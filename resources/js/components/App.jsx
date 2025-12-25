@@ -1,62 +1,92 @@
 import React, { useState } from "react";
+import Login from "./Login";
+import AdminLayout from "./admin/AdminLayout";
+import Dashboard from "./Dashboard";
+import PeriodThemeManagement from "./admin/PeriodThemeManagement";
+import MasterDataManagement from "./admin/MasterDataManagement";
+import RegistrationValidation from "./admin/RegistrationValidation";
+import Registration from "./student/Registration";
+import Logbook from "./student/Logbook";
+import LogbookValidation from "./dosen/LogbookValidation";
 
 const App = () => {
-    const [count, setCount] = useState(0);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+    const [currentView, setCurrentView] = useState("dashboard");
+
+    // Check for saved session on mount
+    React.useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+            setIsLoggedIn(true);
+        }
+    }, []);
+
+    // Login function
+    const handleLogin = (userData) => {
+        setUser(userData);
+        setIsLoggedIn(true);
+        localStorage.setItem("user", JSON.stringify(userData));
+        setCurrentView("dashboard");
+    };
+
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        setUser(null);
+        setCurrentView("dashboard");
+        localStorage.removeItem("user");
+    };
+
+    const handleNavigate = (view) => {
+        setCurrentView(view);
+    };
+
+    const renderCurrentView = () => {
+        switch (currentView) {
+            case "dashboard":
+                return <Dashboard />;
+            case "period-theme":
+                return <PeriodThemeManagement />;
+            case "master-data":
+                return <MasterDataManagement />;
+            case "registration-validation":
+                return <RegistrationValidation />;
+            case "student-registration":
+                return <Registration />;
+            case "student-logbook":
+                return <Logbook />;
+            case "logbook-validation":
+                return <LogbookValidation />;
+            default:
+                return <Dashboard />;
+        }
+    };
+
+    if (!isLoggedIn) {
+        return <Login onLogin={handleLogin} />;
+    }
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="bg-white shadow-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex items-center">
-                            <h1 className="text-xl font-bold text-gray-800">
-                                SIMKP - Sistem Informasi Kerja Praktek
-                            </h1>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <main className="py-8">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <h2 className="text-2xl font-semibold mb-4">
-                            Selamat Datang di SIMKP
-                        </h2>
-                        <p className="mb-4">
-                            Sistem Informasi Manajemen Kerja Praktek Mahasiswa
-                        </p>
-
-                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                            <p className="text-gray-700">
-                                Status:{" "}
-                                <span className="font-medium">
-                                    React telah terintegrasi dengan Laravel
-                                </span>
-                            </p>
-                        </div>
-
-                        <div className="mt-6">
-                            <button
-                                onClick={() => setCount(count + 1)}
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Counter: {count}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <footer className="bg-white mt-8 py-4 border-t">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-                    <p>
-                        © {new Date().getFullYear()} SIMKP - Sistem Informasi
-                        Kerja Praktek
-                    </p>
-                </div>
-            </footer>
-        </div>
+        <AdminLayout
+            title={
+                currentView === "dashboard"
+                    ? "Dashboard"
+                    : currentView
+                          .split("-")
+                          .map(
+                              (word) =>
+                                  word.charAt(0).toUpperCase() + word.slice(1)
+                          )
+                          .join(" ")
+            }
+            user={user || { name: "Admin", role: "admin" }}
+            currentView={currentView}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+        >
+            {renderCurrentView()}
+        </AdminLayout>
     );
 };
 

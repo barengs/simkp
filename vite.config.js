@@ -11,6 +11,7 @@ export default defineConfig({
         }),
         react({
             jsxRuntime: 'automatic',
+            include: [/\.jsx?$/],
         }),
         tailwindcss(),
     ],

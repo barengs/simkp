@@ -21,36 +21,102 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## About SIMKP (Sistem Informasi Kerja Praktek)
+## SIMKP (Sistem Informasi Kerja Praktek)
 
-SIMKP is a monolith hybrid application designed for managing student internship (kerja praktek) processes. The application uses a modern tech stack combining Laravel backend with React frontend.
+SIMKP is a comprehensive application designed for managing student internship (kerja praktek) processes. The system provides a complete solution for students, lecturers, and administrators to manage internship registrations, monitoring, and evaluation.
 
-### Tech Stack
+## Installation
 
--   **Backend**: Laravel PHP framework
--   **Frontend**: ReactJS with Vite build tool
--   **CSS Framework**: Tailwind CSS
--   **Build Tool**: Vite with Laravel Vite plugin
+### Prerequisites
 
-### Architecture
+-   PHP >= 8.2
+-   Node.js >= 18.0
+-   Composer
+-   A database system (MySQL, PostgreSQL, or SQLite)
 
-The application follows a monolith hybrid architecture where React components are integrated directly within the Laravel project structure. The React frontend is mounted to the main layout via a div with id="app".
+### Steps
 
-### File Structure
+1.  Clone the repository:
 
-```
-resources/
-├── js/
-│   ├── app.jsx                 # React entry point
-│   ├── bootstrap.js            # Laravel JS utilities
-│   └── components/
-│       └── App.jsx             # Main React component
-```
+    ```bash
+    git clone <repository-url>
+    cd simkp
+    ```
 
-### Development Commands
+2.  Install PHP dependencies:
+
+    ```bash
+    composer install
+    ```
+
+3.  Install Node.js dependencies:
+
+    ```bash
+    npm install
+    ```
+
+4.  Create a copy of the `.env` file and configure your environment variables:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+5.  Generate application key:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+6.  Configure your database connection in the `.env` file and run migrations:
+
+    ```bash
+    php artisan migrate
+    ```
+
+7.  (Optional) Seed the database with sample data:
+    ```bash
+    php artisan db:seed
+    ```
+
+## Running the Application
+
+### Development Mode
+
+1.  Start the Laravel development server:
+
+    ```bash
+    php artisan serve
+    ```
+
+2.  In a separate terminal, start the Vite development server for hot module replacement:
+
+    ```bash
+    npm run dev
+    ```
+
+3.  Access the application in your browser at `http://127.0.0.1:8000`
+
+### Production Mode
+
+1.  Build the frontend assets for production:
+
+    ```bash
+    npm run build
+    ```
+
+2.  Start the Laravel application:
+    ```bash
+    php artisan serve
+    ```
+
+The application will be accessible at `http://127.0.0.1:8000`
+
+### Additional Commands
 
 -   `npm run dev` - Start Vite development server with hot reload
 -   `npm run build` - Build production assets
+-   `php artisan migrate` - Run database migrations
+-   `php artisan db:seed` - Seed the database with sample data
 
 ## Learning Laravel
 
