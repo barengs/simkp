@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import Login from "./Login";
-import AdminLayout from "./admin/AdminLayout";
+import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./Dashboard";
-import PeriodThemeManagement from "./admin/PeriodThemeManagement";
-import MasterDataManagement from "./admin/MasterDataManagement";
+import PeriodManagement from "./admin/PeriodManagement";
+import ThemeManagement from "./admin/ThemeManagement";
+import MasterDosen from "./admin/master/MasterDosen";
+import MasterMahasiswa from "./admin/master/MasterMahasiswa";
+import MasterMitra from "./admin/master/MasterMitra";
 import RegistrationValidation from "./admin/RegistrationValidation";
 import Registration from "./student/Registration";
 import Logbook from "./student/Logbook";
@@ -46,10 +49,17 @@ const App = () => {
         switch (currentView) {
             case "dashboard":
                 return <Dashboard />;
-            case "period-theme":
-                return <PeriodThemeManagement />;
-            case "master-data":
-                return <MasterDataManagement />;
+            case "period-management":
+                return <PeriodManagement />;
+            case "theme-management":
+                return <ThemeManagement />;
+            case "master-data": // Fallback or redirect if needed
+            case "master-dosen":
+                return <MasterDosen />;
+            case "master-mahasiswa":
+                return <MasterMahasiswa />;
+            case "master-mitra":
+                return <MasterMitra />;
             case "registration-validation":
                 return <RegistrationValidation />;
             case "student-registration":
@@ -68,7 +78,7 @@ const App = () => {
     }
 
     return (
-        <AdminLayout
+        <MainLayout
             title={
                 currentView === "dashboard"
                     ? "Dashboard"
@@ -80,13 +90,13 @@ const App = () => {
                           )
                           .join(" ")
             }
-            user={user || { name: "Admin", role: "admin" }}
+            user={user}
             currentView={currentView}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
         >
             {renderCurrentView()}
-        </AdminLayout>
+        </MainLayout>
     );
 };
 
