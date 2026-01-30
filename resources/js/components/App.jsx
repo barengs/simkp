@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Login";
 import MainLayout from "./layouts/MainLayout";
-import Dashboard from "./Dashboard";
+import AdminDashboard from "./admin/Dashboard";
+import DosenDashboard from "./dosen/Dashboard";
+import StudentDashboard from "./student/Dashboard";
 import PeriodManagement from "./admin/PeriodManagement";
 import ThemeManagement from "./admin/ThemeManagement";
 import MasterDosen from "./admin/master/MasterDosen";
@@ -11,93 +14,136 @@ import RegistrationValidation from "./admin/RegistrationValidation";
 import Registration from "./student/Registration";
 import Logbook from "./student/Logbook";
 import LogbookValidation from "./dosen/LogbookValidation";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ToastProvider } from "./ui/Toast";
+import ProtectedRoute from "./protected/ProtectedRoute";
 
 const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState(null);
-    const [currentView, setCurrentView] = useState("dashboard");
+    return (
+        <ToastProvider>
+            <AuthProvider>
+                <AppRoutes />
+            </AuthProvider>
+        </ToastProvider>
+    );
+};
 
-    // Check for saved session on mount
-    React.useEffect(() => {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-            setIsLoggedIn(true);
-        }
-    }, []);
+const AppRoutes = () => {
+    const { user, logout, isLoading } = useAuth();
 
-    // Login function
-    const handleLogin = (userData) => {
-        setUser(userData);
-        setIsLoggedIn(true);
-        localStorage.setItem("user", JSON.stringify(userData));
-        setCurrentView("dashboard");
-    };
-
-    const handleLogout = () => {
-        setIsLoggedIn(false);
-        setUser(null);
-        setCurrentView("dashboard");
-        localStorage.removeItem("user");
-    };
-
-    const handleNavigate = (view) => {
-        setCurrentView(view);
-    };
-
-    const renderCurrentView = () => {
-        switch (currentView) {
-            case "dashboard":
-                return <Dashboard />;
-            case "period-management":
-                return <PeriodManagement />;
-            case "theme-management":
-                return <ThemeManagement />;
-            case "master-data": // Fallback or redirect if needed
-            case "master-dosen":
-                return <MasterDosen />;
-            case "master-mahasiswa":
-                return <MasterMahasiswa />;
-            case "master-mitra":
-                return <MasterMitra />;
-            case "registration-validation":
-                return <RegistrationValidation />;
-            case "student-registration":
-                return <Registration />;
-            case "student-logbook":
-                return <Logbook />;
-            case "logbook-validation":
-                return <LogbookValidation />;
-            default:
-                return <Dashboard />;
-        }
-    };
-
-    if (!isLoggedIn) {
-        return <Login onLogin={handleLogin} />;
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="relative w-20 h-20">
+                    <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-200 rounded-full"></div>
+                    <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <MainLayout
-            title={
-                currentView === "dashboard"
-                    ? "Dashboard"
-                    : currentView
-                          .split("-")
-                          .map(
-                              (word) =>
-                                  word.charAt(0).toUpperCase() + word.slice(1)
-                          )
-                          .join(" ")
-            }
-            user={user}
-            currentView={currentView}
-            onNavigate={handleNavigate}
-            onLogout={handleLogout}
-        >
-            {renderCurrentView()}
-        </MainLayout>
+        <Routes>
+            <Route path="/login" element={<Login />} />
+
+            <Route path="/*" element={
+                <ProtectedRoute>
+                    <MainLayout user={user} onLogout={logout}>
+                        <Routes>
+                            <Route index element={<Navigate to="/dashboard" replace />} />
+
+                            {/* Role Dashboards */}
+                            <Route path="admin" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <AdminDashboard />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="dosen" element={
+                                <ProtectedRoute allowedRoles={['dosen']}>
+                                    <DosenDashboard />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="mahasiswa" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa']}>
+                                    <StudentDashboard />
+                                </ProtectedRoute>
+                            } />
+
+                            {/* Admin Features */}
+                            <Route path="period-management" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <PeriodManagement />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="theme/management" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ThemeManagement />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="master/dosen" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <MasterDosen />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="master/mahasiswa" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <MasterMahasiswa />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="master/mitra" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <MasterMitra />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="registration/validation" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <RegistrationValidation />
+                                </ProtectedRoute>
+                            } />
+
+                            {/* Student Features */}
+                            <Route path="student/registration" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa']}>
+                                    <Registration />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="student/logbook" element={
+                                <ProtectedRoute allowedRoles={['mahasiswa']}>
+                                    <Logbook />
+                                </ProtectedRoute>
+                            } />
+
+                            {/* Dosen Features */}
+                            <Route path="logbook/validation" element={
+                                <ProtectedRoute allowedRoles={['dosen']}>
+                                    <LogbookValidation />
+                                </ProtectedRoute>
+                            } />
+
+                            {/* Dashboard redirection helper */}
+                            <Route path="dashboard" element={<DashboardRedirect />} />
+
+                            {/* Nested catch-all within MainLayout */}
+                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                    </MainLayout>
+                </ProtectedRoute>
+            } />
+        </Routes>
     );
+};
+
+// Helper component for dashboard redirection
+const DashboardRedirect = () => {
+    const { user, isLoading } = useAuth();
+
+    if (isLoading) return null;
+
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user?.role === 'dosen') return <Navigate to="/dosen" replace />;
+    if (user?.role === 'mahasiswa') return <Navigate to="/mahasiswa" replace />;
+
+    return <Navigate to="/login" replace />;
 };
 
 export default App;

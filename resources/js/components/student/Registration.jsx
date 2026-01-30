@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { UploadCloud } from "lucide-react";
 
 
 const Registration = () => {
@@ -106,11 +107,10 @@ const Registration = () => {
                                 {companies.map((company) => (
                                     <div
                                         key={company.id}
-                                        className={`p-4 border rounded-md cursor-pointer ${
-                                            formData.companyId == company.id
-                                                ? "border-indigo-500 bg-indigo-50"
-                                                : "border-gray-300"
-                                        }`}
+                                        className={`p-4 border rounded-md cursor-pointer ${formData.companyId == company.id
+                                            ? "border-indigo-500 bg-indigo-50"
+                                            : "border-gray-300"
+                                            }`}
                                         onClick={() =>
                                             setFormData({
                                                 ...formData,
@@ -263,11 +263,10 @@ const Registration = () => {
                                 {themes.map((theme) => (
                                     <div
                                         key={theme.id}
-                                        className={`p-4 border rounded-md cursor-pointer ${
-                                            formData.themeId == theme.id
-                                                ? "border-indigo-500 bg-indigo-50"
-                                                : "border-gray-300"
-                                        }`}
+                                        className={`p-4 border rounded-md cursor-pointer ${formData.themeId == theme.id
+                                            ? "border-indigo-500 bg-indigo-50"
+                                            : "border-gray-300"
+                                            }`}
                                         onClick={() =>
                                             setFormData({
                                                 ...formData,
@@ -294,11 +293,10 @@ const Registration = () => {
                                 {periods.map((period) => (
                                     <div
                                         key={period.id}
-                                        className={`p-4 border rounded-md cursor-pointer ${
-                                            formData.periodId == period.id
-                                                ? "border-indigo-500 bg-indigo-50"
-                                                : "border-gray-300"
-                                        }`}
+                                        className={`p-4 border rounded-md cursor-pointer ${formData.periodId == period.id
+                                            ? "border-indigo-500 bg-indigo-50"
+                                            : "border-gray-300"
+                                            }`}
                                         onClick={() =>
                                             setFormData({
                                                 ...formData,
@@ -334,19 +332,7 @@ const Registration = () => {
                                 </label>
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                                     <div className="space-y-1 text-center">
-                                        <svg
-                                            className="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                                        <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
                                             <label
                                                 htmlFor="proposal-upload"
@@ -384,19 +370,7 @@ const Registration = () => {
                                 </label>
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                                     <div className="space-y-1 text-center">
-                                        <svg
-                                            className="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                                        <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
                                             <label
                                                 htmlFor="krs-upload"
@@ -434,19 +408,7 @@ const Registration = () => {
                                 </label>
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                                     <div className="space-y-1 text-center">
-                                        <svg
-                                            className="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                                        <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
                                             <label
                                                 htmlFor="student-card-upload"
@@ -483,19 +445,7 @@ const Registration = () => {
                                 </label>
                                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                                     <div className="space-y-1 text-center">
-                                        <svg
-                                            className="mx-auto h-12 w-12 text-gray-400"
-                                            stroke="currentColor"
-                                            fill="none"
-                                            viewBox="0 0 48 48"
-                                        >
-                                            <path
-                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                                        <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
                                         <div className="flex text-sm text-gray-600">
                                             <label
                                                 htmlFor="recommendation-upload"
@@ -520,7 +470,7 @@ const Registration = () => {
                                             </p>
                                         </div>
                                         <p className="text-xs text-gray-500">
-                                            PDF, DOC, DOCX hingga 5MB
+                                            PDF, JPG, PNG hingga 5MB
                                         </p>
                                     </div>
                                 </div>
@@ -549,10 +499,10 @@ const Registration = () => {
                                         {formData.companyId === "new"
                                             ? formData.newCompanyName
                                             : companies.find(
-                                                  (c) =>
-                                                      c.id.toString() ===
-                                                      formData.companyId
-                                              )?.name || "Belum dipilih"}
+                                                (c) =>
+                                                    c.id.toString() ===
+                                                    formData.companyId
+                                            )?.name || "Belum dipilih"}
                                     </p>
                                 </div>
                                 <div>
@@ -642,24 +592,24 @@ const Registration = () => {
                                     )}
                                     {formData.documents
                                         .recommendationLetter && (
-                                        <li>
-                                            Surat Rekomendasi:{" "}
-                                            {
-                                                formData.documents
-                                                    .recommendationLetter.name
-                                            }
-                                        </li>
-                                    )}
+                                            <li>
+                                                Surat Rekomendasi:{" "}
+                                                {
+                                                    formData.documents
+                                                        .recommendationLetter.name
+                                                }
+                                            </li>
+                                        )}
                                     {!(
                                         formData.documents.proposal ||
                                         formData.documents.krs ||
                                         formData.documents.studentCard ||
                                         formData.documents.recommendationLetter
                                     ) && (
-                                        <li className="text-gray-500">
-                                            Belum ada dokumen yang diunggah
-                                        </li>
-                                    )}
+                                            <li className="text-gray-500">
+                                                Belum ada dokumen yang diunggah
+                                            </li>
+                                        )}
                                 </ul>
                             </div>
                         </div>
@@ -686,60 +636,52 @@ const Registration = () => {
                     <div className="px-4 py-5 sm:px-6">
                         <div className="flex items-center">
                             <div
-                                className={`flex-1 ${
-                                    step >= 1 ? "bg-indigo-600" : "bg-gray-200"
-                                } h-2 rounded`}
+                                className={`flex-1 ${step >= 1 ? "bg-indigo-600" : "bg-gray-200"
+                                    } h-2 rounded`}
                             ></div>
                             <div
-                                className={`flex-1 ${
-                                    step >= 2 ? "bg-indigo-600" : "bg-gray-200"
-                                } h-2 rounded`}
+                                className={`flex-1 ${step >= 2 ? "bg-indigo-600" : "bg-gray-200"
+                                    } h-2 rounded`}
                             ></div>
                             <div
-                                className={`flex-1 ${
-                                    step >= 3 ? "bg-indigo-600" : "bg-gray-200"
-                                } h-2 rounded`}
+                                className={`flex-1 ${step >= 3 ? "bg-indigo-600" : "bg-gray-200"
+                                    } h-2 rounded`}
                             ></div>
                             <div
-                                className={`flex-1 ${
-                                    step >= 4 ? "bg-indigo-600" : "bg-gray-200"
-                                } h-2 rounded`}
+                                className={`flex-1 ${step >= 4 ? "bg-indigo-600" : "bg-gray-200"
+                                    } h-2 rounded`}
                             ></div>
                         </div>
                         <div className="flex justify-between mt-2">
                             <span
-                                className={`text-sm ${
-                                    step === 1
-                                        ? "font-bold text-indigo-600"
-                                        : "text-gray-500"
-                                }`}
+                                className={`text-sm ${step === 1
+                                    ? "font-bold text-indigo-600"
+                                    : "text-gray-500"
+                                    }`}
                             >
                                 Pilih Perusahaan
                             </span>
                             <span
-                                className={`text-sm ${
-                                    step === 2
-                                        ? "font-bold text-indigo-600"
-                                        : "text-gray-500"
-                                }`}
+                                className={`text-sm ${step === 2
+                                    ? "font-bold text-indigo-600"
+                                    : "text-gray-500"
+                                    }`}
                             >
                                 Tema & Periode
                             </span>
                             <span
-                                className={`text-sm ${
-                                    step === 3
-                                        ? "font-bold text-indigo-600"
-                                        : "text-gray-500"
-                                }`}
+                                className={`text-sm ${step === 3
+                                    ? "font-bold text-indigo-600"
+                                    : "text-gray-500"
+                                    }`}
                             >
                                 Unggah Dokumen
                             </span>
                             <span
-                                className={`text-sm ${
-                                    step === 4
-                                        ? "font-bold text-indigo-600"
-                                        : "text-gray-500"
-                                }`}
+                                className={`text-sm ${step === 4
+                                    ? "font-bold text-indigo-600"
+                                    : "text-gray-500"
+                                    }`}
                             >
                                 Review
                             </span>
@@ -758,11 +700,10 @@ const Registration = () => {
                         <button
                             onClick={prevStep}
                             disabled={step === 1}
-                            className={`px-4 py-2 rounded-md ${
-                                step === 1
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gray-500 text-white hover:bg-gray-600"
-                            }`}
+                            className={`px-4 py-2 rounded-md ${step === 1
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gray-500 text-white hover:bg-gray-600"
+                                }`}
                         >
                             Kembali
                         </button>

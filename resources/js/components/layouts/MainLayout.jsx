@@ -7,8 +7,6 @@ const MainLayout = ({
     children,
     title,
     user,
-    currentView,
-    onNavigate,
     onLogout,
 }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,8 +18,6 @@ const MainLayout = ({
         <div className="min-h-screen bg-gray-100">
             <Sidebar
                 user={user}
-                currentView={currentView}
-                onNavigate={onNavigate}
                 onLogout={onLogout}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}

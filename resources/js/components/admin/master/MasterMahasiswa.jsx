@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import DataTable from "react-data-table-component";
+import { Plus, Pencil, Trash2, Search, FileSpreadsheet } from "lucide-react";
 
 const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
@@ -52,11 +53,10 @@ const MasterMahasiswa = () => {
             sortable: true,
             cell: (row) => (
                 <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        row.status === "Aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                    }`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Aktif"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                 >
                     {row.status}
                 </span>
@@ -66,15 +66,11 @@ const MasterMahasiswa = () => {
             name: "Aksi",
             cell: (row) => (
                 <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900" title="Edit">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                    <button className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
+                        <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900" title="Hapus">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                    <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                        <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             ),
@@ -100,22 +96,29 @@ const MasterMahasiswa = () => {
 
                 <div className="flex justify-between items-center">
                     <div className="w-1/3">
-                        <input
-                            type="text"
-                            placeholder="Cari mahasiswa..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cari mahasiswa..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
                     </div>
                     <div className="flex space-x-3">
-                        <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
+                        <button className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
+                            <FileSpreadsheet className="h-5 w-5 mr-2" />
                             Import Excel
                         </button>
                         <button
                             onClick={() => setShowModal(true)}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
+                            className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
                         >
+                            <Plus className="h-5 w-5 mr-2" />
                             Tambah Mahasiswa
                         </button>
                     </div>

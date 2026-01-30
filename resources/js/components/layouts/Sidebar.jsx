@@ -1,14 +1,30 @@
 import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+    LayoutDashboard,
+    Calendar,
+    Lightbulb,
+    ClipboardList,
+    CheckCircle,
+    UserCircle,
+    BarChart3,
+    FileText,
+    Settings,
+    BookOpen,
+    Users,
+    LogOut,
+    ChevronRight
+} from "lucide-react";
 
 const Sidebar = ({
     user,
-    currentView,
-    onNavigate,
     onLogout,
     sidebarOpen,
     setSidebarOpen,
     isCollapsed,
 }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [expandedMenus, setExpandedMenus] = useState({});
 
     const toggleMenu = (menuId) => {
@@ -18,63 +34,68 @@ const Sidebar = ({
         }));
     };
 
+    // Helper to check if a path is active
+    const isPathActive = (path) => {
+        if (!path) return false;
+        return location.pathname === `/${path}` || location.pathname.startsWith(`/${path}/`);
+    };
+
     // Navigation items based on role
     const getNavigation = () => {
-        // Ensure user and user.role exist, default to 'admin' if not
         const role = (user?.role || "admin").toLowerCase();
 
         switch (role) {
             case "admin":
                 return [
-                    { name: "Dashboard", id: "dashboard", icon: "📊" },
-                    { name: "Manajemen Periode", id: "period-management", icon: "📅" },
-                    { name: "Manajemen Tema", id: "theme-management", icon: "💡" },
+                    { name: "Dashboard", path: "admin", icon: LayoutDashboard },
+                    { name: "Manajemen Periode", path: "period-management", icon: Calendar },
+                    { name: "Manajemen Tema", path: "theme/management", icon: Lightbulb },
                     {
                         name: "Master Data",
                         id: "master-data",
-                        icon: "📋",
+                        icon: ClipboardList,
                         children: [
-                            { name: "Dosen", id: "master-dosen" },
-                            { name: "Mahasiswa", id: "master-mahasiswa" },
-                            { name: "Mitra", id: "master-mitra" },
+                            { name: "Dosen", path: "master/dosen" },
+                            { name: "Mahasiswa", path: "master/mahasiswa" },
+                            { name: "Mitra", path: "master/mitra" },
                         ],
                     },
                     {
                         name: "Validasi Pendaftaran",
-                        id: "registration-validation",
-                        icon: "✅",
+                        path: "registration/validation",
+                        icon: CheckCircle,
                     },
                     {
                         name: "Plotting Dosen",
-                        id: "lecturer-plotting",
-                        icon: "👨‍🏫",
+                        path: "lecturer-plotting",
+                        icon: UserCircle,
                     },
-                    { name: "Monitoring", id: "monitoring", icon: "📈" },
-                    { name: "Laporan", id: "reports", icon: "📄" },
-                    { name: "Pengaturan", id: "settings", icon: "⚙️" },
+                    { name: "Monitoring", path: "monitoring", icon: BarChart3 },
+                    { name: "Laporan", path: "reports", icon: FileText },
+                    { name: "Pengaturan", path: "settings", icon: Settings },
                 ];
-            case "student":
+            case "mahasiswa":
                 return [
-                    { name: "Dashboard", id: "dashboard", icon: "📊" },
+                    { name: "Dashboard", path: "mahasiswa", icon: LayoutDashboard },
                     {
                         name: "Pendaftaran KP",
-                        id: "student-registration",
-                        icon: "📝",
+                        path: "student/registration",
+                        icon: FileText,
                     },
-                    { name: "Logbook", id: "student-logbook", icon: "📒" },
+                    { name: "Logbook", path: "student/logbook", icon: BookOpen },
                 ];
             case "dosen":
                 return [
-                    { name: "Dashboard", id: "dashboard", icon: "📊" },
+                    { name: "Dashboard", path: "dosen", icon: LayoutDashboard },
                     {
                         name: "Validasi Logbook",
-                        id: "logbook-validation",
-                        icon: "✅",
+                        path: "logbook/validation",
+                        icon: CheckCircle,
                     },
-                    { name: "Bimbingan", id: "guidance", icon: "👥" },
+                    { name: "Bimbingan", path: "guidance", icon: Users },
                 ];
             default:
-                return [{ name: "Dashboard", id: "dashboard", icon: "📊" }];
+                return [{ name: "Dashboard", path: "dashboard", icon: LayoutDashboard }];
         }
     };
 
@@ -83,65 +104,47 @@ const Sidebar = ({
 
     const renderMenuItem = (item, level = 0) => {
         const hasChildren = item.children && item.children.length > 0;
-        const isExpanded = expandedMenus[item.id];
-        // Check if any child is active to keep parent expanded or highlighted
-        const isChildActive = hasChildren && item.children.some(child => child.id === currentView);
-        
-        // Auto-expand if child is active and not explicitly toggled yet
-        // This is a simple check, could be improved with effects
-        if (isChildActive && expandedMenus[item.id] === undefined) {
-             // Side-effect in render is not ideal, but for this simple case:
-             // Better to handle in useEffect, but let's just default expandedMenus state if needed
-             // For now, relies on user interaction or manual expansion
-        }
+        const Icon = item.icon;
+        const menuId = item.id || item.path;
+        const isExpanded = expandedMenus[menuId];
 
-        const isActive = currentView === item.id || isChildActive;
+        // Active state logic
+        const isActive = isPathActive(item.path);
+        const isChildActive = hasChildren && item.children.some(child => isPathActive(child.path));
+        const shouldHighlight = isActive || isChildActive;
 
         return (
-            <div key={item.id} className="relative group">
+            <div key={menuId} className="relative group">
                 <button
                     onClick={() => {
                         if (hasChildren) {
-                            if (isCollapsed) return; // Don't expand in collapsed mode (or handle differently)
-                            toggleMenu(item.id);
+                            if (isCollapsed) return;
+                            toggleMenu(menuId);
                         } else {
-                            onNavigate(item.id);
+                            navigate(`/${item.path}`);
                             setSidebarOpen(false);
                         }
                     }}
                     title={isCollapsed ? item.name : ""}
-                    className={`${
-                        isActive
-                            ? level === 0
-                                ? "bg-indigo-100 text-indigo-600" // Main menu active
-                                : "bg-indigo-50 text-indigo-600" // Submenu active
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } group w-full flex items-center px-2 py-2 text-sm font-medium ${
-                        isCollapsed ? "justify-center" : ""
-                    } ${level > 0 ? "pl-11" : ""}`}
+                    className={`${shouldHighlight
+                        ? level === 0
+                            ? "bg-indigo-100 text-indigo-600"
+                            : "bg-indigo-50 text-indigo-600"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        } group w-full flex items-center px-2 py-2 text-sm font-medium ${isCollapsed ? "justify-center" : ""
+                        } ${level > 0 ? "pl-11" : ""}`}
                 >
                     <span className={`${isCollapsed ? "" : "mr-3"}`}>
-                        {item.icon}
+                        {Icon && <Icon className="h-5 w-5" />}
                     </span>
                     {!isCollapsed && (
                         <>
                             <span className="flex-1 text-left">{item.name}</span>
                             {hasChildren && (
-                                <svg
-                                    className={`ml-2 h-4 w-4 transform transition-transform ${
-                                        isExpanded ? "rotate-90" : ""
-                                    }`}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M9 5l7 7-7 7"
-                                    />
-                                </svg>
+                                <ChevronRight
+                                    className={`ml-2 h-4 w-4 transform transition-transform ${isExpanded ? "rotate-90" : ""
+                                        }`}
+                                />
                             )}
                         </>
                     )}
@@ -160,15 +163,14 @@ const Sidebar = ({
                             </div>
                             {item.children.map((child) => (
                                 <button
-                                    key={child.id}
+                                    key={child.path}
                                     onClick={() => {
-                                        onNavigate(child.id);
+                                        navigate(`/${child.path}`);
                                     }}
-                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-150 ${
-                                        currentView === child.id
-                                            ? "bg-indigo-50 text-indigo-600 font-medium"
-                                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                                    }`}
+                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-150 ${isPathActive(child.path)
+                                        ? "bg-indigo-50 text-indigo-600 font-medium"
+                                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                        }`}
                                 >
                                     {child.name}
                                 </button>
@@ -194,45 +196,33 @@ const Sidebar = ({
                             <div className="flex-shrink-0 flex items-center px-4">
                                 <h1 className="text-xl font-bold text-indigo-600">
                                     SIMKP{" "}
-                                    {user.role === "admin"
+                                    {user?.role === "admin"
                                         ? "Admin"
-                                        : user.role === "student"
-                                        ? "Mahasiswa"
-                                        : "Dosen"}
+                                        : user?.role === "mahasiswa"
+                                            ? "Mahasiswa"
+                                            : "Dosen"}
                                 </h1>
                             </div>
                             <nav className="mt-5 px-2 space-y-1">
                                 {navigation.map((item) => renderMenuItem(item))}
                             </nav>
                         </div>
-                        <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+                        <div className="shrink-0 flex border-t border-gray-200 p-4">
                             <div className="flex items-center w-full">
                                 <div className="flex-1 min-w-0">
                                     <div className="text-base font-medium text-gray-800 truncate">
-                                        {user.name}
+                                        {user?.name}
                                     </div>
                                     <div className="text-sm font-medium text-gray-500 truncate">
-                                        {user.role}
+                                        {user?.role}
                                     </div>
                                 </div>
                                 <button
                                     onClick={onLogout}
-                                    className="ml-2 bg-red-100 p-2 text-red-600 hover:bg-red-200"
+                                    className="ml-2 bg-red-100 p-2 text-red-600 hover:bg-red-200 rounded-md transition-colors"
                                     title="Logout"
                                 >
-                                    <svg
-                                        className="h-5 w-5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                        />
-                                    </svg>
+                                    <LogOut className="h-5 w-5" />
                                 </button>
                             </div>
                         </div>
@@ -247,9 +237,8 @@ const Sidebar = ({
                 <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
                     <div className={`flex-1 flex flex-col pt-5 pb-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                         <div
-                            className={`flex items-center flex-shrink-0 px-4 ${
-                                isCollapsed ? "justify-center" : ""
-                            }`}
+                            className={`flex items-center shrink-0 px-4 ${isCollapsed ? "justify-center" : ""
+                                }`}
                         >
                             {isCollapsed ? (
                                 <span className="text-xl font-bold text-indigo-600">
@@ -257,12 +246,7 @@ const Sidebar = ({
                                 </span>
                             ) : (
                                 <h1 className="text-xl font-bold text-indigo-600 truncate">
-                                    SIMKP{" "}
-                                    {user.role === "admin"
-                                        ? "Admin"
-                                        : user.role === "student"
-                                        ? "Mhs"
-                                        : "Dosen"}
+                                    SIMKP
                                 </h1>
                             )}
                         </div>
@@ -270,44 +254,30 @@ const Sidebar = ({
                             {navigation.map((item) => renderMenuItem(item))}
                         </nav>
                     </div>
-                    <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+                    <div className="shrink-0 flex border-t border-gray-200 p-4">
                         <div
-                            className={`flex items-center w-full ${
-                                isCollapsed
-                                    ? "justify-center flex-col space-y-2"
-                                    : ""
-                            }`}
+                            className={`flex items-center w-full ${isCollapsed
+                                ? "justify-center flex-col space-y-2"
+                                : ""
+                                }`}
                         >
                             {!isCollapsed && (
                                 <div className="flex-1 min-w-0">
                                     <div className="text-sm font-medium text-gray-900 truncate">
-                                        {user.name}
+                                        {user?.name}
                                     </div>
                                     <div className="text-xs font-medium text-gray-500 truncate">
-                                        {user.role}
+                                        {user?.role}
                                     </div>
                                 </div>
                             )}
                             <button
                                 onClick={onLogout}
-                                className={`${
-                                    isCollapsed ? "p-2" : "ml-2 p-2"
-                                } bg-red-100 text-red-600 hover:bg-red-200`}
+                                className={`${isCollapsed ? "p-2" : "ml-2 p-2"
+                                    } bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors`}
                                 title="Logout"
                             >
-                                <svg
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                    />
-                                </svg>
+                                <LogOut className="h-5 w-5" />
                             </button>
                         </div>
                     </div>
@@ -318,3 +288,4 @@ const Sidebar = ({
 };
 
 export default Sidebar;
+
