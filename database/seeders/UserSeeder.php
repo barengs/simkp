@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     {
         // Admin
         User::updateOrCreate(
-            ['email' => 'admin@university.ac.id'],
+            ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Administrator SIMKP',
                 'password' => Hash::make('password'),
@@ -25,9 +25,9 @@ class UserSeeder extends Seeder
 
         // Dosen
         User::updateOrCreate(
-            ['email' => 'dosen@university.ac.id'],
+            ['email' => 'dosen@gmail.com'],
             [
-                'name' => 'Dr. Ahmad Dosen',
+                'name' => 'Rofiuddin, S.Kom, M.Kom',
                 'password' => Hash::make('password'),
                 'role' => 'dosen',
             ]
@@ -35,9 +35,9 @@ class UserSeeder extends Seeder
 
         // Mahasiswa
         User::updateOrCreate(
-            ['email' => 'student@university.ac.id'],
+            ['email' => 'mahasiswa@gmail.com'],
             [
-                'name' => 'Budi Mahasiswa',
+                'name' => 'Alfiansyah',
                 'password' => Hash::make('password'),
                 'role' => 'mahasiswa',
             ]

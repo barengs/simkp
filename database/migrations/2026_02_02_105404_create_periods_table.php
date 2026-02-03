@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lecturers', function (Blueprint $table) {
+        Schema::create('periods', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('nip')->unique();
-            $table->string('phone');
+            $table->string('academic_year');
+            $table->enum('semester', ['ganjil', 'genap']);
+            $table->string('theme_name');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lecturers');
+        Schema::dropIfExists('periods');
     }
 };

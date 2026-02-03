@@ -1,64 +1,140 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
+import Modal from "../../ui/Modal";
+import DeleteConfirm from "../../ui/DeleteConfirm";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import api from "../../../src/api";
+import { useToast } from "../../ui/Toast";
 
 const MasterDosen = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [dosen, setDosen] = useState([
-        {
-            id: 1,
-            nip: "123456789",
-            name: "Dr. Budi Santoso, S.T., M.T.",
-            email: "budi@university.ac.id",
-            phone: "081234567890",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            nip: "987654321",
-            name: "Prof. Ani Lestari, S.T., Ph.D.",
-            email: "ani@university.ac.id",
-            phone: "081234567891",
-            status: "Aktif",
-        },
-    ]);
+    const [dosen, setDosen] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [totalRows, setTotalRows] = useState(0);
+    const [perPage, setPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [formLoading, setFormLoading] = useState(false);
+    const { addToast } = useToast();
 
-    const [newRecord, setNewRecord] = useState({
+    const [formData, setFormData] = useState({
         nip: "",
         name: "",
         email: "",
         phone: "",
+        password: "password123",
     });
 
-    const handleAddRecord = () => {
-        const record = {
-            id: dosen.length + 1,
-            ...newRecord,
-            status: "Aktif",
-        };
-        setDosen([...dosen, record]);
-        setNewRecord({ nip: "", name: "", email: "", phone: "" });
-        setShowModal(false);
+    // Edit/Delete states
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
+    const fetchDosen = async (page, size = perPage, search = searchTerm) => {
+        setLoading(true);
+        try {
+            const response = await api.get(`/lecturers?page=${page}&per_page=${size}&search=${search}`);
+            setDosen(response.data.data.data);
+            setTotalRows(response.data.data.total);
+            setCurrentPage(response.data.data.current_page);
+        } catch (error) {
+            console.error("Error fetching lecturers:", error);
+            addToast("Gagal mengambil data dosen", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchDosen(1, perPage, searchTerm);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
+
+    const handlePageChange = (page) => {
+        fetchDosen(page);
+    };
+
+    const handlePerRowsChange = (newPerPage, page) => {
+        setPerPage(newPerPage);
+        fetchDosen(page, newPerPage);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            if (isEditing && editingId) {
+                await api.put(`/lecturers/${editingId}`, formData);
+                addToast('Dosen berhasil diperbarui', 'success');
+            } else {
+                await api.post('/lecturers', formData);
+                addToast('Dosen berhasil ditambahkan', 'success');
+            }
+
+            setShowModal(false);
+            setIsEditing(false);
+            setEditingId(null);
+            setFormData({ nip: '', name: '', email: '', phone: '', password: 'password123' });
+            fetchDosen(1); // Refresh data
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const openEdit = (row) => {
+        setIsEditing(true);
+        setEditingId(row.id);
+        setFormData({
+            nip: row.lecturer?.nip || '',
+            name: row.name || '',
+            email: row.email || '',
+            phone: row.lecturer?.phone || '',
+            password: 'password123'
+        });
+        setShowModal(true);
+    };
+
+    const openDelete = (row) => {
+        setDeleteTarget(row);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            await api.delete(`/lecturers/${deleteTarget.id}`);
+            addToast('Dosen berhasil dihapus', 'success');
+            setShowDeleteConfirm(false);
+            setDeleteTarget(null);
+            fetchDosen(currentPage);
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+        }
     };
 
     const columns = [
-        { name: "NIP", selector: (row) => row.nip, sortable: true },
+        { name: "NIP", selector: (row) => row.lecturer?.nip || '-', sortable: true },
         { name: "Nama", selector: (row) => row.name, sortable: true },
         { name: "Email", selector: (row) => row.email, sortable: true },
-        { name: "Telepon", selector: (row) => row.phone, sortable: true },
+        { name: "Telepon", selector: (row) => row.lecturer?.phone || '-', sortable: true },
         {
             name: "Status",
-            selector: (row) => row.status,
+            selector: (row) => row.email_verified_at ? "Aktif" : "Non-Aktif", // Approximation
             sortable: true,
             cell: (row) => (
                 <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Aktif"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.deleted_at ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
                         }`}
                 >
-                    {row.status}
+                    {row.deleted_at ? "Non-Aktif" : "Aktif"}
                 </span>
             ),
         },
@@ -66,24 +142,16 @@ const MasterDosen = () => {
             name: "Aksi",
             cell: (row) => (
                 <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
+                    <button onClick={() => openEdit(row)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
                         <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                    <button onClick={() => openDelete(row)} className="text-red-600 hover:text-red-900 p-1" title="Hapus">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             ),
         },
     ];
-
-    const filteredData = dosen.filter((item) =>
-        ["nip", "name", "email"].some(
-            (field) =>
-                item[field] &&
-                item[field].toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
 
     return (
         <>
@@ -111,7 +179,7 @@ const MasterDosen = () => {
                     </div>
                     <div className="flex space-x-3">
                         <button
-                            onClick={() => setShowModal(true)}
+                            onClick={() => { setIsEditing(false); setEditingId(null); setFormData({ nip: '', name: '', email: '', phone: '', password: 'password123' }); setShowModal(true); }}
                             className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
                         >
                             <Plus className="h-5 w-5 mr-2" />
@@ -124,9 +192,14 @@ const MasterDosen = () => {
                     <div className="px-4 py-5 sm:p-6">
                         <DataTable
                             columns={columns}
-                            data={filteredData}
+                            data={dosen}
+                            // progressPending={loading}
                             pagination
-                            paginationPerPage={10}
+                            paginationServer
+                            paginationTotalRows={totalRows}
+                            onChangeRowsPerPage={handlePerRowsChange}
+                            onChangePage={handlePageChange}
+                            paginationPerPage={perPage}
                             paginationRowsPerPageOptions={[10, 25, 50, 100]}
                             highlightOnHover
                             pointerOnHover
@@ -136,101 +209,83 @@ const MasterDosen = () => {
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Dosen Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        NIP
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.nip}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                nip: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="NIP Dosen"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.name}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Nama Lengkap"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newRecord.email}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                email: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="email@university.ac.id"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Telepon
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.phone}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                phone: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="081234567890"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddRecord}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <DeleteConfirm
+                isOpen={showDeleteConfirm}
+                itemName={deleteTarget?.name}
+                onClose={() => { setShowDeleteConfirm(false); setDeleteTarget(null); }}
+                onConfirm={confirmDelete}
+                loading={formLoading}
+            />
+
+            <Modal
+                isOpen={showModal}
+                onClose={() => { setShowModal(false); setIsEditing(false); setEditingId(null); }}
+                title={isEditing ? 'Edit Dosen' : 'Tambah Dosen'}
+                showFooter={false}
+            >
+                <form onSubmit={handleSubmit} className="space-y-4 bg-white">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                        <input
+                            type="text"
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 bg-white/50 border"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">NIP</label>
+                        <input
+                            type="text"
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 bg-white/50 border"
+                            value={formData.nip}
+                            onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <input
+                            type="email"
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 bg-white/50 border"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Telepon</label>
+                        <input
+                            type="text"
+                            required
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 bg-white/50 border"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="flex justify-end pt-4 space-x-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={formLoading}
+                            className={`bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:bg-indigo-700 transition-all ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {formLoading ? 'Menyimpan...' : (isEditing ? 'Perbarui Dosen' : 'Simpan Dosen') }
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </>
     );
 };
