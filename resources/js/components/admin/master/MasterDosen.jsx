@@ -5,17 +5,23 @@ import DeleteConfirm from "../../ui/DeleteConfirm";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import api from "../../../src/api";
 import { useToast } from "../../ui/Toast";
+import { useLecturers } from "../../context/LecturerContext";
+import { Skeleton } from "../../ui/Skeleton";
 
 const MasterDosen = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [dosen, setDosen] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [totalRows, setTotalRows] = useState(0);
-    const [perPage, setPerPage] = useState(10);
-    const [currentPage, setCurrentPage] = useState(1);
+
+    // Use Context
+    const { lecturers, pagination, loading, getLecturers, refreshLecturers } = useLecturers();
+    const { total, per_page, current_page } = pagination;
+
     const [formLoading, setFormLoading] = useState(false);
     const { addToast } = useToast();
+
+    // Local state for params to control context
+    const [perPage, setPerPage] = useState(10);
+    // Note: currentPage is managed by context via getLecturers, but we need to pass it from DataTable change.
 
     const [formData, setFormData] = useState({
         nip: "",
@@ -31,36 +37,22 @@ const MasterDosen = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
-    const fetchDosen = async (page, size = perPage, search = searchTerm) => {
-        setLoading(true);
-        try {
-            const response = await api.get(`/lecturers?page=${page}&per_page=${size}&search=${search}`);
-            setDosen(response.data.data.data);
-            setTotalRows(response.data.data.total);
-            setCurrentPage(response.data.data.current_page);
-        } catch (error) {
-            console.error("Error fetching lecturers:", error);
-            addToast("Gagal mengambil data dosen", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Initial load & Search debounce
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            fetchDosen(1, perPage, searchTerm);
+            getLecturers(1, perPage, searchTerm);
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+    }, [searchTerm, getLecturers, perPage]);
 
     const handlePageChange = (page) => {
-        fetchDosen(page);
+        getLecturers(page, perPage, searchTerm);
     };
 
     const handlePerRowsChange = (newPerPage, page) => {
         setPerPage(newPerPage);
-        fetchDosen(page, newPerPage);
+        getLecturers(page, newPerPage, searchTerm);
     };
 
     const handleSubmit = async (e) => {
@@ -79,7 +71,7 @@ const MasterDosen = () => {
             setIsEditing(false);
             setEditingId(null);
             setFormData({ nip: '', name: '', email: '', phone: '', password: 'password123' });
-            fetchDosen(1); // Refresh data
+            refreshLecturers(); // Refresh data using context
         } catch (error) {
             console.error(error);
             addToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
@@ -92,10 +84,10 @@ const MasterDosen = () => {
         setIsEditing(true);
         setEditingId(row.id);
         setFormData({
-            nip: row.lecturer?.nip || '',
-            name: row.name || '',
-            email: row.email || '',
-            phone: row.lecturer?.phone || '',
+            nip: row.nip || '',
+            name: row.user?.name || '',
+            email: row.user?.email || '',
+            phone: row.phone || '',
             password: 'password123'
         });
         setShowModal(true);
@@ -108,33 +100,43 @@ const MasterDosen = () => {
 
     const confirmDelete = async () => {
         if (!deleteTarget) return;
+        setFormLoading(true);
         try {
             await api.delete(`/lecturers/${deleteTarget.id}`);
-            addToast('Dosen berhasil dihapus', 'success');
+            addToast('Dosen berhasil dihapus dari periode ini', 'success');
             setShowDeleteConfirm(false);
             setDeleteTarget(null);
-            fetchDosen(currentPage);
+            refreshLecturers();
         } catch (error) {
             console.error(error);
             addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+        } finally {
+            setFormLoading(false);
         }
     };
 
+    const TableRowSkeleton = () => (
+        <div className="w-full space-y-3 p-4">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ))}
+        </div>
+    );
+
     const columns = [
-        { name: "NIP", selector: (row) => row.lecturer?.nip || '-', sortable: true },
-        { name: "Nama", selector: (row) => row.name, sortable: true },
-        { name: "Email", selector: (row) => row.email, sortable: true },
-        { name: "Telepon", selector: (row) => row.lecturer?.phone || '-', sortable: true },
+        { name: "NIP", selector: (row) => row.nip || '-', sortable: true },
+        { name: "Nama", selector: (row) => row.user?.name || '-', sortable: true },
+        { name: "Email", selector: (row) => row.user?.email || '-', sortable: true },
+        { name: "Telepon", selector: (row) => row.phone || '-', sortable: true },
         {
             name: "Status",
-            selector: (row) => row.email_verified_at ? "Aktif" : "Non-Aktif", // Approximation
+            selector: (row) => "Aktif",
             sortable: true,
             cell: (row) => (
-                <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.deleted_at ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                        }`}
-                >
-                    {row.deleted_at ? "Non-Aktif" : "Aktif"}
+                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Aktif
                 </span>
             ),
         },
@@ -192,14 +194,16 @@ const MasterDosen = () => {
                     <div className="px-4 py-5 sm:p-6">
                         <DataTable
                             columns={columns}
-                            data={dosen}
-                            // progressPending={loading}
+                            data={lecturers}
+                            progressPending={loading}
+                            progressComponent={<TableRowSkeleton />}
                             pagination
                             paginationServer
-                            paginationTotalRows={totalRows}
+                            paginationTotalRows={total}
                             onChangeRowsPerPage={handlePerRowsChange}
                             onChangePage={handlePageChange}
                             paginationPerPage={perPage}
+                            paginationDefaultPage={current_page} // Ensure persistence usually visual
                             paginationRowsPerPageOptions={[10, 25, 50, 100]}
                             highlightOnHover
                             pointerOnHover
@@ -281,7 +285,7 @@ const MasterDosen = () => {
                             disabled={formLoading}
                             className={`bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:bg-indigo-700 transition-all ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {formLoading ? 'Menyimpan...' : (isEditing ? 'Perbarui Dosen' : 'Simpan Dosen') }
+                            {formLoading ? 'Menyimpan...' : (isEditing ? 'Perbarui Dosen' : 'Simpan Dosen')}
                         </button>
                     </div>
                 </form>

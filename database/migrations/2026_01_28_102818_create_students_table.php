@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nim')->unique();
             $table->string('major');
             $table->integer('batch_year');
+            $table->string('phone');
             $table->timestamps();
         });
     }

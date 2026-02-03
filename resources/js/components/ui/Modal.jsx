@@ -23,7 +23,7 @@ const Modal = ({ isOpen, onClose, title, children, ...props }) => {
               className="bg-white/80 backdrop-blur-xl border border-white/20 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
             >
               {/* Header */}
-              <div class="px-6 py-4 border-b border-gray-200/50 flex justify-between items-center bg-white">
+              <div className="px-6 py-4 border-b border-gray-200/50 flex justify-between items-center bg-white">
                 <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
                 <button
                   onClick={onClose}

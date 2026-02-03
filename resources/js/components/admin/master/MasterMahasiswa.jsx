@@ -1,64 +1,148 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search, FileSpreadsheet } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { useStudents } from "../../context/StudentContext";
+import { useToast } from "../../ui/Toast";
+import Modal from "../../ui/Modal";
+import DeleteConfirm from "../../ui/DeleteConfirm";
+import { Skeleton } from "../../ui/Skeleton";
+import api from "../../../src/api";
 
 const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [mahasiswa, setMahasiswa] = useState([
-        {
-            id: 1,
-            nim: "1234567890",
-            name: "Rudi Hartono",
-            email: "rudi@student.university.ac.id",
-            phone: "081234567892",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            nim: "0987654321",
-            name: "Siti Nurhaliza",
-            email: "siti@student.university.ac.id",
-            phone: "081234567893",
-            status: "Aktif",
-        },
-    ]);
+    const { students, pagination, loading, getStudents, refreshStudents } = useStudents();
+    const { total, current_page } = pagination;
+    const { addToast } = useToast();
 
-    const [newRecord, setNewRecord] = useState({
+    const [perPage, setPerPage] = useState(10);
+    const [formLoading, setFormLoading] = useState(false);
+
+    const [formData, setFormData] = useState({
         nim: "",
         name: "",
         email: "",
         phone: "",
+        major: "",
+        batch_year: new Date().getFullYear(),
+        password: "password123",
     });
 
-    const handleAddRecord = () => {
-        const record = {
-            id: mahasiswa.length + 1,
-            ...newRecord,
-            status: "Aktif",
-        };
-        setMahasiswa([...mahasiswa, record]);
-        setNewRecord({ nim: "", name: "", email: "", phone: "" });
-        setShowModal(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            getStudents(1, perPage, searchTerm);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm, getStudents, perPage]);
+
+    const handlePageChange = (page) => {
+        getStudents(page, perPage, searchTerm);
     };
+
+    const handlePerRowsChange = (newPerPage, page) => {
+        setPerPage(newPerPage);
+        getStudents(page, newPerPage, searchTerm);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+        try {
+            if (isEditing && editingId) {
+                await api.put(`/students/${editingId}`, formData);
+                addToast('Mahasiswa berhasil diperbarui', 'success');
+            } else {
+                await api.post('/students', formData);
+                addToast('Mahasiswa berhasil ditambahkan ke periode ini', 'success');
+            }
+            setShowModal(false);
+            resetForm();
+            refreshStudents();
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            nim: "",
+            name: "",
+            email: "",
+            phone: "",
+            major: "",
+            batch_year: new Date().getFullYear(),
+            password: "password123",
+        });
+        setIsEditing(false);
+        setEditingId(null);
+    };
+
+    const openEdit = (row) => {
+        setIsEditing(true);
+        setEditingId(row.id);
+        setFormData({
+            nim: row.nim || '',
+            name: row.user?.name || '',
+            email: row.user?.email || '',
+            phone: row.phone || '',
+            major: row.major || '',
+            batch_year: row.batch_year || new Date().getFullYear(),
+            password: 'password123'
+        });
+        setShowModal(true);
+    };
+
+    const openDelete = (row) => {
+        setDeleteTarget(row);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setFormLoading(true);
+        try {
+            await api.delete(`/students/${deleteTarget.id}`);
+            addToast('Mahasiswa berhasil dihapus dari periode ini', 'success');
+            setShowDeleteConfirm(false);
+            setDeleteTarget(null);
+            refreshStudents();
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const TableRowSkeleton = () => (
+        <div className="w-full space-y-3 p-4">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ))}
+        </div>
+    );
 
     const columns = [
         { name: "NIM", selector: (row) => row.nim, sortable: true },
-        { name: "Nama", selector: (row) => row.name, sortable: true },
-        { name: "Email", selector: (row) => row.email, sortable: true },
-        { name: "Telepon", selector: (row) => row.phone, sortable: true },
+        { name: "Nama", selector: (row) => row.user?.name, sortable: true },
+        { name: "Email", selector: (row) => row.user?.email, sortable: true },
+        { name: "Major", selector: (row) => row.major, sortable: true },
         {
             name: "Status",
-            selector: (row) => row.status,
-            sortable: true,
             cell: (row) => (
-                <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Aktif"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                        }`}
-                >
-                    {row.status}
+                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Aktif
                 </span>
             ),
         },
@@ -66,24 +150,16 @@ const MasterMahasiswa = () => {
             name: "Aksi",
             cell: (row) => (
                 <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
+                    <button onClick={() => openEdit(row)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
                         <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                    <button onClick={() => openDelete(row)} className="text-red-600 hover:text-red-900 p-1" title="Hapus">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             ),
         },
     ];
-
-    const filteredData = mahasiswa.filter((item) =>
-        ["nim", "name", "email"].some(
-            (field) =>
-                item[field] &&
-                item[field].toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
 
     return (
         <>
@@ -109,29 +185,29 @@ const MasterMahasiswa = () => {
                             />
                         </div>
                     </div>
-                    <div className="flex space-x-3">
-                        <button className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200">
-                            <FileSpreadsheet className="h-5 w-5 mr-2" />
-                            Import Excel
-                        </button>
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
-                        >
-                            <Plus className="h-5 w-5 mr-2" />
-                            Tambah Mahasiswa
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => { resetForm(); setShowModal(true); }}
+                        className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
+                    >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Tambah Mahasiswa
+                    </button>
                 </div>
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
                         <DataTable
                             columns={columns}
-                            data={filteredData}
+                            data={students}
+                            progressPending={loading}
+                            progressComponent={<TableRowSkeleton />}
                             pagination
-                            paginationPerPage={10}
-                            paginationRowsPerPageOptions={[10, 25, 50, 100]}
+                            paginationServer
+                            paginationTotalRows={total}
+                            onChangeRowsPerPage={handlePerRowsChange}
+                            onChangePage={handlePageChange}
+                            paginationPerPage={perPage}
+                            paginationDefaultPage={current_page}
                             highlightOnHover
                             pointerOnHover
                             responsive
@@ -140,101 +216,101 @@ const MasterMahasiswa = () => {
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Mahasiswa Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        NIM
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.nim}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                nim: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="NIM Mahasiswa"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.name}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Nama Lengkap"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newRecord.email}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                email: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="email@student.university.ac.id"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Telepon
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.phone}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                phone: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="081234567890"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddRecord}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
+            <DeleteConfirm
+                isOpen={showDeleteConfirm}
+                itemName={deleteTarget?.user?.name}
+                onClose={() => { setShowDeleteConfirm(false); setDeleteTarget(null); }}
+                onConfirm={confirmDelete}
+                loading={formLoading}
+            />
+
+            <Modal
+                isOpen={showModal}
+                onClose={() => { setShowModal(false); resetForm(); }}
+                title={isEditing ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}
+                showFooter={false}
+            >
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                            <input
+                                type="text"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">NIM</label>
+                            <input
+                                type="text"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.nim}
+                                onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Email</label>
+                            <input
+                                type="email"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Telepon</label>
+                            <input
+                                type="text"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Program Studi</label>
+                            <input
+                                type="text"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.major}
+                                onChange={(e) => setFormData({ ...formData, major: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Angkatan</label>
+                            <input
+                                type="number"
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                                value={formData.batch_year}
+                                onChange={(e) => setFormData({ ...formData, batch_year: e.target.value })}
+                            />
                         </div>
                     </div>
-                </div>
-            )}
+                    <div className="flex justify-end pt-4 space-x-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={formLoading}
+                            className={`bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:bg-indigo-700 transition-all ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {formLoading ? 'Menyimpan...' : (isEditing ? 'Perbarui' : 'Simpan')}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </>
     );
 };

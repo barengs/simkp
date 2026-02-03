@@ -1,85 +1,239 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
+import { usePeriods } from "../context/PeriodContext";
+import { useToast } from "../ui/Toast";
+import Modal from "../ui/Modal";
+import DeleteConfirm from "../ui/DeleteConfirm";
+import { Skeleton } from "../ui/Skeleton";
+import { Plus, Pencil, Trash2, Search, Eye } from "lucide-react";
+import api from "../../src/api";
 
 const PeriodManagement = () => {
-    const [periods, setPeriods] = useState([
-        {
-            id: 1,
-            name: "KP Genap 2023/2024",
-            startDate: "2024-02-01",
-            endDate: "2024-07-31",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            name: "KP Ganjil 2023/2024",
-            startDate: "2023-08-01",
-            endDate: "2023-12-31",
-            status: "Selesai",
-        },
-    ]);
-
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [newPeriod, setNewPeriod] = useState({
-        name: "",
-        startDate: "",
-        endDate: "",
+
+    const { periods, pagination, loading, getPeriods, refreshPeriods } = usePeriods();
+    const { total, per_page, current_page } = pagination;
+
+    const [formLoading, setFormLoading] = useState(false);
+    const { addToast } = useToast();
+    const [perPage, setPerPage] = useState(10);
+
+    const [formData, setFormData] = useState({
+        academic_year: '',
+        semester: 'ganjil',
+        theme_name: '',
+        start_date: '',
+        end_date: '',
+        is_active: false
     });
 
-    const handleAddPeriod = () => {
-        const period = {
-            id: periods.length + 1,
-            ...newPeriod,
-            status: "Aktif",
-        };
-        setPeriods([...periods, period]);
-        setNewPeriod({ name: "", startDate: "", endDate: "" });
-        setShowModal(false);
+    // Edit/Delete/View states
+    const [isEditing, setIsEditing] = useState(false);
+    const [isViewing, setIsViewing] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            getPeriods(1, perPage, searchTerm);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm, getPeriods, perPage]);
+
+    const handlePageChange = (page) => {
+        getPeriods(page, perPage, searchTerm);
+    };
+
+    const handlePerRowsChange = (newPerPage, page) => {
+        setPerPage(newPerPage);
+        getPeriods(page, newPerPage, searchTerm);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormLoading(true);
+
+        try {
+            if (isEditing && editingId) {
+                await api.put(`/periods/${editingId}`, formData);
+                addToast('Data periode berhasil diperbarui', 'success');
+            } else {
+                await api.post('/periods', formData);
+                addToast('Data periode berhasil ditambahkan', 'success');
+            }
+
+            setShowModal(false);
+            resetForm();
+            refreshPeriods();
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data', 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            academic_year: '',
+            semester: 'ganjil',
+            theme_name: '',
+            start_date: '',
+            end_date: '',
+            is_active: false
+        });
+        setIsEditing(false);
+        setIsViewing(false);
+        setEditingId(null);
+    };
+
+    const openCreate = () => {
+        resetForm();
+        setShowModal(true);
+    };
+
+    const openEdit = (row) => {
+        setIsEditing(true);
+        setIsViewing(false);
+        setEditingId(row.id);
+        setFormData({
+            academic_year: row.academic_year || '',
+            semester: row.semester || 'ganjil',
+            theme_name: row.theme_name || '',
+            start_date: row.start_date || '',
+            end_date: row.end_date || '',
+            is_active: !!row.is_active
+        });
+        setShowModal(true);
+    };
+
+    const openView = (row) => {
+        setIsViewing(true);
+        setIsEditing(false);
+        setFormData({
+            academic_year: row.academic_year || '',
+            semester: row.semester || 'ganjil',
+            theme_name: row.theme_name || '',
+            start_date: row.start_date || '',
+            end_date: row.end_date || '',
+            is_active: !!row.is_active
+        });
+        setShowModal(true);
+    };
+
+    const openDelete = (row) => {
+        setDeleteTarget(row);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setFormLoading(true);
+        try {
+            await api.delete(`/periods/${deleteTarget.id}`);
+            addToast('Data periode berhasil dihapus', 'success');
+            setShowDeleteConfirm(false);
+            setDeleteTarget(null);
+            refreshPeriods();
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+        } finally {
+            setFormLoading(false);
+        }
+    };
+
+    const handleActivate = async (row) => {
+        if (row.is_active) {
+            addToast('Periode sudah aktif', 'info');
+            return;
+        }
+
+        setFormLoading(true);
+        try {
+            await api.post(`/periods/${row.id}/activate`);
+            addToast('Periode berhasil diaktifkan', 'success');
+            refreshPeriods();
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Gagal mengaktifkan periode', 'error');
+        } finally {
+            setFormLoading(false);
+        }
     };
 
     const columns = [
-        { name: "Nama Periode", selector: (row) => row.name, sortable: true },
-        { name: "Tanggal Mulai", selector: (row) => row.startDate, sortable: true },
-        { name: "Tanggal Selesai", selector: (row) => row.endDate, sortable: true },
+        {
+            name: "Tahun Akademik",
+            selector: (row) => row.academic_year,
+            sortable: true
+        },
+        {
+            name: "Semester",
+            selector: (row) => row.semester,
+            sortable: true,
+            cell: (row) => (
+                <span className="capitalize">{row.semester}</span>
+            )
+        },
+        {
+            name: "Tanggal Mulai",
+            selector: (row) => row.start_date,
+            sortable: true
+        },
+        {
+            name: "Tanggal Selesai",
+            selector: (row) => row.end_date,
+            sortable: true
+        },
         {
             name: "Status",
-            selector: (row) => row.status,
+            selector: (row) => row.is_active,
             sortable: true,
             cell: (row) => (
                 <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        row.status === "Aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                    }`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.is_active
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                 >
-                    {row.status}
+                    {row.is_active ? "Aktif" : "Non-Aktif"}
                 </span>
             ),
         },
         {
             name: "Aksi",
+            $minWidth: "150px",
             cell: (row) => (
                 <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900" title="Edit">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                    {!row.is_active && (
+                        <button
+                            onClick={() => handleActivate(row)}
+                            className="text-green-600 hover:text-green-900 p-1"
+                            title="Aktifkan"
+                            disabled={formLoading}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    )}
+                    <button onClick={() => openView(row)} className="text-blue-600 hover:text-blue-900 p-1" title="Lihat">
+                        <Eye className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900" title="Hapus">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                    <button onClick={() => openEdit(row)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
+                        <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => openDelete(row)} className="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                        <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             ),
         },
     ];
-
-    const filteredData = periods.filter((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <>
@@ -92,21 +246,24 @@ const PeriodManagement = () => {
 
                 <div className="flex justify-between items-center">
                     <div className="w-1/3">
-                        <input
-                            type="text"
-                            placeholder="Cari periode..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cari periode..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
                     </div>
                     <button
-                        onClick={() => setShowModal(true)}
+                        onClick={openCreate}
                         className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200 flex items-center"
                     >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Plus className="w-4 h-4 mr-2" />
                         Tambah Periode
                     </button>
                 </div>
@@ -115,8 +272,17 @@ const PeriodManagement = () => {
                     <div className="px-4 py-5 sm:p-6">
                         <DataTable
                             columns={columns}
-                            data={filteredData}
+                            data={periods}
+                            progressPending={loading}
+                            progressComponent={<Skeleton />}
                             pagination
+                            paginationServer
+                            paginationTotalRows={total}
+                            onChangeRowsPerPage={handlePerRowsChange}
+                            onChangePage={handlePageChange}
+                            paginationPerPage={perPage}
+                            paginationDefaultPage={current_page}
+                            paginationRowsPerPageOptions={[10, 25, 50, 100]}
                             highlightOnHover
                             pointerOnHover
                             responsive
@@ -125,86 +291,123 @@ const PeriodManagement = () => {
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Periode KP Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama Periode
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newPeriod.name}
-                                        onChange={(e) =>
-                                            setNewPeriod({
-                                                ...newPeriod,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Contoh: KP Genap 2024/2025"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Tanggal Mulai
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={newPeriod.startDate}
-                                            onChange={(e) =>
-                                                setNewPeriod({
-                                                    ...newPeriod,
-                                                    startDate: e.target.value,
-                                                })
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Tanggal Selesai
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={newPeriod.endDate}
-                                            onChange={(e) =>
-                                                setNewPeriod({
-                                                    ...newPeriod,
-                                                    endDate: e.target.value,
-                                                })
-                                            }
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddPeriod}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
+            <DeleteConfirm
+                isOpen={showDeleteConfirm}
+                itemName={deleteTarget ? `${deleteTarget.academic_year} (${deleteTarget.semester})` : ""}
+                onClose={() => { setShowDeleteConfirm(false); setDeleteTarget(null); }}
+                onConfirm={confirmDelete}
+                loading={formLoading}
+            />
+
+            <Modal
+                isOpen={showModal}
+                onClose={() => { setShowModal(false); resetForm(); }}
+                title={isViewing ? 'Lihat Periode' : (isEditing ? 'Edit Periode' : 'Tambah Periode')}
+                showFooter={false}
+            >
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Tahun Akademik</label>
+                            <input
+                                type="text"
+                                required
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100"
+                                value={formData.academic_year}
+                                placeholder="Contoh: 2024/2025"
+                                onChange={(e) => setFormData({ ...formData, academic_year: e.target.value })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Semester</label>
+                            <select
+                                required
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100 appearance-none bg-white"
+                                value={formData.semester}
+                                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                            >
+                                <option value="ganjil">Ganjil</option>
+                                <option value="genap">Genap</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Status</label>
+                            <select
+                                required
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100 appearance-none bg-white"
+                                value={formData.is_active ? "1" : "0"}
+                                onChange={(e) => setFormData({ ...formData, is_active: e.target.value === "1" })}
+                            >
+                                <option value="1">Aktif</option>
+                                <option value="0">Non-Aktif</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
+                            <input
+                                type="date"
+                                required
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100"
+                                value={formData.start_date}
+                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Tanggal Selesai</label>
+                            <input
+                                type="date"
+                                required
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100"
+                                value={formData.end_date}
+                                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Nama Tema (Opsional)</label>
+                            <input
+                                type="text"
+                                disabled={isViewing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border disabled:bg-gray-100"
+                                value={formData.theme_name}
+                                placeholder="Contoh: Digital Transformation"
+                                onChange={(e) => setFormData({ ...formData, theme_name: e.target.value })}
+                            />
                         </div>
                     </div>
-                </div>
-            )}
+
+                    <div className="flex justify-end pt-4 space-x-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
+                        >
+                            {isViewing ? 'Tutup' : 'Batal'}
+                        </button>
+                        {!isViewing && (
+                            <button
+                                type="submit"
+                                disabled={formLoading}
+                                className={`bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:bg-indigo-700 transition-all ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {formLoading ? 'Menyimpan...' : (isEditing ? 'Perbarui Periode' : 'Simpan Periode')}
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </Modal>
         </>
     );
 };
 
 export default PeriodManagement;
+

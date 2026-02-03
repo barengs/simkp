@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('academic_year');
             $table->enum('semester', ['ganjil', 'genap']);
-            $table->string('theme_name');
+            $table->string('theme_name')->nullable();
             $table->date('start_date');
             $table->date('end_date');
             $table->boolean('is_active')->default(false);

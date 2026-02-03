@@ -16,13 +16,22 @@ import Logbook from "./student/Logbook";
 import LogbookValidation from "./dosen/LogbookValidation";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./ui/Toast";
+import { StudentProvider } from "./context/StudentContext";
 import ProtectedRoute from "./protected/ProtectedRoute";
+import { LecturerProvider } from "./context/LecturerContext";
+import { PeriodProvider } from "./context/PeriodContext";
 
 const App = () => {
     return (
         <ToastProvider>
             <AuthProvider>
-                <AppRoutes />
+                <LecturerProvider>
+                    <StudentProvider>
+                        <PeriodProvider>
+                            <AppRoutes />
+                        </PeriodProvider>
+                    </StudentProvider>
+                </LecturerProvider>
             </AuthProvider>
         </ToastProvider>
     );

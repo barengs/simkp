@@ -13,14 +13,14 @@ class LecturerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'dosen')->with('lecturer');
+        $query = Lecturer::with('user');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%")
-                  ->orWhereHas('lecturer', function ($q2) use ($request) {
-                      $q2->where('nip', 'like', "%{$request->search}%");
+                $q->where('nip', 'like', "%{$request->search}%")
+                  ->orWhereHas('user', function ($q2) use ($request) {
+                      $q2->where('name', 'like', "%{$request->search}%")
+                         ->orWhere('email', 'like', "%{$request->search}%");
                   });
             });
         }
@@ -37,30 +37,41 @@ class LecturerController extends Controller
     {
         $request->validate([
             'name'      =>  'required|string|max:255',
-            'email'     =>  'required|email|unique:users,email',
+            'email'     =>  'required|email',
             'password'  =>  'required|min:6',
-            'nip'       =>  'required|string|unique:lecturers,nip',
+            'nip'       =>  'required|string',
             'phone'     =>  'required|string'
-        ]);
+        ]); 
 
         try {
             return DB::transaction(function () use ($request) {
-                $user = User::create([
-                    'name'      => $request->name,
-                    'email'     => $request->email,
-                    'password'  => Hash::make($request->password),
-                    'role'      => 'dosen'
-                ]);
+                // Check if user already exists
+                $user = User::where('email', $request->email)->first();
+                
+                if (!$user) {
+                    $user = User::create([
+                        'name'      => $request->name,
+                        'email'     => $request->email,
+                        'password'  => Hash::make($request->password),
+                        'role'      => 'dosen'
+                    ]);
+                }
 
-                $user->lecturer()->create([
+                // Check if lecturer registration already exists for this period
+                // The Global Scope will automatically check for active period_id
+                if (Lecturer::where('nip', $request->nip)->exists()) {
+                    throw new \Exception('Dosen dengan NIP ini sudah terdaftar di periode ini.');
+                }
+
+                $lecturer = $user->lecturer()->create([
                     'nip'       => $request->nip,
                     'phone'     => $request->phone,
                 ]);
 
                 return response()->json([
                     'status'    => 'success',
-                    'message'   => 'Dosen berhasil ditambahkan',
-                    'data'      => $user->load('lecturer')
+                    'message'   => 'Dosen berhasil ditambahkan ke periode ini',
+                    'data'      => $lecturer->load('user')
                 ], 201);
             });
         } catch (\Exception $error) {
@@ -71,43 +82,35 @@ class LecturerController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
-        $user = User::where('role', 'dosen')->findOrFail($id);
+        $lecturer = Lecturer::findOrFail($id);
 
         $request->validate([
             'name'      =>  'required|string|max:255',
-            'email'     =>  'required|email|unique:users,email,' . $user->id,
-            'nip'       =>  'required|string|unique:lecturers,nip,' . ($user->lecturer->id ?? 'NULL'),
+            'email'     =>  'required|email',
+            'nip'       =>  'required|string',
             'phone'     =>  'required|string'
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $user) {
-                $user->update([
+            return DB::transaction(function () use ($request, $lecturer) {
+                // Update global user info
+                $lecturer->user->update([
                     'name'  => $request->name,
                     'email' => $request->email,
                 ]);
 
-                if ($user->lecturer) {
-                    $user->lecturer()->update([
-                        'nip'   => $request->nip,
-                        'phone' => $request->phone,
-                    ]);
-                } else {
-                    $user->lecturer()->create([
-                        'nip'   => $request->nip,
-                        'phone' => $request->phone,
-                    ]);
-                }
+                // Update period-specific lecturer info
+                $lecturer->update([
+                    'nip'   => $request->nip,
+                    'phone' => $request->phone,
+                ]);
 
                 return response()->json([
                     'status'    => 'success',
                     'message'   => 'Dosen berhasil diperbarui',
-                    'data'      => $user->load('lecturer')
+                    'data'      => $lecturer->load('user')
                 ]);
             });
         } catch (\Exception $error) {
@@ -118,19 +121,18 @@ class LecturerController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
-        $user = User::where('role', 'dosen')->findOrFail($id);
+        $lecturer = Lecturer::findOrFail($id);
 
         try {
-            $user->delete();
+            // We only delete the lecturer record for this period
+            // The User record remains global
+            $lecturer->delete();
 
             return response()->json([
                 'status'    => 'success',
-                'message'   => 'Dosen berhasil dihapus'
+                'message'   => 'Data dosen di periode ini berhasil dihapus'
             ]);
         } catch (\Exception $error) {
             return response()->json([
@@ -140,3 +142,4 @@ class LecturerController extends Controller
         }
     }
 }
+

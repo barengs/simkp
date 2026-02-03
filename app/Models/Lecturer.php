@@ -4,9 +4,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Traits\BelongsToPeriod;
+
 class Lecturer extends Model
 {
-    protected $fillable = ['user_id', 'nip', 'phone'];
+    use BelongsToPeriod;
+
+    protected $fillable = ['user_id', 'period_id', 'nip', 'phone'];
 
     public function user()
     {
