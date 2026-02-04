@@ -11,7 +11,7 @@ class Student extends Model
 {
     use BelongsToPeriod;
 
-    protected $fillable = ['user_id', 'period_id', 'nim', 'major', 'batch_year'];
+    protected $fillable = ['user_id', 'period_id', 'nim', 'major', 'batch_year', 'phone'];
 
     public function user() {
         return $this->belongsTo(User::class);

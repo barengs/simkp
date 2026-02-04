@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, EyeOff, Eye } from "lucide-react";
 import { useStudents } from "../../context/StudentContext";
 import { useToast } from "../../ui/Toast";
 import Modal from "../../ui/Modal";
@@ -10,6 +10,7 @@ import api from "../../../src/api";
 
 const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const { students, pagination, loading, getStudents, refreshStudents } = useStudents();
     const { total, current_page } = pagination;
@@ -25,7 +26,7 @@ const MasterMahasiswa = () => {
         phone: "",
         major: "",
         batch_year: new Date().getFullYear(),
-        password: "password123",
+        password: "mahasiswa123",
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -80,7 +81,7 @@ const MasterMahasiswa = () => {
             phone: "",
             major: "",
             batch_year: new Date().getFullYear(),
-            password: "password123",
+            password: "mahasiswa123",
         });
         setIsEditing(false);
         setEditingId(null);
@@ -96,7 +97,7 @@ const MasterMahasiswa = () => {
             phone: row.phone || '',
             major: row.major || '',
             batch_year: row.batch_year || new Date().getFullYear(),
-            password: 'password123'
+            password: row.user?.password || '',
         });
         setShowModal(true);
     };
@@ -137,6 +138,7 @@ const MasterMahasiswa = () => {
         { name: "NIM", selector: (row) => row.nim, sortable: true },
         { name: "Nama", selector: (row) => row.user?.name, sortable: true },
         { name: "Email", selector: (row) => row.user?.email, sortable: true },
+        { name: "Phone", selector: (row) => row.phone || '-', sortable: true },
         { name: "Major", selector: (row) => row.major, sortable: true },
         {
             name: "Status",
@@ -291,6 +293,29 @@ const MasterMahasiswa = () => {
                                 value={formData.batch_year}
                                 onChange={(e) => setFormData({ ...formData, batch_year: e.target.value })}
                             />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 pr-10 border"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                            >
+                                {showPassword ? (
+                                    <Eye className="h-5 w-5" />
+                                ) : (
+                                    <EyeOff className="h-5 w-5" />
+                                )}
+                            </button>
                         </div>
                     </div>
                     <div className="flex justify-end pt-4 space-x-2">

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-import { Lock } from "lucide-react";
+import { Lock, EyeOff, Eye } from "lucide-react";
 
 export default function Login() {
     const navigate = useNavigate();
     const { login, isAuthenticated, user: authUser } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -100,44 +101,33 @@ export default function Login() {
                             >
                                 Password
                             </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                value={credentials.password}
-                                onChange={handleChange}
-                                className={`mt-1 block w-full px-3 py-2 border ${errors.password
-                                    ? "border-red-300"
-                                    : "border-gray-300"
-                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={credentials.password}
+                                    onChange={handleChange}
+                                    className={`mt-1 block w-full px-3 py-2 border ${errors.password
+                                        ? "border-red-300"
+                                        : "border-gray-300"
+                                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <p className="mt-1 text-sm text-red-600">
                                     {errors.password}
                                 </p>
                             )}
                         </div>
-
-                        {/* <div>
-                            <label
-                                htmlFor="role"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Peran
-                            </label>
-                            <select
-                                id="role"
-                                name="role"
-                                value={credentials.role}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            >
-                                <option value="admin">Administrator</option>
-                                <option value="student">Mahasiswa</option>
-                                <option value="dosen">Dosen Pembimbing</option>
-                            </select>
-                        </div> */}
                     </div>
 
                     <div className="flex items-center justify-between">

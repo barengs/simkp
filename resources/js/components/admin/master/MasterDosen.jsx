@@ -28,7 +28,7 @@ const MasterDosen = () => {
         name: "",
         email: "",
         phone: "",
-        password: "password123",
+        password: "dosen123",
     });
 
     // Edit/Delete states
