@@ -20,6 +20,8 @@ import { StudentProvider } from "./context/StudentContext";
 import ProtectedRoute from "./protected/ProtectedRoute";
 import { LecturerProvider } from "./context/LecturerContext";
 import { PeriodProvider } from "./context/PeriodContext";
+import { MitraProvider } from "./context/MitraContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 const App = () => {
     return (
@@ -27,9 +29,13 @@ const App = () => {
             <AuthProvider>
                 <LecturerProvider>
                     <StudentProvider>
-                        <PeriodProvider>
-                            <AppRoutes />
-                        </PeriodProvider>
+                        <MitraProvider>
+                            <ThemeProvider>
+                                <PeriodProvider>
+                                    <AppRoutes />
+                                </PeriodProvider>
+                            </ThemeProvider>
+                        </MitraProvider>
                     </StudentProvider>
                 </LecturerProvider>
             </AuthProvider>
@@ -40,16 +46,16 @@ const App = () => {
 const AppRoutes = () => {
     const { user, logout, isLoading } = useAuth();
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="relative w-20 h-20">
-                    <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-200 rounded-full"></div>
-                    <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
-                </div>
-            </div>
-        );
-    }
+    // if (isLoading) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    //             <div className="relative w-20 h-20">
+    //                 <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-200 rounded-full"></div>
+    //                 <div className="absolute top-0 left-0 w-full h-full border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     return (
         <Routes>

@@ -2,12 +2,12 @@ import { createContext, useContext, useState, useCallback, useRef } from "react"
 import api from "../../src/api";
 import { useToast } from "../ui/Toast";
 
-const PeriodContext = createContext();
+const ThemeContext = createContext();
 
-export const usePeriods = () => useContext(PeriodContext);
+export const useThemes = () => useContext(ThemeContext);
 
-export const PeriodProvider = ({ children }) => {
-    const [periods, setPeriods] = useState([]);
+export const ThemeProvider = ({ children }) => {
+    const [themes, setThemes] = useState([]);
     const [pagination, setPagination] = useState({
         total: 0,
         per_page: 10,
@@ -19,7 +19,7 @@ export const PeriodProvider = ({ children }) => {
 
     const lastParamsRef = useRef(null);
 
-    const getPeriods = useCallback(async (page = 1, perPage = 10, search = "") => {
+    const getThemes = useCallback(async (page = 1, perPage = 10, search = "") => {
         const params = { page, per_page: perPage, search };
 
         if (
@@ -34,9 +34,9 @@ export const PeriodProvider = ({ children }) => {
 
         setLoading(true);
         try {
-            const response = await api.get(`/periods`, { params });
+            const response = await api.get(`/themes`, { params });
             const data = response.data.data;
-            setPeriods(data.data);
+            setThemes(data.data);
             setPagination({
                 total: data.total,
                 per_page: data.per_page,
@@ -45,21 +45,20 @@ export const PeriodProvider = ({ children }) => {
             });
             lastParamsRef.current = { ...params, hasData: true };
         } catch (error) {
-            console.error("Error fetching periods:", error);
-            addToast("Gagal mengambil data periode", "error");
+            console.error("Error fetching themes:", error);
+            addToast("Gagal mengambil data tema", "error");
         } finally {
             setLoading(false);
         }
     }, [addToast]);
 
-    const refreshPeriods = useCallback(async () => {
+    const refreshThemes = useCallback(async () => {
         if (lastParamsRef.current) {
-            const { page, per_page, search } = lastParamsRef.current;
             setLoading(true);
             try {
-                const response = await api.get(`/periods`, { params: lastParamsRef.current });
+                const response = await api.get(`/themes`, { params: lastParamsRef.current });
                 const data = response.data.data;
-                setPeriods(data.data);
+                setThemes(data.data);
                 setPagination({
                     total: data.total,
                     per_page: data.per_page,
@@ -67,27 +66,27 @@ export const PeriodProvider = ({ children }) => {
                     last_page: data.last_page,
                 });
             } catch (error) {
-                console.error("Error refreshing periods:", error);
-                addToast("Gagal memperbarui data periode", "error");
+                console.error("Error refreshing themes:", error);
+                addToast("Gagal memperbarui data tema", "error");
             } finally {
                 setLoading(false);
             }
         } else {
-            getPeriods();
+            getThemes();
         }
-    }, [getPeriods, addToast]);
+    }, [getThemes, addToast]);
 
     const value = {
-        periods,
+        themes,
         pagination,
         loading,
-        getPeriods,
-        refreshPeriods,
+        getThemes,
+        refreshThemes,
     };
 
     return (
-        <PeriodContext.Provider value={value}>
+        <ThemeContext.Provider value={value}>
             {children}
-        </PeriodContext.Provider>
+        </ThemeContext.Provider>
     );
 };

@@ -1,89 +1,150 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import DataTable from "react-data-table-component";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import api from "../../../src/api";
+import Modal from "../../ui/Modal";
+import DeleteConfirm from "../../ui/DeleteConfirm";
+import { useToast } from "../../ui/Toast";
+import { Skeleton } from "../../ui/Skeleton";
+import { useMitra } from "../../context/MitraContext";
 
 const MasterMitra = () => {
-    const [showModal, setShowModal] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [mitra, setMitra] = useState([
-        {
-            id: 1,
-            name: "PT. Teknologi Maju Jaya",
-            address: "Jl. Sudirman No. 123, Jakarta",
-            contactPerson: "Bapak Joko",
-            phone: "021-12345678",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            name: "CV. Inovasi Digital",
-            address: "Jl. Gatot Subroto No. 45, Bandung",
-            contactPerson: "Ibu Sari",
-            phone: "022-87654321",
-            status: "Aktif",
-        },
-    ]);
+    const { addToast } = useToast();
+    const { mitra: data, pagination, loading, getMitra, refreshMitra } = useMitra();
+    const { total: totalRows, current_page: currentPage } = pagination;
 
-    const [newRecord, setNewRecord] = useState({
+    const [perPage, setPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Modal states
+    const [showModal, setShowModal] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [modalLoading, setModalLoading] = useState(false);
+
+    const [formData, setFormData] = useState({
         name: "",
         address: "",
-        contactPerson: "",
+        contact_person: "",
         phone: "",
     });
 
-    const handleAddRecord = () => {
-        const record = {
-            id: mitra.length + 1,
-            ...newRecord,
-            status: "Aktif",
-        };
-        setMitra([...mitra, record]);
-        setNewRecord({ name: "", address: "", contactPerson: "", phone: "" });
-        setShowModal(false);
+    const isFirstRun = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRun.current) {
+            getMitra(1, perPage, searchTerm);
+            isFirstRun.current = false;
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(() => {
+            getMitra(1, perPage, searchTerm);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm, getMitra, perPage]);
+
+    const handlePageChange = (page) => {
+        getMitra(page, perPage, searchTerm);
+    };
+
+    const handlePerRowsChange = async (newPerPage, page) => {
+        setPerPage(newPerPage);
+        getMitra(page, newPerPage, searchTerm);
+    };
+
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleOpenModal = (item = null) => {
+        if (item) {
+            setSelectedItem(item);
+            setFormData({
+                name: item.name,
+                address: item.address,
+                contact_person: item.contact_person,
+                phone: item.phone,
+            });
+        } else {
+            setSelectedItem(null);
+            setFormData({
+                name: "",
+                address: "",
+                contact_person: "",
+                phone: "",
+            });
+        }
+        setShowModal(true);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setModalLoading(true);
+        try {
+            if (selectedItem) {
+                await api.put(`/companies/${selectedItem.id}`, formData);
+                addToast("Data mitra berhasil diperbarui", "success");
+            } else {
+                await api.post("/companies", formData);
+                addToast("Mitra baru berhasil ditambahkan", "success");
+            }
+            setShowModal(false);
+            refreshMitra();
+        } catch (error) {
+            addToast(error.response?.data?.message || "Terjadi kesalahan", "error");
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleDeleteClick = (item) => {
+        setSelectedItem(item);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        setModalLoading(true);
+        try {
+            await api.delete(`/companies/${selectedItem.id}`);
+            addToast("Mitra berhasil dihapus", "success");
+            setShowDeleteConfirm(false);
+            refreshMitra();
+        } catch (error) {
+            addToast("Gagal menghapus mitra", "error");
+        } finally {
+            setModalLoading(false);
+        }
     };
 
     const columns = [
         { name: "Nama Mitra", selector: (row) => row.name, sortable: true },
         { name: "Alamat", selector: (row) => row.address, sortable: true },
-        { name: "Kontak", selector: (row) => row.contactPerson, sortable: true },
+        { name: "Kontak", selector: (row) => row.contact_person, sortable: true },
         { name: "Telepon", selector: (row) => row.phone, sortable: true },
-        {
-            name: "Status",
-            selector: (row) => row.status,
-            sortable: true,
-            cell: (row) => (
-                <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Aktif"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                        }`}
-                >
-                    {row.status}
-                </span>
-            ),
-        },
         {
             name: "Aksi",
             cell: (row) => (
                 <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit">
+                    <button
+                        onClick={() => handleOpenModal(row)}
+                        className="text-indigo-600 hover:text-indigo-900 p-1"
+                        title="Edit"
+                    >
                         <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900 p-1" title="Hapus">
+                    <button
+                        onClick={() => handleDeleteClick(row)}
+                        className="text-red-600 hover:text-red-900 p-1"
+                        title="Hapus"
+                    >
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             ),
         },
     ];
-
-    const filteredData = mitra.filter((item) =>
-        ["name", "contactPerson"].some(
-            (field) =>
-                item[field] &&
-                item[field].toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
 
     return (
         <>
@@ -104,14 +165,14 @@ const MasterMitra = () => {
                                 type="text"
                                 placeholder="Cari mitra..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={handleSearch}
                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
                     </div>
                     <div className="flex space-x-3">
                         <button
-                            onClick={() => setShowModal(true)}
+                            onClick={() => handleOpenModal()}
                             className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
                         >
                             <Plus className="h-5 w-5 mr-2" />
@@ -122,115 +183,117 @@ const MasterMitra = () => {
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
-                        <DataTable
-                            columns={columns}
-                            data={filteredData}
-                            pagination
-                            paginationPerPage={10}
-                            paginationRowsPerPageOptions={[10, 25, 50, 100]}
-                            highlightOnHover
-                            pointerOnHover
-                            responsive
-                        />
+                        {loading ? (
+                            <div className="space-y-4">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        ) : (
+                            <DataTable
+                                columns={columns}
+                                data={data}
+                                pagination
+                                paginationServer
+                                paginationTotalRows={totalRows}
+                                onChangeRowsPerPage={handlePerRowsChange}
+                                onChangePage={handlePageChange}
+                                highlightOnHover
+                                pointerOnHover
+                                responsive
+                            />
+                        )}
                     </div>
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Mitra Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama Mitra/Perusahaan
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.name}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Nama Perusahaan"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Alamat
-                                    </label>
-                                    <textarea
-                                        value={newRecord.address}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                address: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Alamat Lengkap"
-                                        rows="2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Kontak Person
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.contactPerson}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                contactPerson: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Nama Kontak"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Telepon
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.phone}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                phone: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="021-12345678"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddRecord}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title={selectedItem ? "Edit Mitra" : "Tambah Mitra Baru"}
+            >
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Nama Mitra/Perusahaan
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Nama Perusahaan"
+                        />
                     </div>
-                </div>
-            )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Alamat
+                        </label>
+                        <textarea
+                            required
+                            value={formData.address}
+                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Alamat Lengkap"
+                            rows="2"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Kontak Person
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.contact_person}
+                            onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Nama Kontak"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Telepon
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="021-12345678"
+                        />
+                    </div>
+                    <div className="flex justify-end space-x-3 pt-4">
+                        <button
+                            type="button"
+                            disabled={modalLoading}
+                            onClick={() => setShowModal(false)}
+                            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200 disabled:opacity-50"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={modalLoading}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 disabled:opacity-50"
+                        >
+                            {modalLoading ? "Menyimpan..." : "Simpan"}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            <DeleteConfirm
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleConfirmDelete}
+                itemName={selectedItem?.name}
+                loading={modalLoading}
+            />
         </>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import DataTable from "react-data-table-component";
 import { usePeriods } from "../context/PeriodContext";
 import { useToast } from "../ui/Toast";
@@ -35,7 +35,15 @@ const PeriodManagement = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
+    const isFirstRun = useRef(true);
+
     useEffect(() => {
+        if (isFirstRun.current) {
+            getPeriods(1, perPage, searchTerm);
+            isFirstRun.current = false;
+            return;
+        }
+
         const delayDebounceFn = setTimeout(() => {
             getPeriods(1, perPage, searchTerm);
         }, 500);

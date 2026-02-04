@@ -2,12 +2,12 @@ import { createContext, useContext, useState, useCallback, useRef } from "react"
 import api from "../../src/api";
 import { useToast } from "../ui/Toast";
 
-const PeriodContext = createContext();
+const MitraContext = createContext();
 
-export const usePeriods = () => useContext(PeriodContext);
+export const useMitra = () => useContext(MitraContext);
 
-export const PeriodProvider = ({ children }) => {
-    const [periods, setPeriods] = useState([]);
+export const MitraProvider = ({ children }) => {
+    const [mitra, setMitra] = useState([]);
     const [pagination, setPagination] = useState({
         total: 0,
         per_page: 10,
@@ -19,7 +19,7 @@ export const PeriodProvider = ({ children }) => {
 
     const lastParamsRef = useRef(null);
 
-    const getPeriods = useCallback(async (page = 1, perPage = 10, search = "") => {
+    const getMitra = useCallback(async (page = 1, perPage = 10, search = "") => {
         const params = { page, per_page: perPage, search };
 
         if (
@@ -34,9 +34,9 @@ export const PeriodProvider = ({ children }) => {
 
         setLoading(true);
         try {
-            const response = await api.get(`/periods`, { params });
+            const response = await api.get(`/companies`, { params });
             const data = response.data.data;
-            setPeriods(data.data);
+            setMitra(data.data);
             setPagination({
                 total: data.total,
                 per_page: data.per_page,
@@ -45,21 +45,20 @@ export const PeriodProvider = ({ children }) => {
             });
             lastParamsRef.current = { ...params, hasData: true };
         } catch (error) {
-            console.error("Error fetching periods:", error);
-            addToast("Gagal mengambil data periode", "error");
+            console.error("Error fetching companies:", error);
+            addToast("Gagal mengambil data mitra", "error");
         } finally {
             setLoading(false);
         }
     }, [addToast]);
 
-    const refreshPeriods = useCallback(async () => {
+    const refreshMitra = useCallback(async () => {
         if (lastParamsRef.current) {
-            const { page, per_page, search } = lastParamsRef.current;
             setLoading(true);
             try {
-                const response = await api.get(`/periods`, { params: lastParamsRef.current });
+                const response = await api.get(`/companies`, { params: lastParamsRef.current });
                 const data = response.data.data;
-                setPeriods(data.data);
+                setMitra(data.data);
                 setPagination({
                     total: data.total,
                     per_page: data.per_page,
@@ -67,27 +66,27 @@ export const PeriodProvider = ({ children }) => {
                     last_page: data.last_page,
                 });
             } catch (error) {
-                console.error("Error refreshing periods:", error);
-                addToast("Gagal memperbarui data periode", "error");
+                console.error("Error refreshing companies:", error);
+                addToast("Gagal memperbarui data mitra", "error");
             } finally {
                 setLoading(false);
             }
         } else {
-            getPeriods();
+            getMitra();
         }
-    }, [getPeriods, addToast]);
+    }, [getMitra, addToast]);
 
     const value = {
-        periods,
+        mitra,
         pagination,
         loading,
-        getPeriods,
-        refreshPeriods,
+        getMitra,
+        refreshMitra,
     };
 
     return (
-        <PeriodContext.Provider value={value}>
+        <MitraContext.Provider value={value}>
             {children}
-        </PeriodContext.Provider>
+        </MitraContext.Provider>
     );
 };
