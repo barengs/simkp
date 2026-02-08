@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Administrator SIMKP',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('uimpass123'),
                 'role' => 'admin',
             ]
         );
@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ['email' => 'dosen@gmail.com'],
             [
                 'name' => 'Rofiuddin, S.Kom, M.Kom',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('uimpass123'),
                 'role' => 'dosen',
             ]
         );
@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
             ['email' => 'mahasiswa@gmail.com'],
             [
                 'name' => 'Alfiansyah',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('uimpass123'),
                 'role' => 'mahasiswa',
             ]
         );

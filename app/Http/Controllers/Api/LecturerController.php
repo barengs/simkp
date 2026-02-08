@@ -18,10 +18,10 @@ class LecturerController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nip', 'like', "%{$request->search}%")
-                  ->orWhereHas('user', function ($q2) use ($request) {
-                      $q2->where('name', 'like', "%{$request->search}%")
-                         ->orWhere('email', 'like', "%{$request->search}%");
-                  });
+                    ->orWhereHas('user', function ($q2) use ($request) {
+                        $q2->where('name', 'like', "%{$request->search}%")
+                            ->orWhere('email', 'like', "%{$request->search}%");
+                    });
             });
         }
 
@@ -36,24 +36,24 @@ class LecturerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'      =>  'required|string|max:255',
-            'email'     =>  'required|email',
-            'password'  =>  'required|min:6',
-            'nip'       =>  'required|string',
-            'phone'     =>  'required|string'
-        ]); 
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'nip' => 'required|string',
+            'phone' => 'required|string'
+        ]);
 
         try {
             return DB::transaction(function () use ($request) {
                 // Check if user already exists
                 $user = User::where('email', $request->email)->first();
-                
+
                 if (!$user) {
                     $user = User::create([
-                        'name'      => $request->name,
-                        'email'     => $request->email,
-                        'password'  => Hash::make($request->password),
-                        'role'      => 'dosen'
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'password' => Hash::make($request->password),
+                        'role' => 'dosen'
                     ]);
                 }
 
@@ -64,20 +64,20 @@ class LecturerController extends Controller
                 }
 
                 $lecturer = $user->lecturer()->create([
-                    'nip'       => $request->nip,
-                    'phone'     => $request->phone,
+                    'nip' => $request->nip,
+                    'phone' => $request->phone,
                 ]);
 
                 return response()->json([
-                    'status'    => 'success',
-                    'message'   => 'Dosen berhasil ditambahkan ke periode ini',
-                    'data'      => $lecturer->load('user')
+                    'status' => 'success',
+                    'message' => 'Dosen berhasil ditambahkan ke periode ini',
+                    'data' => $lecturer->load('user')
                 ], 201);
             });
         } catch (\Exception $error) {
             return response()->json([
-                'status'        => 'error',
-                'message'       => 'Gagal menambahkan dosen: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal menambahkan dosen: ' . $error->getMessage()
             ], 500);
         }
     }
@@ -87,36 +87,43 @@ class LecturerController extends Controller
         $lecturer = Lecturer::findOrFail($id);
 
         $request->validate([
-            'name'      =>  'required|string|max:255',
-            'email'     =>  'required|email',
-            'nip'       =>  'required|string',
-            'phone'     =>  'required|string'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'nip' => 'required|string',
+            'phone' => 'required|string',
+            'password' => 'nullable|min:6'
         ]);
 
         try {
             return DB::transaction(function () use ($request, $lecturer) {
                 // Update global user info
-                $lecturer->user->update([
-                    'name'  => $request->name,
+                $userData = [
+                    'name' => $request->name,
                     'email' => $request->email,
-                ]);
+                ];
+
+                if ($request->password) {
+                    $userData['password'] = Hash::make($request->password);
+                }
+
+                $lecturer->user->update($userData);
 
                 // Update period-specific lecturer info
                 $lecturer->update([
-                    'nip'   => $request->nip,
+                    'nip' => $request->nip,
                     'phone' => $request->phone,
                 ]);
 
                 return response()->json([
-                    'status'    => 'success',
-                    'message'   => 'Dosen berhasil diperbarui',
-                    'data'      => $lecturer->load('user')
+                    'status' => 'success',
+                    'message' => 'Dosen berhasil diperbarui',
+                    'data' => $lecturer->load('user')
                 ]);
             });
         } catch (\Exception $error) {
             return response()->json([
-                'status'        => 'error',
-                'message'       => 'Gagal memperbarui dosen: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal memperbarui dosen: ' . $error->getMessage()
             ], 500);
         }
     }
@@ -131,13 +138,13 @@ class LecturerController extends Controller
             $lecturer->delete();
 
             return response()->json([
-                'status'    => 'success',
-                'message'   => 'Data dosen di periode ini berhasil dihapus'
+                'status' => 'success',
+                'message' => 'Data dosen di periode ini berhasil dihapus'
             ]);
         } catch (\Exception $error) {
             return response()->json([
-                'status'    => 'error',
-                'message'   => 'Gagal menghapus dosen: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal menghapus dosen: ' . $error->getMessage()
             ], 500);
         }
     }

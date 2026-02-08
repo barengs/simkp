@@ -243,6 +243,16 @@ const PeriodManagement = () => {
         },
     ];
 
+    const TableRowSkeleton = () => (
+        <div className="w-full space-y-3 p-4">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ))}
+        </div>
+    );
+
     return (
         <>
             <div className="space-y-6">
@@ -282,7 +292,7 @@ const PeriodManagement = () => {
                             columns={columns}
                             data={periods}
                             progressPending={loading}
-                            progressComponent={<Skeleton />}
+                            progressComponent={<TableRowSkeleton />}
                             pagination
                             paginationServer
                             paginationTotalRows={total}

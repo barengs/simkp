@@ -16,4 +16,7 @@ class Lecturer extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function internship(){
+        return $this->hasOne(Internship::class);
+    }
 }

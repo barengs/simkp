@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Key, ChevronDown } from "lucide-react";
 import api from "../../../src/api";
 import { useToast } from "../../ui/Toast";
 import { useLecturers } from "../../context/LecturerContext";
 import { Skeleton } from "../../ui/Skeleton";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MasterDosen = () => {
     const [showModal, setShowModal] = useState(false);
@@ -88,7 +90,7 @@ const MasterDosen = () => {
             name: row.user?.name || '',
             email: row.user?.email || '',
             phone: row.phone || '',
-            password: 'password123'
+            password: ''
         });
         setShowModal(true);
     };
@@ -103,7 +105,7 @@ const MasterDosen = () => {
         setFormLoading(true);
         try {
             await api.delete(`/lecturers/${deleteTarget.id}`);
-            addToast('Dosen berhasil dihapus dari periode ini', 'success');
+            addToast('Dosen berhasil dihapus', 'success');
             setShowDeleteConfirm(false);
             setDeleteTarget(null);
             refreshLecturers();
@@ -114,6 +116,7 @@ const MasterDosen = () => {
             setFormLoading(false);
         }
     };
+
 
     const TableRowSkeleton = () => (
         <div className="w-full space-y-3 p-4">
@@ -221,6 +224,7 @@ const MasterDosen = () => {
                 loading={formLoading}
             />
 
+
             <Modal
                 isOpen={showModal}
                 onClose={() => { setShowModal(false); setIsEditing(false); setEditingId(null); }}
@@ -272,10 +276,24 @@ const MasterDosen = () => {
                         />
                     </div>
 
-                    <div className="flex justify-end pt-4 space-x-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Password {isEditing && <span className="text-xs text-gray-400 font-normal">(Kosongkan jika tidak ingin mengubah)</span>}</label>
+                            <input
+                                type="password"
+                                required={!isEditing}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 bg-white/50 border"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                placeholder={isEditing ? "••••••••" : ""}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-6">
                         <button
                             type="button"
-                            onClick={() => setShowModal(false)}
+                            onClick={() => { setShowModal(false); setIsEditing(false); setEditingId(null); }}
                             className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
                         >
                             Batal

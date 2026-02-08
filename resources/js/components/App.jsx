@@ -11,6 +11,7 @@ import MasterDosen from "./admin/master/MasterDosen";
 import MasterMahasiswa from "./admin/master/MasterMahasiswa";
 import MasterMitra from "./admin/master/MasterMitra";
 import RegistrationValidation from "./admin/RegistrationValidation";
+import PlottingDosen from "./admin/PlottingDosen";
 import Registration from "./student/Registration";
 import Logbook from "./student/Logbook";
 import LogbookValidation from "./dosen/LogbookValidation";
@@ -22,6 +23,8 @@ import { LecturerProvider } from "./context/LecturerContext";
 import { PeriodProvider } from "./context/PeriodContext";
 import { MitraProvider } from "./context/MitraContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { StudentDashboardProvider } from "./context/StudentDashboardContext";
+import { AdminInternshipProvider } from "./context/AdminInternshipContext";
 
 const App = () => {
     return (
@@ -32,7 +35,11 @@ const App = () => {
                         <MitraProvider>
                             <ThemeProvider>
                                 <PeriodProvider>
-                                    <AppRoutes />
+                                    <AdminInternshipProvider>
+                                        <StudentDashboardProvider>
+                                            <AppRoutes />
+                                        </StudentDashboardProvider>
+                                    </AdminInternshipProvider>
                                 </PeriodProvider>
                             </ThemeProvider>
                         </MitraProvider>
@@ -113,6 +120,11 @@ const AppRoutes = () => {
                             <Route path="registration/validation" element={
                                 <ProtectedRoute allowedRoles={['admin']}>
                                     <RegistrationValidation />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="registration/plotting" element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <PlottingDosen />
                                 </ProtectedRoute>
                             } />
 

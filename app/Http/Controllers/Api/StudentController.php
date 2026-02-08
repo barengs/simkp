@@ -18,10 +18,10 @@ class StudentController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nim', 'like', "%{$request->search}%")
-                  ->orWhereHas('user', function ($q2) use ($request) {
-                      $q2->where('name', 'like', "%{$request->search}%")
-                         ->orWhere('email', 'like', "%{$request->search}%");
-                  });
+                    ->orWhereHas('user', function ($q2) use ($request) {
+                        $q2->where('name', 'like', "%{$request->search}%")
+                            ->orWhere('email', 'like', "%{$request->search}%");
+                    });
             });
         }
 
@@ -36,26 +36,26 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email',
-            'password'      => 'required|min:6',
-            'nim'           => 'required|string',
-            'major'         => 'required|string',
-            'batch_year'    => 'required|integer',
-            'phone'         => 'required|string',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'nim' => 'required|string',
+            'major' => 'required|string',
+            'batch_year' => 'required|integer',
+            'phone' => 'required|string',
         ]);
 
         try {
             return DB::transaction(function () use ($request) {
                 // Check if user already exists
                 $user = User::where('email', $request->email)->first();
-                
+
                 if (!$user) {
                     $user = User::create([
-                        'name'      => $request->name,
-                        'email'     => $request->email,
-                        'password'  => Hash::make($request->password),
-                        'role'      => 'mahasiswa'
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'password' => Hash::make($request->password),
+                        'role' => 'mahasiswa'
                     ]);
                 }
 
@@ -65,22 +65,22 @@ class StudentController extends Controller
                 }
 
                 $student = $user->student()->create([
-                    'nim'           => $request->nim,
-                    'major'         => $request->major,
-                    'batch_year'    => $request->batch_year,
-                    'phone'         => $request->phone,
+                    'nim' => $request->nim,
+                    'major' => $request->major,
+                    'batch_year' => $request->batch_year,
+                    'phone' => $request->phone,
                 ]);
 
                 return response()->json([
-                    'status'    => 'success',
-                    'message'   => 'Mahasiswa berhasil ditambahkan ke periode ini',
-                    'data'      => $student->load('user')
+                    'status' => 'success',
+                    'message' => 'Mahasiswa berhasil ditambahkan ke periode ini',
+                    'data' => $student->load('user')
                 ], 201);
             });
         } catch (\Exception $error) {
             return response()->json([
-                'status'        => 'error',
-                'message'       => 'Gagal menambahkan mahasiswa: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal menambahkan mahasiswa: ' . $error->getMessage()
             ], 500);
         }
     }
@@ -90,40 +90,47 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
 
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email',
-            'nim'           => 'required|string',
-            'major'         => 'required|string',
-            'batch_year'    => 'required|integer',
-            'phone'         => 'required|string',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'nim' => 'required|string',
+            'major' => 'required|string',
+            'batch_year' => 'required|integer',
+            'phone' => 'required|string',
+            'password' => 'nullable|min:6'
         ]);
 
         try {
             return DB::transaction(function () use ($request, $student) {
                 // Update global user info
-                $student->user->update([
-                    'name'  => $request->name,
+                $userData = [
+                    'name' => $request->name,
                     'email' => $request->email,
-                ]);
+                ];
+
+                if ($request->password) {
+                    $userData['password'] = Hash::make($request->password);
+                }
+
+                $student->user->update($userData);
 
                 // Update period-specific student info
                 $student->update([
-                    'nim'           => $request->nim,
-                    'major'         => $request->major,
-                    'batch_year'    => $request->batch_year,
-                    'phone'         => $request->phone,
+                    'nim' => $request->nim,
+                    'major' => $request->major,
+                    'batch_year' => $request->batch_year,
+                    'phone' => $request->phone,
                 ]);
 
                 return response()->json([
-                    'status'    => 'success',
-                    'message'   => 'Mahasiswa berhasil diperbarui',
-                    'data'      => $student->load('user')
+                    'status' => 'success',
+                    'message' => 'Mahasiswa berhasil diperbarui',
+                    'data' => $student->load('user')
                 ]);
             });
         } catch (\Exception $error) {
             return response()->json([
-                'status'        => 'error',
-                'message'       => 'Gagal memperbarui mahasiswa: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal memperbarui mahasiswa: ' . $error->getMessage()
             ], 500);
         }
     }
@@ -137,13 +144,13 @@ class StudentController extends Controller
             $student->delete();
 
             return response()->json([
-                'status'    => 'success',
-                'message'   => 'Data mahasiswa di periode ini berhasil dihapus'
+                'status' => 'success',
+                'message' => 'Data mahasiswa di periode ini berhasil dihapus'
             ]);
         } catch (\Exception $error) {
             return response()->json([
-                'status'    => 'error',
-                'message'   => 'Gagal menghapus mahasiswa: ' . $error->getMessage()
+                'status' => 'error',
+                'message' => 'Gagal menghapus mahasiswa: ' . $error->getMessage()
             ], 500);
         }
     }

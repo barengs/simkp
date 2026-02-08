@@ -1,100 +1,109 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
+import api from "../../src/api";
+import { useToast } from "../ui/Toast";
+import { Skeleton } from "../ui/Skeleton";
+import { CheckCircle, XCircle, Eye, Search, Clock, FileText } from "lucide-react";
+import { useAdminInternship } from "../context/AdminInternshipContext";
 
 const RegistrationValidation = () => {
-    const [registrations, setRegistrations] = useState([
-        {
-            id: 1,
-            studentName: "Rudi Hartono",
-            studentNim: "1234567890",
-            company: "PT. Teknologi Maju Jaya",
-            theme: "Pengembangan Web Application",
-            period: "KP Genap 2023/2024",
-            status: "Menunggu Validasi",
-            registrationDate: "2024-01-15",
-            documents: ["Proposal", "KRS", "Kartu Mahasiswa"],
-            notes: "Dokumen lengkap, menunggu verifikasi",
-        },
-        {
-            id: 2,
-            studentName: "Siti Nurhaliza",
-            studentNim: "0987654321",
-            company: "CV. Inovasi Digital",
-            theme: "Mobile Application Development",
-            period: "KP Genap 2023/2024",
-            status: "Ditolak",
-            registrationDate: "2024-01-14",
-            documents: ["Proposal", "KRS"],
-            notes: "Dokumen KTM belum diunggah",
-        },
-        {
-            id: 3,
-            studentName: "Ahmad Fauzi",
-            studentNim: "1122334455",
-            company: "PT. Solusi Kreatif",
-            theme: "Data Science & Analytics",
-            period: "KP Genap 2023/2024",
-            status: "Disetujui",
-            registrationDate: "2024-01-13",
-            documents: [
-                "Proposal",
-                "KRS",
-                "Kartu Mahasiswa",
-                "Surat Rekomendasi",
-            ],
-            notes: "Semua dokumen valid",
-        },
-    ]);
+    const { addToast } = useToast();
+    const {
+        submittedRegistrations: registrations,
+        loadingSubmitted: loading,
+        fetchSubmitted,
+        fetchApproved
+    } = useAdminInternship();
 
+    const [searchTerm, setSearchTerm] = useState("");
     const [selectedRegistration, setSelectedRegistration] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
     const [action, setAction] = useState(""); // 'approve' or 'reject'
     const [notes, setNotes] = useState("");
+    const [processing, setProcessing] = useState(false);
 
-    const handleAction = (regId, actionType) => {
-        const registration = registrations.find((r) => r.id === regId);
+    useEffect(() => {
+        fetchSubmitted();
+    }, [fetchSubmitted]);
+
+    const handleAction = (registration, actionType) => {
         setSelectedRegistration(registration);
         setAction(actionType);
         setShowActionModal(true);
     };
 
-    const confirmAction = () => {
-        setRegistrations((prev) =>
-            prev.map((reg) => {
-                if (reg.id === selectedRegistration.id) {
-                    return {
-                        ...reg,
-                        status: action === "approve" ? "Disetujui" : "Ditolak",
-                        notes: notes || reg.notes,
-                    };
-                }
-                return reg;
-            })
-        );
-        setShowActionModal(false);
-        setNotes("");
+    const confirmAction = async () => {
+        if (!selectedRegistration || !action) return;
+
+        setProcessing(true);
+        const status = action === "approve" ? "approved" : "rejected";
+        try {
+            await api.patch(`/admin/internships/${selectedRegistration.id}/status`, {
+                status: status,
+                notes: notes
+            });
+            addToast(`Pendaftaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`, "success");
+            setShowActionModal(false);
+            setNotes("");
+
+            // Refresh both submitted and approved lists
+            fetchSubmitted(true);
+            fetchApproved(true);
+        } catch (error) {
+            addToast("Gagal memperbarui status", "error");
+            console.error(error);
+        } finally {
+            setProcessing(false);
+        }
     };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "Disetujui":
+            case "approved":
+            case "ongoing":
                 return "bg-green-100 text-green-800";
-            case "Ditolak":
+            case "rejected":
                 return "bg-red-100 text-red-800";
-            case "Menunggu Validasi":
+            case "submitted":
                 return "bg-yellow-100 text-yellow-800";
             default:
                 return "bg-gray-100 text-gray-800";
         }
     };
 
-    const [searchTerm, setSearchTerm] = useState("");
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case "submitted":
+                return "Menunggu Validasi";
+            case "approved":
+                return "Disetujui";
+            case "rejected":
+                return "Ditolak";
+            case "ongoing":
+                return "Sedang Berjalan";
+            default:
+                return status;
+        }
+    };
 
     const filteredRegistrations = registrations.filter((reg) =>
-        [reg.studentName, reg.studentNim, reg.company].some((field) =>
-            field.toLowerCase().includes(searchTerm.toLowerCase())
+        [reg.student?.user?.name, reg.student?.nim, reg.company?.name].some((field) =>
+            field?.toLowerCase().includes(searchTerm.toLowerCase())
         )
+    );
+
+    const TableRowSkeleton = () => (
+        <>
+            {[...Array(5)].map((_, i) => (
+                <tr key={i}>
+                    {[...Array(7)].map((_, j) => (
+                        <td key={j} className="px-6 py-4">
+                            <Skeleton className="h-4 w-full" />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+        </>
     );
 
     return (
@@ -104,7 +113,7 @@ const RegistrationValidation = () => {
                     <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900 font-bold">
                                     Daftar Pendaftaran KP
                                 </h3>
                                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
@@ -112,13 +121,18 @@ const RegistrationValidation = () => {
                                 </p>
                             </div>
                             <div className="w-1/3">
-                                <input
-                                    type="text"
-                                    placeholder="Cari mahasiswa..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                />
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Search className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Cari mahasiswa..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -127,102 +141,105 @@ const RegistrationValidation = () => {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Mahasiswa
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Perusahaan
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Tema
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Periode
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Tanggal
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredRegistrations.map((registration) => (
-                                        <tr key={registration.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {registration.studentName}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {registration.studentNim}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {registration.company}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {registration.theme}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {registration.period}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                                                        registration.status
-                                                    )}`}
-                                                >
-                                                    {registration.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {registration.registrationDate}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedRegistration(registration);
-                                                            setShowDetailModal(true);
-                                                        }}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                        title="Detail"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                        </svg>
-                                                    </button>
-                                                    {registration.status === "Menunggu Validasi" && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleAction(registration.id, "approve")}
-                                                                className="text-green-600 hover:text-green-900"
-                                                                title="Setujui"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleAction(registration.id, "reject")}
-                                                                className="text-red-600 hover:text-red-900"
-                                                                title="Tolak"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
+                                    {loading ? (
+                                        <TableRowSkeleton />
+                                    ) : filteredRegistrations.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" className="px-6 py-8 text-center text-sm text-gray-500">
+                                                Tidak ada pendaftaran yang perlu divalidasi.
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : (
+                                        filteredRegistrations.map((registration) => (
+                                            <tr key={registration.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-bold text-gray-900">
+                                                        {registration.student?.user?.name}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 font-medium">
+                                                        {registration.student?.nim}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                                    {registration.company?.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium leading-tight">
+                                                    <div className="max-w-xs truncate">{registration.theme?.name}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                                    TA {registration.period?.academic_year} ({registration.period?.semester})
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`px-2 py-0.5 inline-flex text-[10px] leading-5 font-bold rounded-full uppercase ${getStatusColor(
+                                                            registration.status
+                                                        )}`}
+                                                    >
+                                                        {getStatusLabel(registration.status)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                                                    {new Date(registration.created_at).toLocaleDateString('id-ID')}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <div className="flex space-x-3">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedRegistration(registration);
+                                                                setShowDetailModal(true);
+                                                            }}
+                                                            className="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                                            title="Detail"
+                                                        >
+                                                            <Eye className="w-5 h-5" />
+                                                        </button>
+                                                        {registration.status === "submitted" && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleAction(registration, "approve")}
+                                                                    className="text-green-600 hover:text-green-900 transition-colors"
+                                                                    title="Setujui"
+                                                                >
+                                                                    <CheckCircle className="w-5 h-5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleAction(registration, "reject")}
+                                                                    className="text-red-600 hover:text-red-900 transition-colors"
+                                                                    title="Tolak"
+                                                                >
+                                                                    <XCircle className="w-5 h-5" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -232,148 +249,141 @@ const RegistrationValidation = () => {
 
             {/* Registration Detail Modal */}
             {showDetailModal && selectedRegistration && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <div className="flex justify-between items-start">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Detail Pendaftaran
-                                </h3>
-                                <button
-                                    onClick={() => setShowDetailModal(false)}
-                                    className="text-gray-400 hover:text-gray-500"
-                                >
-                                    <span className="text-2xl">&times;</span>
-                                </button>
-                            </div>
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4">
+                    <div className="relative mx-auto border w-full max-w-4xl shadow-2xl rounded-2xl bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 className="text-lg font-bold text-gray-900">
+                                Detail Pendaftaran
+                            </h3>
+                            <button
+                                onClick={() => setShowDetailModal(false)}
+                                className="text-gray-400 hover:text-gray-500 p-2 rounded-full hover:bg-white transition-all"
+                            >
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="p-8 max-h-[80vh] overflow-y-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                 <div>
-                                    <h4 className="text-md font-medium text-gray-900 mb-2">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
                                         Informasi Mahasiswa
                                     </h4>
-                                    <div className="space-y-2">
-                                        <p>
-                                            <span className="font-medium">
-                                                Nama:
-                                            </span>{" "}
-                                            {selectedRegistration.studentName}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                NIM:
-                                            </span>{" "}
-                                            {selectedRegistration.studentNim}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Status:
-                                            </span>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Nama</span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedRegistration.student?.user?.name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">NIM</span>
+                                            <span className="text-sm font-medium text-gray-700">{selectedRegistration.student?.nim}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Status</span>
                                             <span
-                                                className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                                                className={`mt-1 px-2 py-0.5 inline-flex text-[10px] font-bold rounded-full uppercase ${getStatusColor(
                                                     selectedRegistration.status
                                                 )}`}
                                             >
-                                                {selectedRegistration.status}
+                                                {getStatusLabel(selectedRegistration.status)}
                                             </span>
-                                        </p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 className="text-md font-medium text-gray-900 mb-2">
-                                        Detail KP
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                                        Detail Kerja Praktek
                                     </h4>
-                                    <div className="space-y-2">
-                                        <p>
-                                            <span className="font-medium">
-                                                Perusahaan:
-                                            </span>{" "}
-                                            {selectedRegistration.company}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Tema:
-                                            </span>{" "}
-                                            {selectedRegistration.theme}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Periode:
-                                            </span>{" "}
-                                            {selectedRegistration.period}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Tanggal Pendaftaran:
-                                            </span>{" "}
-                                            {
-                                                selectedRegistration.registrationDate
-                                            }
-                                        </p>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Perusahaan</span>
+                                            <span className="text-sm font-bold text-indigo-600">{selectedRegistration.company?.name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Tema</span>
+                                            <span className="text-sm font-medium text-gray-700">{selectedRegistration.theme?.name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Periode</span>
+                                            <span className="text-sm font-medium text-gray-700">TA {selectedRegistration.period?.academic_year} ({selectedRegistration.period?.semester})</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase block">Tanggal Pendaftaran</span>
+                                            <span className="text-sm font-medium text-gray-700">{new Date(selectedRegistration.created_at).toLocaleDateString('id-ID')}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mb-6">
-                                <h4 className="text-md font-medium text-gray-900 mb-2">
+                            <div className="mb-8">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
                                     Dokumen yang Diunggah
                                 </h4>
-                                <ul className="list-disc pl-5 space-y-1">
-                                    {selectedRegistration.documents.map(
-                                        (doc, index) => (
-                                            <li
-                                                key={index}
-                                                className="text-sm text-gray-600"
-                                            >
-                                                {doc}
-                                            </li>
-                                        )
-                                    )}
-                                </ul>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {[
+                                        { label: 'Proposal', url: selectedRegistration.proposal_url },
+                                        { label: 'KRS', url: selectedRegistration.krs_url },
+                                        { label: 'KTM/KTP', url: selectedRegistration.ktp_url },
+                                        { label: 'Rekomendasi', url: selectedRegistration.surat_rekomendasi_url }
+                                    ].map((doc, i) => doc.url && (
+                                        <a
+                                            key={i}
+                                            href={doc.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-all group"
+                                        >
+                                            <div className="bg-indigo-100 p-2 rounded-lg group-hover:bg-indigo-500 transition-colors">
+                                                <FileText className="w-4 h-4 text-indigo-600 group-hover:text-white" />
+                                            </div>
+                                            <span className="text-sm font-bold text-gray-700">{doc.label}</span>
+                                        </a>
+                                    ))}
+                                </div>
                             </div>
 
-                            <div className="mb-6">
-                                <h4 className="text-md font-medium text-gray-900 mb-2">
-                                    Catatan
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                    {selectedRegistration.notes}
-                                </p>
-                            </div>
+                            {selectedRegistration.notes && (
+                                <div className="mb-8">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
+                                        Catatan
+                                    </h4>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p className="text-sm text-gray-600 italic">
+                                            "{selectedRegistration.notes}"
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
-                            <div className="flex justify-end space-x-3 pt-4">
-                                {selectedRegistration.status ===
-                                    "Menunggu Validasi" && (
+                            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+                                {selectedRegistration.status === "submitted" && (
                                     <>
                                         <button
                                             onClick={() => {
-                                                handleAction(
-                                                    selectedRegistration.id,
-                                                    "approve"
-                                                );
+                                                handleAction(selectedRegistration, "approve");
                                                 setShowDetailModal(false);
                                             }}
-                                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200"
+                                            className="px-6 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 shadow-lg shadow-green-100 transition-all flex items-center gap-2"
                                         >
+                                            <CheckCircle className="w-4 h-4" />
                                             Setujui
                                         </button>
                                         <button
                                             onClick={() => {
-                                                handleAction(
-                                                    selectedRegistration.id,
-                                                    "reject"
-                                                );
+                                                handleAction(selectedRegistration, "reject");
                                                 setShowDetailModal(false);
                                             }}
-                                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
+                                            className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-100 transition-all flex items-center gap-2"
                                         >
+                                            <XCircle className="w-4 h-4" />
                                             Tolak
                                         </button>
                                     </>
                                 )}
                                 <button
                                     onClick={() => setShowDetailModal(false)}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
+                                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all"
                                 >
                                     Tutup
                                 </button>
@@ -385,60 +395,52 @@ const RegistrationValidation = () => {
 
             {/* Action Confirmation Modal */}
             {showActionModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <div className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4">
+                    <div className="relative mx-auto p-6 border w-full max-w-md shadow-2xl rounded-2xl bg-white animate-in fade-in slide-in-from-bottom-4 duration-200">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">
                                 {action === "approve"
                                     ? "Setujui Pendaftaran"
                                     : "Tolak Pendaftaran"}
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm text-gray-500">
                                 Apakah Anda yakin ingin{" "}
                                 {action === "approve"
                                     ? "menyetujui"
                                     : "menolak"}{" "}
                                 pendaftaran KP untuk:
                             </p>
-                            <p className="font-medium">
-                                {selectedRegistration?.studentName} (
-                                {selectedRegistration?.studentNim})
+                            <p className="text-sm font-bold text-gray-900 mt-1">
+                                {selectedRegistration?.student?.user?.name} ({selectedRegistration?.student?.nim})
                             </p>
+                        </div>
 
-                            <div className="mt-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Catatan (Opsional)
-                                </label>
-                                <textarea
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                    rows="3"
-                                    placeholder="Tambahkan catatan atau alasan..."
-                                />
-                            </div>
 
-                            <div className="flex justify-end space-x-3 pt-4">
-                                <button
-                                    onClick={() => {
-                                        setShowActionModal(false);
-                                        setNotes("");
-                                    }}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={confirmAction}
-                                    className={`px-4 py-2 text-white rounded-md transition duration-200 ${
-                                        action === "approve"
-                                            ? "bg-green-600 hover:bg-green-700"
-                                            : "bg-red-600 hover:bg-red-700"
-                                    }`}
-                                >
-                                    {action === "approve" ? "Setujui" : "Tolak"}
-                                </button>
-                            </div>
+                        <div className="flex justify-end space-x-3 mt-8">
+                            <button
+                                onClick={() => {
+                                    setShowActionModal(false);
+                                    setNotes("");
+                                }}
+                                className="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={confirmAction}
+                                disabled={processing}
+                                className={`px-6 py-2.5 text-white rounded-xl text-sm font-bold transition-all shadow-lg flex items-center gap-2 ${action === "approve"
+                                    ? "bg-green-600 hover:bg-green-700 shadow-green-100"
+                                    : "bg-red-600 hover:bg-red-700 shadow-red-100"
+                                    } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {processing ? (
+                                    <Clock className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    action === "approve" ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />
+                                )}
+                                {action === "approve" ? "Setujui" : "Tolak"}
+                            </button>
                         </div>
                     </div>
                 </div>

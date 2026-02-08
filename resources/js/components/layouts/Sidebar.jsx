@@ -16,6 +16,8 @@ import {
     ChevronRight
 } from "lucide-react";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 const Sidebar = ({
     user,
     onLogout,
@@ -67,7 +69,7 @@ const Sidebar = ({
                     },
                     {
                         name: "Plotting Dosen",
-                        path: "lecturer-plotting",
+                        path: "registration/plotting",
                         icon: UserCircle,
                     },
                     { name: "Monitoring", path: "monitoring", icon: BarChart3 },
@@ -149,11 +151,19 @@ const Sidebar = ({
                         </>
                     )}
                 </button>
-                {hasChildren && isExpanded && !isCollapsed && (
-                    <div className="space-y-1">
-                        {item.children.map((child) => renderMenuItem(child, level + 1))}
-                    </div>
-                )}
+                <AnimatePresence>
+                    {hasChildren && isExpanded && !isCollapsed && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                            className="space-y-1 overflow-hidden"
+                        >
+                            {item.children.map((child) => renderMenuItem(child, level + 1))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {hasChildren && isCollapsed && (
                     <div className="hidden group-hover:block absolute left-full top-0 w-56 bg-white shadow-xl rounded-r-md border border-gray-200 z-50 ml-1">
@@ -193,7 +203,7 @@ const Sidebar = ({
                     ></div>
                     <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
                         <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-                            <div className="flex-shrink-0 flex items-center px-4">
+                            <div className="shrink-0 flex items-center px-4">
                                 <h1 className="text-xl font-bold text-indigo-600">
                                     SIMKP{" "}
                                     {user?.role === "admin"

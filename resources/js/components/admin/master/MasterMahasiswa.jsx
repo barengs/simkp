@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search, EyeOff, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, EyeOff, Eye, Key, ChevronDown } from "lucide-react";
 import { useStudents } from "../../context/StudentContext";
 import { useToast } from "../../ui/Toast";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
 import { Skeleton } from "../../ui/Skeleton";
 import api from "../../../src/api";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
@@ -97,7 +99,7 @@ const MasterMahasiswa = () => {
             phone: row.phone || '',
             major: row.major || '',
             batch_year: row.batch_year || new Date().getFullYear(),
-            password: row.user?.password || '',
+            password: '',
         });
         setShowModal(true);
     };
@@ -123,6 +125,7 @@ const MasterMahasiswa = () => {
             setFormLoading(false);
         }
     };
+
 
     const TableRowSkeleton = () => (
         <div className="w-full space-y-3 p-4">
@@ -226,6 +229,7 @@ const MasterMahasiswa = () => {
                 loading={formLoading}
             />
 
+
             <Modal
                 isOpen={showModal}
                 onClose={() => { setShowModal(false); resetForm(); }}
@@ -296,14 +300,15 @@ const MasterMahasiswa = () => {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                        <label className="block text-sm font-medium text-gray-700">Password {isEditing && <span className="text-xs text-gray-400 font-normal">(Kosongkan jika tidak ingin mengubah)</span>}</label>
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
-                                required
+                                required={!isEditing}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 pr-10 border"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                placeholder={isEditing ? "••••••••" : ""}
                             />
                             <button
                                 type="button"
@@ -318,10 +323,10 @@ const MasterMahasiswa = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="flex justify-end pt-4 space-x-2">
+                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100 mt-6">
                         <button
                             type="button"
-                            onClick={() => setShowModal(false)}
+                            onClick={() => { setShowModal(false); resetForm(); }}
                             className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
                         >
                             Batal

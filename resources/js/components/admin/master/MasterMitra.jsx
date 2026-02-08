@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ChevronDown } from "lucide-react";
 import api from "../../../src/api";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
 import { useToast } from "../../ui/Toast";
 import { Skeleton } from "../../ui/Skeleton";
 import { useMitra } from "../../context/MitraContext";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MasterMitra = () => {
     const { addToast } = useToast();
@@ -118,6 +120,16 @@ const MasterMitra = () => {
         }
     };
 
+    const TableRowSkeleton = () => (
+        <div className="w-full space-y-3 p-4">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ))}
+        </div>
+    );
+
     const columns = [
         { name: "Nama Mitra", selector: (row) => row.name, sortable: true },
         { name: "Alamat", selector: (row) => row.address, sortable: true },
@@ -183,28 +195,20 @@ const MasterMitra = () => {
 
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div className="px-4 py-5 sm:p-6">
-                        {loading ? (
-                            <div className="space-y-4">
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                            </div>
-                        ) : (
-                            <DataTable
-                                columns={columns}
-                                data={data}
-                                pagination
-                                paginationServer
-                                paginationTotalRows={totalRows}
-                                onChangeRowsPerPage={handlePerRowsChange}
-                                onChangePage={handlePageChange}
-                                highlightOnHover
-                                pointerOnHover
-                                responsive
-                            />
-                        )}
+                        <DataTable
+                            columns={columns}
+                            data={data}
+                            progressPending={loading}
+                            progressComponent={<TableRowSkeleton />}
+                            pagination
+                            paginationServer
+                            paginationTotalRows={totalRows}
+                            onChangeRowsPerPage={handlePerRowsChange}
+                            onChangePage={handlePageChange}
+                            highlightOnHover
+                            pointerOnHover
+                            responsive
+                        />
                     </div>
                 </div>
             </div>
@@ -213,6 +217,7 @@ const MasterMitra = () => {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 title={selectedItem ? "Edit Mitra" : "Tambah Mitra Baru"}
+                showFooter={false}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -267,21 +272,21 @@ const MasterMitra = () => {
                             placeholder="021-12345678"
                         />
                     </div>
-                    <div className="flex justify-end space-x-3 pt-4">
+                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100 mt-6">
                         <button
                             type="button"
                             disabled={modalLoading}
                             onClick={() => setShowModal(false)}
-                            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200 disabled:opacity-50"
+                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border rounded-lg"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             disabled={modalLoading}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 disabled:opacity-50"
+                            className={`bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:bg-indigo-700 transition-all ${modalLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {modalLoading ? "Menyimpan..." : "Simpan"}
+                            {modalLoading ? "Menyimpan..." : (selectedItem ? "Perbarui" : "Simpan")}
                         </button>
                     </div>
                 </form>
