@@ -16,37 +16,13 @@ import Registration from "./student/Registration";
 import Logbook from "./student/Logbook";
 import LogbookValidation from "./dosen/LogbookValidation";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ToastProvider } from "./ui/Toast";
-import { StudentProvider } from "./context/StudentContext";
 import ProtectedRoute from "./protected/ProtectedRoute";
-import { LecturerProvider } from "./context/LecturerContext";
-import { PeriodProvider } from "./context/PeriodContext";
-import { MitraProvider } from "./context/MitraContext";
-import { ThemeProvider } from "./context/ThemeContext";
-import { StudentDashboardProvider } from "./context/StudentDashboardContext";
-import { AdminInternshipProvider } from "./context/AdminInternshipContext";
 
 const App = () => {
     return (
-        <ToastProvider>
-            <AuthProvider>
-                <LecturerProvider>
-                    <StudentProvider>
-                        <MitraProvider>
-                            <ThemeProvider>
-                                <PeriodProvider>
-                                    <AdminInternshipProvider>
-                                        <StudentDashboardProvider>
-                                            <AppRoutes />
-                                        </StudentDashboardProvider>
-                                    </AdminInternshipProvider>
-                                </PeriodProvider>
-                            </ThemeProvider>
-                        </MitraProvider>
-                    </StudentProvider>
-                </LecturerProvider>
-            </AuthProvider>
-        </ToastProvider>
+        <AuthProvider>
+            <AppRoutes />
+        </AuthProvider>
     );
 };
 

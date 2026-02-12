@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 
 const LecturerContext = createContext();
 
@@ -15,7 +15,6 @@ export const LecturerProvider = ({ children }) => {
         last_page: 1,
     });
     const [loading, setLoading] = useState(false);
-    const { addToast } = useToast();
 
     // Cache key to store the last used parameters
     const lastParamsRef = useRef(null);
@@ -49,7 +48,7 @@ export const LecturerProvider = ({ children }) => {
             lastParamsRef.current = params;
         } catch (error) {
             console.error("Error fetching lecturers:", error);
-            addToast("Gagal mengambil data dosen", "error");
+            toast.error("Gagal mengambil data dosen");
         } finally {
             setLoading(false);
         }
@@ -75,7 +74,7 @@ export const LecturerProvider = ({ children }) => {
                 });
             } catch (error) {
                 console.error("Error refreshing lecturers:", error);
-                addToast("Gagal memperbarui data dosen", "error");
+                toast.error("Gagal memperbarui data dosen");
             } finally {
                 setLoading(false);
             }

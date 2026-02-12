@@ -33,6 +33,41 @@ class StudentController extends Controller
         ]);
     }
 
+    public function check(Request $request)
+    {
+        $request->validate([
+            'npm' => 'required|string',
+            'period_id' => 'required|exists:periods,id'
+        ]);
+
+        $student = Student::with('user')->where('nim', $request->npm)->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Mahasiswa tidak ditemukan'], 404);
+        }
+
+        // Check if student is already in an internship for this period
+        $exists = \App\Models\InternshipMember::where('student_id', $student->id)
+            ->whereHas('internship', function ($q) use ($request) {
+                $q->where('period_id', $request->period_id)
+                    ->where('status', '!=', 'rejected'); // Allow re-register if rejected? User didn't specify, assuming strict unique for now or status check
+            })->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Mahasiswa sudah terdaftar di kelompok lain pada periode ini',
+                'can_join' => false,
+                'student' => $student
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Mahasiswa tersedia',
+            'can_join' => true,
+            'student' => $student
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

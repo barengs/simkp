@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useState, useRef, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { usePeriods } from "../context/PeriodContext";
-import { useToast } from "../ui/Toast";
+import { fetchPeriods, createPeriod, updatePeriod, deletePeriod, activatePeriod } from "../store/slices/periodSlice";
+import { toast } from "react-toastify";
 import Modal from "../ui/Modal";
 import DeleteConfirm from "../ui/DeleteConfirm";
 import { Skeleton } from "../ui/Skeleton";
@@ -9,14 +10,14 @@ import { Plus, Pencil, Trash2, Search, Eye } from "lucide-react";
 import api from "../../src/api";
 
 const PeriodManagement = () => {
+    const dispatch = useDispatch();
+    const { periods, pagination, loading } = useSelector((state) => state.periods);
+    const { total, per_page, current_page } = pagination;
+
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    const { periods, pagination, loading, getPeriods, refreshPeriods } = usePeriods();
-    const { total, per_page, current_page } = pagination;
-
     const [formLoading, setFormLoading] = useState(false);
-    const { addToast } = useToast();
     const [perPage, setPerPage] = useState(10);
 
     const [formData, setFormData] = useState({
@@ -39,25 +40,25 @@ const PeriodManagement = () => {
 
     useEffect(() => {
         if (isFirstRun.current) {
-            getPeriods(1, perPage, searchTerm);
+            dispatch(fetchPeriods({ page: 1, perPage, search: searchTerm }));
             isFirstRun.current = false;
             return;
         }
 
         const delayDebounceFn = setTimeout(() => {
-            getPeriods(1, perPage, searchTerm);
+            dispatch(fetchPeriods({ page: 1, perPage, search: searchTerm }));
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm, getPeriods, perPage]);
+    }, [searchTerm, dispatch, perPage]);
 
     const handlePageChange = (page) => {
-        getPeriods(page, perPage, searchTerm);
+        dispatch(fetchPeriods({ page, perPage, search: searchTerm }));
     };
 
     const handlePerRowsChange = (newPerPage, page) => {
         setPerPage(newPerPage);
-        getPeriods(page, newPerPage, searchTerm);
+        dispatch(fetchPeriods({ page, perPage: newPerPage, search: searchTerm }));
     };
 
     const handleSubmit = async (e) => {
@@ -66,19 +67,18 @@ const PeriodManagement = () => {
 
         try {
             if (isEditing && editingId) {
-                await api.put(`/periods/${editingId}`, formData);
-                addToast('Data periode berhasil diperbarui', 'success');
+                await dispatch(updatePeriod({ id: editingId, formData })).unwrap();
+                toast.success('Data periode berhasil diperbarui');
             } else {
-                await api.post('/periods', formData);
-                addToast('Data periode berhasil ditambahkan', 'success');
+                await dispatch(createPeriod(formData)).unwrap();
+                toast.success('Data periode berhasil ditambahkan');
             }
 
             setShowModal(false);
             resetForm();
-            refreshPeriods();
+            dispatch(fetchPeriods({ page: current_page, perPage, search: searchTerm }));
         } catch (error) {
-            console.error(error);
-            addToast(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data', 'error');
+            toast.error(error || 'Terjadi kesalahan saat menyimpan data');
         } finally {
             setFormLoading(false);
         }
@@ -141,14 +141,13 @@ const PeriodManagement = () => {
         if (!deleteTarget) return;
         setFormLoading(true);
         try {
-            await api.delete(`/periods/${deleteTarget.id}`);
-            addToast('Data periode berhasil dihapus', 'success');
+            await dispatch(deletePeriod(deleteTarget.id)).unwrap();
+            toast.success('Data periode berhasil dihapus');
             setShowDeleteConfirm(false);
             setDeleteTarget(null);
-            refreshPeriods();
+            dispatch(fetchPeriods({ page: current_page, perPage, search: searchTerm }));
         } catch (error) {
-            console.error(error);
-            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+            toast.error(error || 'Gagal menghapus data');
         } finally {
             setFormLoading(false);
         }
@@ -156,18 +155,17 @@ const PeriodManagement = () => {
 
     const handleActivate = async (row) => {
         if (row.is_active) {
-            addToast('Periode sudah aktif', 'info');
+            toast.info('Periode sudah aktif');
             return;
         }
 
         setFormLoading(true);
         try {
-            await api.post(`/periods/${row.id}/activate`);
-            addToast('Periode berhasil diaktifkan', 'success');
-            refreshPeriods();
+            await dispatch(activatePeriod(row.id)).unwrap();
+            toast.success('Periode berhasil diaktifkan');
+            dispatch(fetchPeriods({ page: current_page, perPage, search: searchTerm }));
         } catch (error) {
-            console.error(error);
-            addToast(error.response?.data?.message || 'Gagal mengaktifkan periode', 'error');
+            toast.error(error || 'Gagal mengaktifkan periode');
         } finally {
             setFormLoading(false);
         }

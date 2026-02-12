@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search, ChevronDown } from "lucide-react";
-import api from "../../../src/api";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchCompanies, createCompany, updateCompany, deleteCompany } from "../../store/slices/companySlice";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
-import { useToast } from "../../ui/Toast";
+import { toast } from "react-toastify";
 import { Skeleton } from "../../ui/Skeleton";
-import { useMitra } from "../../context/MitraContext";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const MasterMitra = () => {
-    const { addToast } = useToast();
-    const { mitra: data, pagination, loading, getMitra, refreshMitra } = useMitra();
-    const { total: totalRows, current_page: currentPage } = pagination;
+    const dispatch = useDispatch();
+    const { companies: data, pagination, loading, forceRefetch } = useSelector((state) => state.companies);
+    const { total: totalRows } = pagination;
 
     const [perPage, setPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState("");
@@ -34,26 +32,26 @@ const MasterMitra = () => {
     const isFirstRun = useRef(true);
 
     useEffect(() => {
-        if (isFirstRun.current) {
-            getMitra(1, perPage, searchTerm);
+        if (isFirstRun.current || forceRefetch) {
+            dispatch(fetchCompanies({ page: 1, perPage, search: searchTerm }));
             isFirstRun.current = false;
             return;
         }
 
         const delayDebounceFn = setTimeout(() => {
-            getMitra(1, perPage, searchTerm);
+            dispatch(fetchCompanies({ page: 1, perPage, search: searchTerm }));
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm, getMitra, perPage]);
+    }, [searchTerm, perPage, dispatch, forceRefetch]);
 
     const handlePageChange = (page) => {
-        getMitra(page, perPage, searchTerm);
+        dispatch(fetchCompanies({ page, perPage, search: searchTerm }));
     };
 
     const handlePerRowsChange = async (newPerPage, page) => {
         setPerPage(newPerPage);
-        getMitra(page, newPerPage, searchTerm);
+        dispatch(fetchCompanies({ page, perPage: newPerPage, search: searchTerm }));
     };
 
     const handleSearch = (e) => {
@@ -86,16 +84,15 @@ const MasterMitra = () => {
         setModalLoading(true);
         try {
             if (selectedItem) {
-                await api.put(`/companies/${selectedItem.id}`, formData);
-                addToast("Data mitra berhasil diperbarui", "success");
+                await dispatch(updateCompany({ id: selectedItem.id, formData })).unwrap();
+                toast.success("Data mitra berhasil diperbarui");
             } else {
-                await api.post("/companies", formData);
-                addToast("Mitra baru berhasil ditambahkan", "success");
+                await dispatch(createCompany(formData)).unwrap();
+                toast.success("Mitra baru berhasil ditambahkan");
             }
             setShowModal(false);
-            refreshMitra();
         } catch (error) {
-            addToast(error.response?.data?.message || "Terjadi kesalahan", "error");
+            toast.error(error || "Terjadi kesalahan");
         } finally {
             setModalLoading(false);
         }
@@ -109,12 +106,13 @@ const MasterMitra = () => {
     const handleConfirmDelete = async () => {
         setModalLoading(true);
         try {
-            await api.delete(`/companies/${selectedItem.id}`);
-            addToast("Mitra berhasil dihapus", "success");
+            await dispatch(deleteCompany(selectedItem.id)).unwrap();
+            toast.success("Mitra berhasil dihapus");
             setShowDeleteConfirm(false);
-            refreshMitra();
+            setSelectedItem(null);
         } catch (error) {
-            addToast("Gagal menghapus mitra", "error");
+            console.error(error);
+            toast.error(error || "Gagal menghapus mitra");
         } finally {
             setModalLoading(false);
         }

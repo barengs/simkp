@@ -7,21 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class Internship extends Model
 {
     protected $fillable = [
-        'student_id',
+        'leader_id',
         'period_id',
         'company_id',
+        'company_name_manual',
         'theme_id',
         'supervisor_id',
         'status',
+        'rejection_note',
         'proposal_url',
         'krs_url',
         'ktp_url',
         'surat_rekomendasi_url',
     ];
 
-    public function student()
+    public function leader()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'leader_id');
+    }
+
+    public function members()
+    {
+        return $this->hasMany(InternshipMember::class);
     }
 
     public function period()

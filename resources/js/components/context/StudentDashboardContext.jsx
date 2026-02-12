@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 import { useAuth } from "./AuthContext";
 
 const StudentDashboardContext = createContext();
@@ -14,7 +14,6 @@ export const StudentDashboardProvider = ({ children }) => {
     const [existingInternship, setExistingInternship] = useState(null);
     const [internshipHistory, setInternshipHistory] = useState([]);
     const [loading, setLoading] = useState(false);
-    const { addToast } = useToast();
     const { user, isAuthenticated } = useAuth();
 
     // Use a ref to track if initial data has been fetched to avoid double fetch in StrictMode
@@ -45,7 +44,7 @@ export const StudentDashboardProvider = ({ children }) => {
             console.error("Error fetching student dashboard data", error);
             // Only show toast if it's a forced refresh or initial load failed significantly
             // Avoid toast on login page before fully authenticated
-            if (force) addToast("Gagal mengambil data dashboard", "error");
+            if (force) toast.error("Gagal mengambil data dashboard");
         } finally {
             setLoading(false);
         }

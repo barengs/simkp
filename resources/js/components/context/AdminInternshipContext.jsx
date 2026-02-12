@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 import { useAuth } from "./AuthContext";
 
 const AdminInternshipContext = createContext();
@@ -16,7 +16,6 @@ export const AdminInternshipProvider = ({ children }) => {
     const [loadingApproved, setLoadingApproved] = useState(false);
     const [loadingLecturers, setLoadingLecturers] = useState(false);
 
-    const { addToast } = useToast();
     const { user, isAuthenticated } = useAuth();
     const hasFetched = useRef({ submitted: false, approved: false, lecturers: false });
 
@@ -33,7 +32,7 @@ export const AdminInternshipProvider = ({ children }) => {
             hasFetched.current.submitted = true;
         } catch (error) {
             console.error("Gagal mengambil data pendaftaran submitted", error);
-            if (force) addToast("Gagal mengambil data pendaftaran", "error");
+            if (force) toast.error("Gagal mengambil data pendaftaran");
         } finally {
             setLoadingSubmitted(false);
         }
@@ -52,7 +51,7 @@ export const AdminInternshipProvider = ({ children }) => {
             hasFetched.current.approved = true;
         } catch (error) {
             console.error("Gagal mengambil data pendaftaran approved", error);
-            if (force) addToast("Gagal mengambil data pendaftaran", "error");
+            if (force) toast.error("Gagal mengambil data pendaftaran");
         } finally {
             setLoadingApproved(false);
         }

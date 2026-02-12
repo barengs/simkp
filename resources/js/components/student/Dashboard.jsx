@@ -1,13 +1,21 @@
 import { Skeleton } from "../ui/Skeleton";
 import { CheckCircle, Clock, XCircle, PlayCircle, GraduationCap, Building2, Calendar, FileText } from "lucide-react";
-import { useStudentDashboard } from "../context/StudentDashboardContext";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchStudentDashboard } from "../store/slices/internshipSlice";
 
 const Dashboard = () => {
+    const dispatch = useDispatch();
     const {
-        existingInternship: myInternship,
+        dashboardData: myInternship,
         internshipHistory,
-        loading
-    } = useStudentDashboard();
+        loading,
+        dashboardFetched
+    } = useSelector((state) => state.internships);
+
+    useEffect(() => {
+        dispatch(fetchStudentDashboard());
+    }, [dispatch]);
 
     const getStatusInfo = (status) => {
         switch (status) {
@@ -57,50 +65,23 @@ const Dashboard = () => {
         },
     ];
 
-    if (loading) {
+    if (!dashboardFetched && loading) {
         return (
-            <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="bg-white p-6 shadow-sm border border-gray-100 rounded-xl space-y-3">
                             <Skeleton className="h-3 w-24" />
                             <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-3 w-1/3" />
                         </div>
                     ))}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
-                        <div className="px-5 py-5 border-b border-gray-50">
-                            <Skeleton className="h-5 w-40" />
-                        </div>
-                        <div className="p-6 space-y-4">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="flex gap-4">
-                                    <Skeleton className="h-4 w-1/3" />
-                                    <Skeleton className="h-4 w-2/3" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
-                        <div className="px-5 py-5 border-b border-gray-50">
-                            <Skeleton className="h-5 w-40" />
-                        </div>
-                        <div className="p-4 space-y-4">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="p-4 border border-gray-50 rounded-lg space-y-2">
-                                    <div className="flex justify-between">
-                                        <Skeleton className="h-4 w-1/2" />
-                                        <Skeleton className="h-4 w-1/4" />
-                                    </div>
-                                    <Skeleton className="h-3 w-1/3" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <Skeleton className="h-64 w-full rounded-xl" />
+                    <Skeleton className="h-64 w-full rounded-xl" />
                 </div>
-            </>
+            </div>
         );
     }
 
@@ -185,6 +166,22 @@ const Dashboard = () => {
                                         )}
                                     </div>
                                 </div>
+                                <div className="flex items-start">
+                                    <div className="w-1/3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Anggota</div>
+                                    <div className="w-2/3 space-y-2">
+                                        {myInternship.members?.map((member) => (
+                                            <div key={member.id} className="flex items-center gap-2">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${member.student_id === myInternship.leader_id ? 'bg-indigo-500' : 'bg-gray-400'}`}>
+                                                    {member.student?.user?.name?.charAt(0) || '?'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900">{member.student?.user?.name}</p>
+                                                    <p className="text-[10px] text-gray-500">{member.student?.nim} {member.student_id === myInternship.leader_id && <span className="text-indigo-600 font-bold">(Ketua)</span>}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="text-center py-10">
@@ -209,7 +206,7 @@ const Dashboard = () => {
                         </h3>
                     </div>
                     <ul className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
-                        {internshipHistory.length > 0 ? internshipHistory.map((history) => (
+                        {internshipHistory?.length > 0 ? internshipHistory.map((history) => (
                             <li key={history.id} className="px-5 py-5 hover:bg-gray-50/50 transition-colors">
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="space-y-1">

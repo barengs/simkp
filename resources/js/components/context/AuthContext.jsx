@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, Children } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 
 const AuthContext = createContext();
 
@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const { addToast } = useToast();
 
     useEffect(() => {
         checkAuth();
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('USER_DATA', JSON.stringify(userData));
                 setUser(userData);
                 setIsAuthenticated(true);
-                addToast('Selamat Datang! Anda berhasil masuk.', 'success');
+                toast.success('Selamat Datang! Anda berhasil masuk.');
                 return userData;
             }
         } catch (error) {
@@ -56,7 +55,7 @@ export const AuthProvider = ({ children }) => {
                 message = 'Koneksi ke server terputus. Periksa jaringan Anda.';
             }
 
-            addToast(message, 'error');
+            toast.error(message);
             throw error;
         }
     };
@@ -70,7 +69,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('USER_DATA', JSON.stringify(userData));
                 setUser(userData);
                 setIsAuthenticated(true);
-                addToast('Pendaftaran berhasil! Akun Anda telah dibuat.', 'success');
+                toast.success('Pendaftaran berhasil! Akun Anda telah dibuat.');
                 return userData;
             }
         } catch (error) {
@@ -80,7 +79,7 @@ export const AuthProvider = ({ children }) => {
                 message = 'Data yang Anda masukkan tidak valid atau sudah terdaftar.';
             }
 
-            addToast(message, 'error');
+            toast.error(message);
             throw error;
         }
     };
@@ -95,7 +94,6 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('USER_DATA');
             setUser(null);
             setIsAuthenticated(false);
-            window.location.href = '/login';
         }
     };
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 
 const StudentContext = createContext();
 
@@ -15,7 +15,6 @@ export const StudentProvider = ({ children }) => {
         last_page: 1,
     });
     const [loading, setLoading] = useState(false);
-    const { addToast } = useToast();
 
     const lastParamsRef = useRef(null);
 
@@ -46,7 +45,7 @@ export const StudentProvider = ({ children }) => {
             lastParamsRef.current = params;
         } catch (error) {
             console.error("Error fetching students:", error);
-            addToast("Gagal mengambil data mahasiswa", "error");
+            toast.error("Gagal mengambil data mahasiswa");
         } finally {
             setLoading(false);
         }
@@ -67,7 +66,7 @@ export const StudentProvider = ({ children }) => {
                 });
             } catch (error) {
                 console.error("Error refreshing students:", error);
-                addToast("Gagal memperbarui data mahasiswa", "error");
+                toast.error("Gagal memperbarui data mahasiswa");
             } finally {
                 setLoading(false);
             }

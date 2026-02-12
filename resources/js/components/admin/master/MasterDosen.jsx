@@ -2,28 +2,21 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
-import { Plus, Pencil, Trash2, Search, Key, ChevronDown } from "lucide-react";
-import api from "../../../src/api";
-import { useToast } from "../../ui/Toast";
-import { useLecturers } from "../../context/LecturerContext";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { toast } from "react-toastify";
 import { Skeleton } from "../../ui/Skeleton";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchLecturers, createLecturer, updateLecturer, deleteLecturer } from "../../store/slices/lecturerSlice";
 
 const MasterDosen = () => {
-    const [showModal, setShowModal] = useState(false);
+    const dispatch = useDispatch();
+    const { lecturers, pagination, loading, initialLoading, forceRefetch } = useSelector((state) => state.lecturers);
+    const { total, current_page } = pagination;
+
     const [searchTerm, setSearchTerm] = useState("");
-
-    // Use Context
-    const { lecturers, pagination, loading, getLecturers, refreshLecturers } = useLecturers();
-    const { total, per_page, current_page } = pagination;
-
-    const [formLoading, setFormLoading] = useState(false);
-    const { addToast } = useToast();
-
-    // Local state for params to control context
     const [perPage, setPerPage] = useState(10);
-    // Note: currentPage is managed by context via getLecturers, but we need to pass it from DataTable change.
+    const [showModal, setShowModal] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         nip: "",
@@ -33,28 +26,37 @@ const MasterDosen = () => {
         password: "dosen123",
     });
 
-    // Edit/Delete states
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
-    // Initial load & Search debounce
     useEffect(() => {
+        if (searchTerm === "") {
+            dispatch(fetchLecturers({ page: 1, perPage, search: "" }));
+            return;
+        }
+
         const delayDebounceFn = setTimeout(() => {
-            getLecturers(1, perPage, searchTerm);
+            dispatch(fetchLecturers({ page: 1, perPage, search: searchTerm }));
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm, getLecturers, perPage]);
+    }, [searchTerm, perPage, dispatch]);
 
     const handlePageChange = (page) => {
-        getLecturers(page, perPage, searchTerm);
+        dispatch(fetchLecturers({ page, perPage, search: searchTerm }));
     };
 
     const handlePerRowsChange = (newPerPage, page) => {
         setPerPage(newPerPage);
-        getLecturers(page, newPerPage, searchTerm);
+        dispatch(fetchLecturers({ page, perPage: newPerPage, search: searchTerm }));
+    };
+
+    const resetForm = () => {
+        setFormData({ nip: '', name: '', email: '', phone: '', password: 'dosen123' });
+        setIsEditing(false);
+        setEditingId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -62,21 +64,20 @@ const MasterDosen = () => {
         setFormLoading(true);
         try {
             if (isEditing && editingId) {
-                await api.put(`/lecturers/${editingId}`, formData);
-                addToast('Dosen berhasil diperbarui', 'success');
+                await dispatch(updateLecturer({ id: editingId, formData })).unwrap();
+                toast.success('Dosen berhasil diperbarui');
             } else {
-                await api.post('/lecturers', formData);
-                addToast('Dosen berhasil ditambahkan', 'success');
+                await dispatch(createLecturer(formData)).unwrap();
+                toast.success('Dosen berhasil ditambahkan');
             }
 
             setShowModal(false);
-            setIsEditing(false);
-            setEditingId(null);
-            setFormData({ nip: '', name: '', email: '', phone: '', password: 'password123' });
-            refreshLecturers(); // Refresh data using context
+            resetForm();
+            // Refresh data after mutation
+            dispatch(fetchLecturers({ page: 1, perPage, search: searchTerm }));
         } catch (error) {
             console.error(error);
-            addToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
+            toast.error(error || 'Gagal menyimpan data');
         } finally {
             setFormLoading(false);
         }
@@ -104,14 +105,15 @@ const MasterDosen = () => {
         if (!deleteTarget) return;
         setFormLoading(true);
         try {
-            await api.delete(`/lecturers/${deleteTarget.id}`);
-            addToast('Dosen berhasil dihapus', 'success');
+            await dispatch(deleteLecturer(deleteTarget.id)).unwrap();
+            toast.success('Dosen berhasil dihapus');
             setShowDeleteConfirm(false);
             setDeleteTarget(null);
-            refreshLecturers();
+            // Refresh data after mutation
+            dispatch(fetchLecturers({ page: 1, perPage, search: searchTerm }));
         } catch (error) {
             console.error(error);
-            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+            toast.error(error || 'Gagal menghapus data');
         } finally {
             setFormLoading(false);
         }
@@ -198,7 +200,7 @@ const MasterDosen = () => {
                         <DataTable
                             columns={columns}
                             data={lecturers}
-                            progressPending={loading}
+                            progressPending={initialLoading}
                             progressComponent={<TableRowSkeleton />}
                             pagination
                             paginationServer

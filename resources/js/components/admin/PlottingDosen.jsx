@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from "react";
-import api from "../../src/api";
 import {
     Search,
     UserPlus,
     CheckCircle,
     Clock,
     AlertCircle,
-    User,
     Building2,
     Calendar,
     ChevronDown,
     X
 } from "lucide-react";
-import { useToast } from "../ui/Toast";
-import { useAdminInternship } from "../context/AdminInternshipContext";
+import { toast } from "react-toastify";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchInternships, plotLecturer } from "../store/slices/internshipSlice";
+import { fetchLecturers } from "../store/slices/lecturerSlice";
 
 const PlottingDosen = () => {
-    const { addToast } = useToast();
-    const {
-        approvedRegistrations: internships,
-        lecturers,
-        loadingApproved: loading,
-        fetchApproved,
-        fetchLecturers,
-        fetchSubmitted // Imported to refresh validation page data if needed
-    } = useAdminInternship();
+    const dispatch = useDispatch();
+    const { internshipsByStatus, loading, forceRefetch } = useSelector((state) => state.internships);
+    const { lecturers } = useSelector((state) => state.lecturers);
+
+    const internships = internshipsByStatus.approved?.data || [];
 
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedInternship, setSelectedInternship] = useState(null);
@@ -33,39 +29,39 @@ const PlottingDosen = () => {
     const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
-        fetchApproved();
-        fetchLecturers();
-    }, [fetchApproved, fetchLecturers]);
+        dispatch(fetchInternships({ status: 'approved', search: searchTerm }));
+        dispatch(fetchLecturers({ perPage: 100 })); // Get more lecturers for dropdown
+    }, [dispatch, searchTerm]);
 
     const handlePlotSubmit = async () => {
         if (!selectedInternship || !selectedLecturerId) {
-            addToast("Pilih dosen pembimbing terlebih dahulu", "error");
+            toast.error("Pilih dosen pembimbing terlebih dahulu");
             return;
         }
 
         setProcessing(true);
         try {
-            await api.patch(`/admin/internships/${selectedInternship.id}/plot`, {
+            await dispatch(plotLecturer({
+                id: selectedInternship.id,
                 lecturer_id: selectedLecturerId
-            });
-            addToast("Dosen pembimbing berhasil di-plot", "success");
+            })).unwrap();
+
+            toast.success("Dosen pembimbing berhasil di-plot");
             setIsPlotModalOpen(false);
             setSelectedInternship(null);
             setSelectedLecturerId("");
-
-            // Refresh approved list and submitted list (just in case)
-            fetchApproved(true);
-            fetchSubmitted(true);
+            // Re-fetch data after action
+            dispatch(fetchInternships({ status: 'approved', search: searchTerm }));
         } catch (error) {
-            addToast("Gagal melakukan plotting dosen", "error");
+            toast.error(error || "Gagal melakukan plotting dosen");
         } finally {
             setProcessing(false);
         }
     };
 
     const filteredInternships = Array.isArray(internships) ? internships.filter(reg =>
-        reg.student?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.student?.nim.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.leader?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.leader?.nim?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.company?.name.toLowerCase().includes(searchTerm.toLowerCase())
     ) : [];
 
@@ -115,8 +111,8 @@ const PlottingDosen = () => {
                             filteredInternships.map((reg) => (
                                 <tr key={reg.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">
-                                        <div className="text-sm font-bold text-gray-900">{reg.student?.user?.name}</div>
-                                        <div className="text-xs text-gray-500 font-medium">{reg.student?.nim}</div>
+                                        <div className="text-sm font-bold text-gray-900">{reg.leader?.user?.name}</div>
+                                        <div className="text-xs text-gray-500 font-medium">{reg.leader?.nim}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2 mb-1">
@@ -169,11 +165,11 @@ const PlottingDosen = () => {
                             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 bg-indigo-200 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
-                                        {selectedInternship.student?.user?.name.charAt(0)}
+                                        {selectedInternship.leader?.user?.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-gray-900">{selectedInternship.student?.user?.name}</p>
-                                        <p className="text-xs text-gray-500 font-medium">{selectedInternship.student?.nim}</p>
+                                        <p className="text-sm font-bold text-gray-900">{selectedInternship.leader?.user?.name}</p>
+                                        <p className="text-xs text-gray-500 font-medium">{selectedInternship.leader?.nim}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-2">

@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
-import api from "../../src/api";
 import Modal from "../ui/Modal";
 import DeleteConfirm from "../ui/DeleteConfirm";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 import { Skeleton } from "../ui/Skeleton";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
-import { useThemes } from "../context/ThemeContext";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchThemes, createTheme, updateTheme, deleteTheme } from "../store/slices/themeSlice";
 
 const ThemeManagement = () => {
-    const { addToast } = useToast();
-    const { themes: data, pagination, loading, getThemes, refreshThemes } = useThemes();
+    const dispatch = useDispatch();
+    const { themes: data, pagination, loading, forceRefetch } = useSelector((state) => state.themes);
     const { total: totalRows } = pagination;
 
     const [perPage, setPerPage] = useState(10);
@@ -32,25 +32,25 @@ const ThemeManagement = () => {
     const isFirstRun = useRef(true);
 
     useEffect(() => {
-        if (isFirstRun.current) {
-            getThemes(1, perPage, searchTerm);
+        if (isFirstRun.current || forceRefetch) {
+            dispatch(fetchThemes({ page: 1, perPage, search: searchTerm }));
             isFirstRun.current = false;
             return;
         }
 
         const delaySearch = setTimeout(() => {
-            getThemes(1, perPage, searchTerm);
+            dispatch(fetchThemes({ page: 1, perPage, search: searchTerm }));
         }, 500);
         return () => clearTimeout(delaySearch);
-    }, [searchTerm, perPage, getThemes]);
+    }, [searchTerm, perPage, dispatch, forceRefetch]);
 
     const handlePageChange = (page) => {
-        getThemes(page, perPage, searchTerm);
+        dispatch(fetchThemes({ page, perPage, search: searchTerm }));
     };
 
     const handlePerRowsChange = async (newPerPage, page) => {
         setPerPage(newPerPage);
-        getThemes(page, newPerPage, searchTerm);
+        dispatch(fetchThemes({ page, perPage: newPerPage, search: searchTerm }));
     };
 
     const handleOpenModal = (item = null) => {
@@ -79,16 +79,15 @@ const ThemeManagement = () => {
         setModalLoading(true);
         try {
             if (isEditing) {
-                await api.put(`/themes/${selectedItem.id}`, formData);
-                addToast("Tema berhasil diperbarui", "success");
+                await dispatch(updateTheme({ id: selectedItem.id, formData })).unwrap();
+                toast.success("Tema berhasil diperbarui");
             } else {
-                await api.post("/themes", formData);
-                addToast("Tema baru berhasil ditambahkan", "success");
+                await dispatch(createTheme(formData)).unwrap();
+                toast.success("Tema baru berhasil ditambahkan");
             }
             setShowModal(false);
-            refreshThemes();
         } catch (error) {
-            addToast(error.response?.data?.message || "Terjadi kesalahan", "error");
+            toast.error(error || "Terjadi kesalahan");
         } finally {
             setModalLoading(false);
         }
@@ -102,12 +101,13 @@ const ThemeManagement = () => {
     const handleConfirmDelete = async () => {
         setModalLoading(true);
         try {
-            await api.delete(`/themes/${selectedItem.id}`);
-            addToast("Tema berhasil dihapus", "success");
+            await dispatch(deleteTheme(selectedItem.id)).unwrap();
+            toast.success("Tema berhasil dihapus");
             setShowDeleteConfirm(false);
-            refreshThemes();
+            setSelectedItem(null);
         } catch (error) {
-            addToast("Gagal menghapus tema", "error");
+            console.error(error);
+            toast.error(error || "Gagal menghapus tema");
         } finally {
             setModalLoading(false);
         }

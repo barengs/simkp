@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from "react";
-import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 import { Skeleton } from "../ui/Skeleton";
 import { CheckCircle, XCircle, Eye, Search, Clock, FileText } from "lucide-react";
-import { useAdminInternship } from "../context/AdminInternshipContext";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchInternships, validateInternship } from "../store/slices/internshipSlice";
 
 const RegistrationValidation = () => {
-    const { addToast } = useToast();
-    const {
-        submittedRegistrations: registrations,
-        loadingSubmitted: loading,
-        fetchSubmitted,
-        fetchApproved
-    } = useAdminInternship();
+    const dispatch = useDispatch();
+    const { internshipsByStatus, loading, forceRefetch } = useSelector((state) => state.internships);
+    const registrations = internshipsByStatus.submitted?.data || [];
 
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedRegistration, setSelectedRegistration] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
-    const [action, setAction] = useState(""); // 'approve' or 'reject'
+    const [action, setAction] = useState("");
     const [notes, setNotes] = useState("");
     const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
-        fetchSubmitted();
-    }, [fetchSubmitted]);
+        dispatch(fetchInternships({ status: 'submitted', search: searchTerm }));
+    }, [dispatch, searchTerm]);
 
     const handleAction = (registration, actionType) => {
         setSelectedRegistration(registration);
@@ -38,19 +34,19 @@ const RegistrationValidation = () => {
         setProcessing(true);
         const status = action === "approve" ? "approved" : "rejected";
         try {
-            await api.patch(`/admin/internships/${selectedRegistration.id}/status`, {
+            await dispatch(validateInternship({
+                id: selectedRegistration.id,
                 status: status,
                 notes: notes
-            });
-            addToast(`Pendaftaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`, "success");
+            })).unwrap();
+
+            toast.success(`Pendaftaran berhasil ${action === 'approve' ? 'disetujui' : 'ditolak'}`);
             setShowActionModal(false);
             setNotes("");
-
-            // Refresh both submitted and approved lists
-            fetchSubmitted(true);
-            fetchApproved(true);
+            // Re-fetch data after action
+            dispatch(fetchInternships({ status: 'submitted', search: searchTerm }));
         } catch (error) {
-            addToast("Gagal memperbarui status", "error");
+            toast.error(error || "Gagal memperbarui status");
             console.error(error);
         } finally {
             setProcessing(false);
@@ -87,7 +83,7 @@ const RegistrationValidation = () => {
     };
 
     const filteredRegistrations = registrations.filter((reg) =>
-        [reg.student?.user?.name, reg.student?.nim, reg.company?.name].some((field) =>
+        [reg.leader?.user?.name, reg.leader?.user?.nim, reg.company?.name].some((field) =>
             field?.toLowerCase().includes(searchTerm.toLowerCase())
         )
     );
@@ -113,7 +109,7 @@ const RegistrationValidation = () => {
                     <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900 font-bold">
+                                <h3 className="text-lg font-bold text-gray-900">
                                     Daftar Pendaftaran KP
                                 </h3>
                                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
@@ -178,10 +174,10 @@ const RegistrationValidation = () => {
                                             <tr key={registration.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-bold text-gray-900">
-                                                        {registration.student?.user?.name}
+                                                        {registration.leader?.user?.name}
                                                     </div>
                                                     <div className="text-xs text-gray-500 font-medium">
-                                                        {registration.student?.nim}
+                                                        {registration.leader?.nim}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
@@ -272,11 +268,11 @@ const RegistrationValidation = () => {
                                     <div className="space-y-3">
                                         <div>
                                             <span className="text-[10px] font-bold text-gray-400 uppercase block">Nama</span>
-                                            <span className="text-sm font-bold text-gray-900">{selectedRegistration.student?.user?.name}</span>
+                                            <span className="text-sm font-bold text-gray-900">{selectedRegistration.leader?.user?.name}</span>
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-bold text-gray-400 uppercase block">NIM</span>
-                                            <span className="text-sm font-medium text-gray-700">{selectedRegistration.student?.nim}</span>
+                                            <span className="text-sm font-medium text-gray-700">{selectedRegistration.leader?.nim}</span>
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-bold text-gray-400 uppercase block">Status</span>
@@ -395,7 +391,7 @@ const RegistrationValidation = () => {
 
             {/* Action Confirmation Modal */}
             {showActionModal && (
-                <div className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-60 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4">
                     <div className="relative mx-auto p-6 border w-full max-w-md shadow-2xl rounded-2xl bg-white animate-in fade-in slide-in-from-bottom-4 duration-200">
                         <div className="mb-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-2">
@@ -411,7 +407,7 @@ const RegistrationValidation = () => {
                                 pendaftaran KP untuk:
                             </p>
                             <p className="text-sm font-bold text-gray-900 mt-1">
-                                {selectedRegistration?.student?.user?.name} ({selectedRegistration?.student?.nim})
+                                {selectedRegistration?.leader?.user?.name} ({selectedRegistration?.leader?.nim})
                             </p>
                         </div>
 

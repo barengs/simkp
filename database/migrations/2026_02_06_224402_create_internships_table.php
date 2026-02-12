@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,15 +12,17 @@ return new class extends Migration
     {
         Schema::create('internships', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('leader_id')->constrained('students')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('period_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //tahun ajaran
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //perusahaan
+            $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //perusahaan
+            $table->string('company_name_manual')->nullable(); // Nama perusahaan manual
             $table->foreignId('theme_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //tema KP
             $table->foreignId('supervisor_id')->nullable()->constrained('lecturers')->cascadeOnDelete()->cascadeOnUpdate(); //dosen pembimbing
             $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'ongoing', 'grading', 'finished'])->default('draft');
-            $table->string('proposal_url');
-            $table->string('krs_url');
-            $table->string('ktp_url');
+            $table->text('rejection_note')->nullable(); // Catatan penolakan
+            $table->string('proposal_url')->nullable();
+            $table->string('krs_url')->nullable();
+            $table->string('ktp_url')->nullable();
             $table->string('surat_rekomendasi_url')->nullable();
             $table->timestamps();
         });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 
 const ThemeContext = createContext();
 
@@ -15,7 +15,6 @@ export const ThemeProvider = ({ children }) => {
         last_page: 1,
     });
     const [loading, setLoading] = useState(false);
-    const { addToast } = useToast();
 
     const lastParamsRef = useRef(null);
 
@@ -46,7 +45,7 @@ export const ThemeProvider = ({ children }) => {
             lastParamsRef.current = { ...params, hasData: true };
         } catch (error) {
             console.error("Error fetching themes:", error);
-            addToast("Gagal mengambil data tema", "error");
+            toast.error("Gagal mengambil data tema");
         } finally {
             setLoading(false);
         }
@@ -67,7 +66,7 @@ export const ThemeProvider = ({ children }) => {
                 });
             } catch (error) {
                 console.error("Error refreshing themes:", error);
-                addToast("Gagal memperbarui data tema", "error");
+                toast.error("Gagal memperbarui data tema");
             } finally {
                 setLoading(false);
             }

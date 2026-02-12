@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { Plus, Pencil, Trash2, Search, EyeOff, Eye, Key, ChevronDown } from "lucide-react";
-import { useStudents } from "../../context/StudentContext";
-import { useToast } from "../../ui/Toast";
+import { Plus, Pencil, Trash2, Search, EyeOff, Eye } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchStudents, createStudent, updateStudent, deleteStudent } from "../../store/slices/studentSlice";
+import { toast } from "react-toastify";
 import Modal from "../../ui/Modal";
 import DeleteConfirm from "../../ui/DeleteConfirm";
 import { Skeleton } from "../../ui/Skeleton";
-import api from "../../../src/api";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const MasterMahasiswa = () => {
+    const dispatch = useDispatch();
+    const { students, pagination, loading, initialLoading, forceRefetch } = useSelector((state) => state.students);
+    const { total, current_page } = pagination;
+
     const [showModal, setShowModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const { students, pagination, loading, getStudents, refreshStudents } = useStudents();
-    const { total, current_page } = pagination;
-    const { addToast } = useToast();
-
     const [perPage, setPerPage] = useState(10);
     const [formLoading, setFormLoading] = useState(false);
 
@@ -37,20 +35,25 @@ const MasterMahasiswa = () => {
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     useEffect(() => {
+        if (searchTerm === "") {
+            dispatch(fetchStudents({ page: 1, perPage, search: "" }));
+            return;
+        }
+
         const delayDebounceFn = setTimeout(() => {
-            getStudents(1, perPage, searchTerm);
+            dispatch(fetchStudents({ page: 1, perPage, search: searchTerm }));
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm, getStudents, perPage]);
+    }, [searchTerm, perPage, dispatch]);
 
     const handlePageChange = (page) => {
-        getStudents(page, perPage, searchTerm);
+        dispatch(fetchStudents({ page, perPage, search: searchTerm }));
     };
 
     const handlePerRowsChange = (newPerPage, page) => {
         setPerPage(newPerPage);
-        getStudents(page, newPerPage, searchTerm);
+        dispatch(fetchStudents({ page, perPage: newPerPage, search: searchTerm }));
     };
 
     const handleSubmit = async (e) => {
@@ -58,18 +61,19 @@ const MasterMahasiswa = () => {
         setFormLoading(true);
         try {
             if (isEditing && editingId) {
-                await api.put(`/students/${editingId}`, formData);
-                addToast('Mahasiswa berhasil diperbarui', 'success');
+                await dispatch(updateStudent({ id: editingId, formData })).unwrap();
+                toast.success('Mahasiswa berhasil diperbarui');
             } else {
-                await api.post('/students', formData);
-                addToast('Mahasiswa berhasil ditambahkan ke periode ini', 'success');
+                await dispatch(createStudent(formData)).unwrap();
+                toast.success('Mahasiswa berhasil ditambahkan ke periode ini');
             }
             setShowModal(false);
             resetForm();
-            refreshStudents();
+            // Refresh data after mutation
+            dispatch(fetchStudents({ page: 1, perPage, search: searchTerm }));
         } catch (error) {
             console.error(error);
-            addToast(error.response?.data?.message || 'Gagal menyimpan data', 'error');
+            toast.error(error || 'Gagal menyimpan data');
         } finally {
             setFormLoading(false);
         }
@@ -113,14 +117,15 @@ const MasterMahasiswa = () => {
         if (!deleteTarget) return;
         setFormLoading(true);
         try {
-            await api.delete(`/students/${deleteTarget.id}`);
-            addToast('Mahasiswa berhasil dihapus dari periode ini', 'success');
+            await dispatch(deleteStudent(deleteTarget.id)).unwrap();
+            toast.success('Mahasiswa berhasil dihapus dari periode ini');
             setShowDeleteConfirm(false);
             setDeleteTarget(null);
-            refreshStudents();
+            // Refresh data after mutation
+            dispatch(fetchStudents({ page: 1, perPage, search: searchTerm }));
         } catch (error) {
             console.error(error);
-            addToast(error.response?.data?.message || 'Gagal menghapus data', 'error');
+            toast.error(error || 'Gagal menghapus data');
         } finally {
             setFormLoading(false);
         }
@@ -204,7 +209,7 @@ const MasterMahasiswa = () => {
                         <DataTable
                             columns={columns}
                             data={students}
-                            progressPending={loading}
+                            progressPending={initialLoading}
                             progressComponent={<TableRowSkeleton />}
                             pagination
                             paginationServer

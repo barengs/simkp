@@ -13,7 +13,13 @@ class Student extends Model
 
     protected $fillable = ['user_id', 'period_id', 'nim', 'major', 'batch_year', 'phone'];
 
-    public function user() {
+    public function user()
+    {
         return $this->belongsTo(User::class);
+    }
+
+    public function internshipMembers()
+    {
+        return $this->hasMany(InternshipMember::class);
     }
 }

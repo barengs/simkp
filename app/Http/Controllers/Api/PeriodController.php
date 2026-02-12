@@ -11,28 +11,34 @@ class PeriodController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->query('search');
-        $perPage = $request->query('per_page', 10);
+        try {
+            $search = $request->query('search');
+            $perPage = $request->query('per_page', 10);
 
-        $query = Period::query();
+            $periods = Period::select(['id', 'academic_year', 'semester', 'theme_name', 'start_date', 'end_date', 'is_active'])
+                ->when($search, function ($query, $search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('academic_year', 'like', "%{$search}%")
+                            ->orWhere('semester', 'like', "%{$search}%")
+                            ->orWhere('theme_name', 'like', "%{$search}%");
+                    });
+                })
+                ->latest()
+                ->paginate($perPage);
 
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('academic_year', 'like', "%{$search}%")
-                  ->orWhere('semester', 'like', "%{$search}%")
-                  ->orWhere('theme_name', 'like', "%{$search}%");
-            });
+            return response()->json([
+                'status' => 'success',
+                'data' => $periods
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil data periode: ' . $th->getMessage()
+            ], 500);
         }
-
-        $periods = $query->latest()->paginate($perPage);
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $periods
-        ]);
     }
 
-    public function store(Request $request) 
+    public function store(Request $request)
     {
         $request->validate([
             'academic_year' => 'required',
@@ -142,16 +148,18 @@ class PeriodController extends Controller
     {
         try {
             return DB::transaction(function () use ($period) {
-                // Deactivate all others
-                Period::where('is_active', true)->update(['is_active' => false]);
-                
+                // Deactivate all others efficiently
+                Period::where('is_active', true)
+                    ->where('id', '!=', $period->id)
+                    ->update(['is_active' => false]);
+
                 // Activate this one
                 $period->update(['is_active' => true]);
 
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Periode berhasil diaktifkan',
-                    'data' => $period
+                    'data' => $period->fresh()
                 ]);
             });
         } catch (\Throwable $th) {

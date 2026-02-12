@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from "react";
 import api from "../../src/api";
-import { useToast } from "../ui/Toast";
+import { toast } from "react-toastify";
 
 const MitraContext = createContext();
 
@@ -15,7 +15,6 @@ export const MitraProvider = ({ children }) => {
         last_page: 1,
     });
     const [loading, setLoading] = useState(false);
-    const { addToast } = useToast();
 
     const lastParamsRef = useRef(null);
 
@@ -46,7 +45,7 @@ export const MitraProvider = ({ children }) => {
             lastParamsRef.current = { ...params, hasData: true };
         } catch (error) {
             console.error("Error fetching companies:", error);
-            addToast("Gagal mengambil data mitra", "error");
+            toast.error("Gagal mengambil data mitra");
         } finally {
             setLoading(false);
         }
@@ -67,7 +66,7 @@ export const MitraProvider = ({ children }) => {
                 });
             } catch (error) {
                 console.error("Error refreshing companies:", error);
-                addToast("Gagal memperbarui data mitra", "error");
+                toast.error("Gagal memperbarui data mitra");
             } finally {
                 setLoading(false);
             }
