@@ -4,27 +4,25 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Period;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Services\PeriodService;
 
 class PeriodController extends Controller
 {
+    protected $periodService;
+
+    public function __construct(PeriodService $periodService)
+    {
+        $this->periodService = $periodService;
+    }
+
     public function index(Request $request)
     {
         try {
-            $search = $request->query('search');
-            $perPage = $request->query('per_page', 10);
-
-            $periods = Period::select(['id', 'academic_year', 'semester', 'theme_name', 'start_date', 'end_date', 'is_active'])
-                ->when($search, function ($query, $search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('academic_year', 'like', "%{$search}%")
-                            ->orWhere('semester', 'like', "%{$search}%")
-                            ->orWhere('theme_name', 'like', "%{$search}%");
-                    });
-                })
-                ->latest()
-                ->paginate($perPage);
+            $periods = $this->periodService->getAllPeriods(
+                $request->only('search'),
+                $request->query('per_page', 10)
+            );
 
             return response()->json([
                 'status' => 'success',
@@ -49,27 +47,13 @@ class PeriodController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                // If this new period is set as active, deactivate all others
-                if ($request->is_active) {
-                    Period::where('is_active', true)->update(['is_active' => false]);
-                }
+            $period = $this->periodService->createPeriod($request->all());
 
-                $period = Period::create([
-                    'academic_year' => $request->academic_year,
-                    'semester' => $request->semester,
-                    'theme_name' => $request->theme_name,
-                    'start_date' => $request->start_date,
-                    'end_date' => $request->end_date,
-                    'is_active' => $request->is_active ?? false,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Periode berhasil ditambahkan',
-                    'data' => $period
-                ], 201);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Periode berhasil ditambahkan',
+                'data' => $period
+            ], 201);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
@@ -97,29 +81,13 @@ class PeriodController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $period) {
-                // If this period is being set as active, deactivate all others
-                if ($request->is_active) {
-                    Period::where('id', '!=', $period->id)
-                        ->where('is_active', true)
-                        ->update(['is_active' => false]);
-                }
+            $updatedPeriod = $this->periodService->updatePeriod($period, $request->all());
 
-                $period->update([
-                    'academic_year' => $request->academic_year,
-                    'semester' => $request->semester,
-                    'theme_name' => $request->theme_name,
-                    'start_date' => $request->start_date,
-                    'end_date' => $request->end_date,
-                    'is_active' => $request->is_active ?? false,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Periode berhasil diperbarui',
-                    'data' => $period
-                ]);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Periode berhasil diperbarui',
+                'data' => $updatedPeriod
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
@@ -131,7 +99,7 @@ class PeriodController extends Controller
     public function destroy(Period $period)
     {
         try {
-            $period->delete();
+            $this->periodService->deletePeriod($period);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Periode berhasil dihapus'
@@ -147,21 +115,13 @@ class PeriodController extends Controller
     public function activate(Period $period)
     {
         try {
-            return DB::transaction(function () use ($period) {
-                // Deactivate all others efficiently
-                Period::where('is_active', true)
-                    ->where('id', '!=', $period->id)
-                    ->update(['is_active' => false]);
+            $activePeriod = $this->periodService->activatePeriod($period);
 
-                // Activate this one
-                $period->update(['is_active' => true]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Periode berhasil diaktifkan',
-                    'data' => $period->fresh()
-                ]);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Periode berhasil diaktifkan',
+                'data' => $activePeriod
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',

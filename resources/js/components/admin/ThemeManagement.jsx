@@ -115,7 +115,7 @@ const ThemeManagement = () => {
 
     const TableRowSkeleton = () => (
         <div className="w-full space-y-3 p-4">
-            {[...Array(5)].map((_, i) => (
+            {[...Array(1)].map((_, i) => (
                 <div key={i} className="flex items-center space-x-4">
                     <Skeleton className="h-12 w-full" />
                 </div>
@@ -128,18 +128,21 @@ const ThemeManagement = () => {
             name: "Nama Tema",
             selector: (row) => row.name,
             sortable: true,
+            // center: true,
             wrap: true,
         },
         {
             name: "Tahun",
             selector: (row) => row.year,
             sortable: true,
+            center: true,
             width: "120px"
         },
         {
             name: "Status",
             selector: (row) => row.is_active,
             sortable: true,
+            center: true,
             width: "150px",
             cell: (row) => (
                 <span
@@ -155,8 +158,9 @@ const ThemeManagement = () => {
         {
             name: "Aksi",
             width: "120px",
+            center: true,
             cell: (row) => (
-                <div className="flex space-x-2">
+                <div className="flex item space-x-2">
                     <button
                         onClick={() => handleOpenModal(row)}
                         className="text-indigo-600 hover:text-indigo-900 p-1"

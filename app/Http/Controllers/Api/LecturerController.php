@@ -2,30 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\User;
-use App\Models\Lecturer;
 use App\Http\Controllers\Controller;
+use App\Models\Lecturer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Services\LecturerService;
+use Illuminate\Validation\ValidationException;
 
 class LecturerController extends Controller
 {
+    protected $lecturerService;
+
+    public function __construct(LecturerService $lecturerService)
+    {
+        $this->lecturerService = $lecturerService;
+    }
+
     public function index(Request $request)
     {
-        $query = Lecturer::with('user');
-
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('nip', 'like', "%{$request->search}%")
-                    ->orWhereHas('user', function ($q2) use ($request) {
-                        $q2->where('name', 'like', "%{$request->search}%")
-                            ->orWhere('email', 'like', "%{$request->search}%");
-                    });
-            });
-        }
-
-        $lecturers = $query->latest()->paginate($request->per_page ?? 10);
+        $lecturers = $this->lecturerService->getAllLecturers(
+            $request->only('search'),
+            $request->get('per_page', 10)
+        );
 
         return response()->json([
             'status' => 'success',
@@ -44,36 +41,19 @@ class LecturerController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                // Check if user already exists
-                $user = User::where('email', $request->email)->first();
+            $lecturer = $this->lecturerService->createLecturer($request->all());
 
-                if (!$user) {
-                    $user = User::create([
-                        'name' => $request->name,
-                        'email' => $request->email,
-                        'password' => Hash::make($request->password),
-                        'role' => 'dosen'
-                    ]);
-                }
-
-                // Check if lecturer registration already exists for this period
-                // The Global Scope will automatically check for active period_id
-                if (Lecturer::where('nip', $request->nip)->exists()) {
-                    throw new \Exception('Dosen dengan NIP ini sudah terdaftar di periode ini.');
-                }
-
-                $lecturer = $user->lecturer()->create([
-                    'nip' => $request->nip,
-                    'phone' => $request->phone,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Dosen berhasil ditambahkan ke periode ini',
-                    'data' => $lecturer->load('user')
-                ], 201);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dosen berhasil ditambahkan ke periode ini',
+                'data' => $lecturer->load('user')
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $error) {
             return response()->json([
                 'status' => 'error',
@@ -95,31 +75,13 @@ class LecturerController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $lecturer) {
-                // Update global user info
-                $userData = [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                ];
+            $updatedLecturer = $this->lecturerService->updateLecturer($lecturer, $request->all());
 
-                if ($request->password) {
-                    $userData['password'] = Hash::make($request->password);
-                }
-
-                $lecturer->user->update($userData);
-
-                // Update period-specific lecturer info
-                $lecturer->update([
-                    'nip' => $request->nip,
-                    'phone' => $request->phone,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Dosen berhasil diperbarui',
-                    'data' => $lecturer->load('user')
-                ]);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dosen berhasil diperbarui',
+                'data' => $updatedLecturer->load('user')
+            ]);
         } catch (\Exception $error) {
             return response()->json([
                 'status' => 'error',
@@ -133,9 +95,7 @@ class LecturerController extends Controller
         $lecturer = Lecturer::findOrFail($id);
 
         try {
-            // We only delete the lecturer record for this period
-            // The User record remains global
-            $lecturer->delete();
+            $this->lecturerService->deleteLecturer($lecturer);
 
             return response()->json([
                 'status' => 'success',

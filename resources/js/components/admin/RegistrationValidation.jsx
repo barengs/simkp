@@ -90,7 +90,7 @@ const RegistrationValidation = () => {
 
     const TableRowSkeleton = () => (
         <>
-            {[...Array(5)].map((_, i) => (
+            {[...Array(1)].map((_, i) => (
                 <tr key={i}>
                     {[...Array(7)].map((_, j) => (
                         <td key={j} className="px-6 py-4">

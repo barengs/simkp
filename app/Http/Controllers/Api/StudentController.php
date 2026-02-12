@@ -2,30 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\User;
-use App\Models\Student;
 use App\Http\Controllers\Controller;
+use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Services\StudentService;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
+    protected $studentService;
+
+    public function __construct(StudentService $studentService)
+    {
+        $this->studentService = $studentService;
+    }
+
     public function index(Request $request)
     {
-        $query = Student::with('user');
-
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('nim', 'like', "%{$request->search}%")
-                    ->orWhereHas('user', function ($q2) use ($request) {
-                        $q2->where('name', 'like', "%{$request->search}%")
-                            ->orWhere('email', 'like', "%{$request->search}%");
-                    });
-            });
-        }
-
-        $students = $query->latest()->paginate($request->per_page ?? 10);
+        $students = $this->studentService->getAllStudents(
+            $request->only('search'),
+            $request->get('per_page', 10)
+        );
 
         return response()->json([
             'status' => 'success',
@@ -40,32 +37,12 @@ class StudentController extends Controller
             'period_id' => 'required|exists:periods,id'
         ]);
 
-        $student = Student::with('user')->where('nim', $request->npm)->first();
-
-        if (!$student) {
-            return response()->json(['message' => 'Mahasiswa tidak ditemukan'], 404);
+        try {
+            $result = $this->studentService->checkAvailability($request->npm, $request->period_id);
+            return response()->json($result);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
         }
-
-        // Check if student is already in an internship for this period
-        $exists = \App\Models\InternshipMember::where('student_id', $student->id)
-            ->whereHas('internship', function ($q) use ($request) {
-                $q->where('period_id', $request->period_id)
-                    ->where('status', '!=', 'rejected'); // Allow re-register if rejected? User didn't specify, assuming strict unique for now or status check
-            })->exists();
-
-        if ($exists) {
-            return response()->json([
-                'message' => 'Mahasiswa sudah terdaftar di kelompok lain pada periode ini',
-                'can_join' => false,
-                'student' => $student
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Mahasiswa tersedia',
-            'can_join' => true,
-            'student' => $student
-        ]);
     }
 
     public function store(Request $request)
@@ -81,37 +58,19 @@ class StudentController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                // Check if user already exists
-                $user = User::where('email', $request->email)->first();
+            $student = $this->studentService->createStudent($request->all());
 
-                if (!$user) {
-                    $user = User::create([
-                        'name' => $request->name,
-                        'email' => $request->email,
-                        'password' => Hash::make($request->password),
-                        'role' => 'mahasiswa'
-                    ]);
-                }
-
-                // Check if student registration already exists for this period
-                if (Student::where('nim', $request->nim)->exists()) {
-                    throw new \Exception('Mahasiswa dengan NIM ini sudah terdaftar di periode ini.');
-                }
-
-                $student = $user->student()->create([
-                    'nim' => $request->nim,
-                    'major' => $request->major,
-                    'batch_year' => $request->batch_year,
-                    'phone' => $request->phone,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Mahasiswa berhasil ditambahkan ke periode ini',
-                    'data' => $student->load('user')
-                ], 201);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Mahasiswa berhasil ditambahkan ke periode ini',
+                'data' => $student->load('user')
+            ], 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $error) {
             return response()->json([
                 'status' => 'error',
@@ -135,33 +94,13 @@ class StudentController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request, $student) {
-                // Update global user info
-                $userData = [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                ];
+            $updatedStudent = $this->studentService->updateStudent($student, $request->all());
 
-                if ($request->password) {
-                    $userData['password'] = Hash::make($request->password);
-                }
-
-                $student->user->update($userData);
-
-                // Update period-specific student info
-                $student->update([
-                    'nim' => $request->nim,
-                    'major' => $request->major,
-                    'batch_year' => $request->batch_year,
-                    'phone' => $request->phone,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Mahasiswa berhasil diperbarui',
-                    'data' => $student->load('user')
-                ]);
-            });
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Mahasiswa berhasil diperbarui',
+                'data' => $updatedStudent->load('user')
+            ]);
         } catch (\Exception $error) {
             return response()->json([
                 'status' => 'error',
@@ -175,8 +114,7 @@ class StudentController extends Controller
         $student = Student::findOrFail($id);
 
         try {
-            // Only delete student record for this period
-            $student->delete();
+            $this->studentService->deleteStudent($student);
 
             return response()->json([
                 'status' => 'success',

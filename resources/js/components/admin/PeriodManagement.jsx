@@ -243,7 +243,7 @@ const PeriodManagement = () => {
 
     const TableRowSkeleton = () => (
         <div className="w-full space-y-3 p-4">
-            {[...Array(5)].map((_, i) => (
+            {[...Array(1)].map((_, i) => (
                 <div key={i} className="flex items-center space-x-4">
                     <Skeleton className="h-12 w-full" />
                 </div>

@@ -4,22 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Theme;
+use App\Services\ThemeService;
 
 class ThemeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $themeService;
+
+    public function __construct(ThemeService $themeService)
+    {
+        $this->themeService = $themeService;
+    }
+
     public function index(Request $request)
     {
-        $query = \App\Models\Theme::query();
-
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where('name', 'like', "%{$search}%");
-        }
-
-        $themes = $query->paginate($request->get('per_page', 10));
+        $themes = $this->themeService->getAllThemes(
+            $request->only('search'),
+            $request->get('per_page', 10)
+        );
 
         return response()->json([
             'status' => 'success',
@@ -30,13 +32,13 @@ class ThemeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'year'      => 'required|string',
+            'name' => 'required|string|max:255',
+            'year' => 'required|string',
             'is_active' => 'boolean',
         ]);
 
         try {
-            $theme = \App\Models\Theme::create($validated);
+            $theme = $this->themeService->createTheme($validated);
 
             return response()->json([
                 'status' => 'success',
@@ -52,7 +54,7 @@ class ThemeController extends Controller
         }
     }
 
-    public function show(\App\Models\Theme $theme)
+    public function show(Theme $theme)
     {
         return response()->json([
             'status' => 'success',
@@ -60,21 +62,21 @@ class ThemeController extends Controller
         ]);
     }
 
-    public function update(Request $request, \App\Models\Theme $theme)
+    public function update(Request $request, Theme $theme)
     {
         $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'year'      => 'required|string',
+            'name' => 'required|string|max:255',
+            'year' => 'required|string',
             'is_active' => 'boolean',
         ]);
 
         try {
-            $theme->update($validated);
+            $updatedTheme = $this->themeService->updateTheme($theme, $validated);
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Tema berhasil diperbarui',
-                'data' => $theme
+                'data' => $updatedTheme
             ]);
         } catch (\Throwable $th) {
             return response()->json([
@@ -85,10 +87,10 @@ class ThemeController extends Controller
         }
     }
 
-    public function destroy(\App\Models\Theme $theme)
+    public function destroy(Theme $theme)
     {
         try {
-            $theme->delete();
+            $this->themeService->deleteTheme($theme);
             return response()->json([
                 'status' => 'success',
                 'message' => 'Tema berhasil dihapus'

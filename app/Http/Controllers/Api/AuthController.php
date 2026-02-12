@@ -4,50 +4,56 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Auth;
+use App\Services\AuthService;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    protected $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     public function login(Request $request)
     {
         $request->validate([
-            'email'     => 'required|email',
-            'password'  => 'required'
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        
-        if(!$user || !Hash::check($request->password, $user->password)) {
+        try {
+            $data = $this->authService->login($request->only('email', 'password'));
+
             return response()->json([
-                'status'    => 'error',
-                'message'   => 'Email atau Password salah'
+                'status' => 'success',
+                'message' => 'Login berhasil',
+                'token' => $data['token'],
+                'user' => $data['user'],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
             ], 401);
         }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status'    => 'success',
-            'message'   => 'Login berhasil',
-            'token'     => $token,
-            'user'      => $user->load(['student', 'lecturer']),
-        ]);
-    }
-        
-    public function me(Request $request){
-        return response()->json($request->user()->load(['student', 'lecturer']));
     }
 
-    public function logout(Request $request){
-        $request->user()->currentAccessToken()->delete();
+    public function me(Request $request)
+    {
+        $user = $this->authService->getCurrentUser($request->user());
+        return response()->json($user);
+    }
+
+    public function logout(Request $request)
+    {
+        $this->authService->logout($request->user());
 
         return response()->json([
-            'status'    => 'success',
-            'message'   => 'Berhasil Keluar'
+            'status' => 'success',
+            'message' => 'Berhasil Keluar'
         ]);
     }
 }
