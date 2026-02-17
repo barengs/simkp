@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { UploadCloud, Save, Send, ChevronLeft, ChevronRight, Plus, Trash2, Search, Loader2, Check } from "lucide-react";
+import { Users, Star, UploadCloud, Save, Send, ChevronLeft, ChevronRight, Plus, Trash2, Search, Loader2, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCompanies } from "../store/slices/companySlice";
 import { fetchThemes } from "../store/slices/themeSlice";
@@ -13,26 +13,9 @@ const Registration = () => {
     const dispatch = useDispatch();
     const { user } = useAuth();
 
-    const { companies } = useSelector((state) => state.companies);
-    const { themes } = useSelector((state) => state.themes);
-    const { periods } = useSelector((state) => state.periods);
-    const {
-        dashboardData: existingInternship,
-        dashboardFetched
-    } = useSelector((state) => state.internships);
-
-    // Check if any of the dependencies are loading
-    const contextLoading = loading;
-
-    useEffect(() => {
-        dispatch(fetchStudentDashboard());
-        dispatch(fetchCompanies({ perPage: 100 }));
-        dispatch(fetchThemes({ perPage: 100 }));
-        dispatch(fetchPeriods({ perPage: 100 }));
-    }, [dispatch]);
-
+    // 1. Local State Hooks
     const [step, setStep] = useState(1);
-    const [loading, setLoading] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
     const [checkingLocation, setCheckingLocation] = useState(false);
     const [locationStatus, setLocationStatus] = useState(null); // { available: bool, message: string }
 
@@ -54,8 +37,28 @@ const Registration = () => {
         },
     });
 
-    const validationTimeouts = React.useRef({});
-    const latestFormData = React.useRef(formData);
+    const validationTimeouts = useRef({});
+    const latestFormData = useRef(formData);
+
+    // 2. Redux Hooks
+    const { companies, loading: companiesLoading } = useSelector((state) => state.companies);
+    const { themes, loading: themesLoading } = useSelector((state) => state.themes);
+    const { periods, loading: periodsLoading } = useSelector((state) => state.periods);
+    const {
+        dashboardData: existingInternship,
+        dashboardFetched,
+        loading: internshipLoading
+    } = useSelector((state) => state.internships);
+
+    // 3. Derived Data
+    const contextLoading = companiesLoading || themesLoading || periodsLoading || internshipLoading;
+
+    useEffect(() => {
+        dispatch(fetchStudentDashboard());
+        dispatch(fetchCompanies({ perPage: 100 }));
+        dispatch(fetchThemes({ perPage: 100 }));
+        dispatch(fetchPeriods({ perPage: 100 }));
+    }, [dispatch]);
 
     // Keep latestFormData in sync
     useEffect(() => {
@@ -66,16 +69,16 @@ const Registration = () => {
     useEffect(() => {
         if (existingInternship) {
             // Populate form if needed, or redirect to status view
-            // For now, if valid existing internship, we show status view below
         } else if (user) {
             // Initialize members with leader
-            if (formData.members.length === 0) {
-                // Handle different user structures (direct or nested student)
-                const npm = user.student?.nim || user.nim || user.username || '';
-                const name = user.name || '';
+            const npm = user.student?.nim || user.nim || user.username || '';
+            const name = user.name || '';
 
-                if (npm) {
-                    setFormData(prev => ({
+            // Ensure we have the leader at index 0
+            setFormData(prev => {
+                // If members empty, adds leader.
+                if (prev.members.length === 0) {
+                    return {
                         ...prev,
                         members: [{
                             npm: npm,
@@ -85,9 +88,43 @@ const Registration = () => {
                             error: null,
                             isLoading: false
                         }]
-                    }));
+                    };
                 }
-            }
+
+                // If first member is leader but NPM doesn't match current user (e.g. relogin/switch)
+                if (prev.members[0].isLeader && prev.members[0].npm !== npm) {
+                    const newMembers = [...prev.members];
+                    newMembers[0] = {
+                        npm: npm,
+                        name: name,
+                        isLeader: true,
+                        isValid: true,
+                        error: null,
+                        isLoading: false
+                    };
+                    return { ...prev, members: newMembers };
+                }
+
+                // If first member is NOT leader (should not happen normally but good safety)
+                if (!prev.members[0].isLeader) {
+                    return {
+                        ...prev,
+                        members: [
+                            {
+                                npm: npm,
+                                name: name,
+                                isLeader: true,
+                                isValid: true,
+                                error: null,
+                                isLoading: false
+                            },
+                            ...prev.members
+                        ]
+                    };
+                }
+
+                return prev;
+            });
         }
     }, [existingInternship, user]);
 
@@ -273,7 +310,7 @@ const Registration = () => {
     };
 
     const submitRegistration = async (status) => {
-        setLoading(true);
+        setSubmitLoading(true);
         const data = new FormData();
         data.append("period_id", formData.periodId);
         data.append("theme_id", formData.themeId);
@@ -314,7 +351,7 @@ const Registration = () => {
                 Object.values(error.response.data.errors).forEach((err) => toast.error(err[0]));
             }
         } finally {
-            setLoading(false);
+            setSubmitLoading(false);
         }
     };
 
@@ -453,7 +490,7 @@ const Registration = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => validateMember(index)}
-                                                        disabled={loading || !member.npm}
+                                                        disabled={submitLoading || !member.npm}
                                                         className="absolute right-2 top-1.5 p-1 text-gray-400 hover:text-indigo-600 disabled:opacity-50"
                                                         title="Cek NPM"
                                                     >
@@ -484,15 +521,14 @@ const Registration = () => {
 
                                     {/* Actions */}
                                     <div className="flex-shrink-0 mt-2">
-                                        {!member.isLeader && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeMemberRow(index)}
-                                                className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => removeMemberRow(index)}
+                                            disabled={member.isLeader}
+                                            className={`p-2 rounded-full transition-colors ${member.isLeader ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -571,24 +607,89 @@ const Registration = () => {
         }
     };
 
-    if (contextLoading || (!dashboardFetched && loading)) return <Skeleton className="h-96 w-full" />;
+    if (contextLoading || (!dashboardFetched && submitLoading)) return <Skeleton className="h-96 w-full" />;
 
     if (existingInternship && existingInternship.status && !['rejected', 'draft'].includes(existingInternship.status)) {
         // Status View (simplified for brevity, reuse existing logic in practice)
         return (
-            <div className="max-w-4xl mx-auto py-8 px-4">
-                <div className="bg-white shadow-xl rounded-2xl p-8 text-center">
-                    <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900">Status: {existingInternship.status?.toUpperCase() || 'UNKNOWN'}</h2>
-                    <p className="text-gray-500 mt-2">Anda terdaftar dalam kelompok.</p>
-                    <div className="mt-6 border-t pt-6 text-left">
-                        <h3 className="font-semibold mb-2">Anggota Kelompok:</h3>
-                        <ul className="list-disc pl-5">
-                            {existingInternship.leader && <li>{existingInternship.leader.user?.name} (Ketua)</li>}
-                            {existingInternship.members?.map(m => (
-                                <li key={m.id}>{m.student?.user?.name}</li>
-                            ))}
-                        </ul>
+            <div className="max-w-6xl mx-auto py-10 px-4 animate-in fade-in duration-1000">
+                <div className="bg-white border border-gray-100 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.05)] rounded-[25px] overflow-hidden">
+                    <div className="flex flex-col lg:flex-row">
+
+                        {/* Sisi Kiri: Status & Hero Section */}
+                        <div className="lg:w-2/5 p-10 lg:p-16 flex flex-col items-center justify-center text-center bg-gradient-to-br from-emerald-50/50 via-white to-transparent border-b lg:border-b-0 lg:border-r border-gray-100">
+                            <div className="relative mb-8">
+                                <div className="absolute inset-0 bg-emerald-200 blur-3xl opacity-20 rounded-full"></div>
+                                <div className="relative inline-flex items-center justify-center w-24 h-24 bg-white shadow-xl shadow-emerald-100 rounded-[32px]">
+                                    <Check className="w-12 h-12 text-emerald-500" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+                                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-[0.2em]">
+                                        Verified System
+                                    </span>
+                                </div>
+                                <h2 className="text-3xl font-black text-gray-900 leading-tight">
+                                    Status: {existingInternship.status?.toUpperCase() || 'UNKNOWN'}
+                                </h2>
+                                <p className="text-gray-400 font-medium">
+                                    Anda terdaftar dalam kelompok.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Sisi Kanan: Daftar Anggota dengan Card Grid */}
+                        <div className="lg:w-3/5 p-10 lg:p-16 bg-gray-50/30">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-2 bg-black rounded-lg">
+                                    <Users className="w-4 h-4 text-white" />
+                                </div>
+                                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">
+                                    Anggota Kelompok:
+                                </h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Leader Card */}
+                                {existingInternship.leader && (
+                                    <div className="group flex items-center gap-4 bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
+                                        <div className="w-12 h-12 shrink-0 bg-gray-900 rounded-2xl flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform">
+                                            {existingInternship.leader.user?.name?.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <p className="font-bold text-gray-800 truncate">
+                                                {existingInternship.leader.user?.name}
+                                            </p>
+                                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter">Ketua Kelompok</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Member Cards */}
+                                {existingInternship.members?.map((m) => (
+                                    <div key={m.id} className="group flex items-center gap-4 bg-white/60 backdrop-blur-md p-5 rounded-[24px] border border-gray-100 transition-all hover:bg-white hover:border-gray-200">
+                                        <div className="w-12 h-12 shrink-0 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold text-sm group-hover:bg-gray-50 transition-colors">
+                                            {m.student?.user?.name?.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <p className="font-bold text-gray-700 truncate">
+                                                {m.student?.user?.name}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter">Anggota Tim</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-12 pt-8 border-t border-gray-100 flex items-center justify-between text-gray-300 font-medium text-[10px] uppercase tracking-[0.2em]">
+                                <span>Timestamp: {new Date().toLocaleDateString('id-ID')}</span>
+                                <span>Reference ID: #{existingInternship.id || 'N/A'}</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -628,11 +729,11 @@ const Registration = () => {
                         </button>
                     ) : (
                         <div className="space-x-4">
-                            <button onClick={() => submitRegistration('draft')} disabled={loading} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <button onClick={() => submitRegistration('draft')} disabled={submitLoading} className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <Save className="w-4 h-4 mr-2" /> Simpan Draft
                             </button>
-                            <button onClick={() => submitRegistration('submitted')} disabled={loading} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-                                {loading ? 'Mengirim...' : <><Send className="w-4 h-4 mr-2" /> Kirim Pendaftaran</>}
+                            <button onClick={() => submitRegistration('submitted')} disabled={submitLoading} className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                {submitLoading ? 'Mengirim...' : <><Send className="w-4 h-4 mr-2" /> Kirim Pendaftaran</>}
                             </button>
                         </div>
                     )}

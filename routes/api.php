@@ -27,5 +27,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/admin/internships', [\App\Http\Controllers\Api\InternshipController::class, 'index']);
     Route::patch('/admin/internships/{internship}/status', [\App\Http\Controllers\Api\InternshipController::class, 'updateStatus']);
-    Route::patch('/admin/internships/{internship}/plot', [\App\Http\Controllers\Api\InternshipController::class, 'plotLecturer']);
+    Route::patch('/admin/internships/{internship}/plot', [\App\Http\Controllers\Api\InternshipController::class, 'plotLecturer']); // Keeping for backward compatibility if needed
+    Route::patch('/admin/internships/assign-teacher', [\App\Http\Controllers\Api\InternshipController::class, 'assignTeacher']);
+
+    // Logbook Routes
+    Route::get('/logbooks', [\App\Http\Controllers\Api\LogbookController::class, 'index']);
+    Route::post('/logbooks', [\App\Http\Controllers\Api\LogbookController::class, 'store']);
+    Route::patch('/logbooks/{logbook}/validate', [\App\Http\Controllers\Api\LogbookController::class, 'validateLogbook']);
 });

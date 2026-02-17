@@ -11,7 +11,8 @@ export const fetchInternships = createAsyncThunk(
             const cacheKey = `${status}_${page}_${perPage}_${search}`;
             return { status, data: response.data, cacheKey };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Gagal mengambil data pendaftaran');
+            const message = error.response?.data?.message || 'Gagal mengambil data pendaftaran';
+            return rejectWithValue(message);
         }
     },
     {
@@ -45,6 +46,18 @@ export const plotLecturer = createAsyncThunk(
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Gagal melakukan plotting dosen');
+        }
+    }
+);
+
+export const assignTeacher = createAsyncThunk(
+    'internships/assignTeacher',
+    async ({ internship_ids, teacher_id }, { rejectWithValue }) => {
+        try {
+            const response = await api.patch('/admin/internships/assign-teacher', { internship_ids, teacher_id });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Gagal menugaskan dosen');
         }
     }
 );
@@ -130,6 +143,9 @@ const internshipSlice = createSlice({
         },
         resetLocationStatus: (state) => {
             state.locationStatus = null;
+        },
+        resetInternshipState: (state) => {
+            return initialState;
         }
     },
     extraReducers: (builder) => {
@@ -157,6 +173,10 @@ const internshipSlice = createSlice({
                 state.lastParamsByStatus = {}; // Invalidate all caches
             })
             .addCase(plotLecturer.fulfilled, (state) => {
+                state.forceRefetch = true;
+                state.lastParamsByStatus = {}; // Invalidate all caches
+            })
+            .addCase(assignTeacher.fulfilled, (state) => {
                 state.forceRefetch = true;
                 state.lastParamsByStatus = {}; // Invalidate all caches
             })
@@ -194,5 +214,5 @@ const internshipSlice = createSlice({
     },
 });
 
-export const { setForceRefetch, resetLocationStatus } = internshipSlice.actions;
+export const { setForceRefetch, resetLocationStatus, resetInternshipState } = internshipSlice.actions;
 export default internshipSlice.reducer;

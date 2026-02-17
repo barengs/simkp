@@ -5,6 +5,7 @@ import lecturerReducer from "./slices/lecturerSlice";
 import studentReducer from "./slices/studentSlice";
 import companyReducer from "./slices/companySlice";
 import internshipReducer from "./slices/internshipSlice";
+import logbookReducer from "./slices/logbookSlice";
 
 export const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
         students: studentReducer,
         companies: companyReducer,
         internships: internshipReducer,
+        logbooks: logbookReducer,
     },
 });
 

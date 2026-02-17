@@ -7,7 +7,7 @@ import { fetchInternships, validateInternship } from "../store/slices/internship
 
 const RegistrationValidation = () => {
     const dispatch = useDispatch();
-    const { internshipsByStatus, loading, forceRefetch } = useSelector((state) => state.internships);
+    const { internshipsByStatus, loading, forceRefetch, error } = useSelector((state) => state.internships);
     const registrations = internshipsByStatus.submitted?.data || [];
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +21,12 @@ const RegistrationValidation = () => {
     useEffect(() => {
         dispatch(fetchInternships({ status: 'submitted', search: searchTerm }));
     }, [dispatch, searchTerm]);
+
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error]);
 
     const handleAction = (registration, actionType) => {
         setSelectedRegistration(registration);

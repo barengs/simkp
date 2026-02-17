@@ -1,491 +1,233 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchLogbooks, validateLogbook } from "../store/slices/logbookSlice";
+import { toast } from "react-toastify";
+import { Skeleton } from "../ui/Skeleton";
+import Modal from "../ui/Modal";
+import { CheckCircle, XCircle, Search, FileText, User, Image, Clock } from "lucide-react";
 
 const LogbookValidation = () => {
-    const [logbooks, setLogbooks] = useState([
-        {
-            id: 1,
-            studentName: "Rudi Hartono",
-            studentNim: "1234567890",
-            week: 1,
-            date: "2024-02-05",
-            activity:
-                "Pengenalan lingkungan kerja dan struktur organisasi perusahaan",
-            status: "Disetujui",
-            feedback: "Kegiatan sudah sesuai, lanjutkan dengan baik",
-            photo: "https://via.placeholder.com/150",
-        },
-        {
-            id: 2,
-            studentName: "Siti Nurhaliza",
-            studentNim: "0987654321",
-            week: 2,
-            date: "2024-02-12",
-            activity:
-                "Melakukan analisis kebutuhan sistem bersama tim pengembang",
-            status: "Disetujui",
-            feedback: "Analisis cukup mendalam, dokumentasi bisa diperbaiki",
-            photo: "https://via.placeholder.com/150",
-        },
-        {
-            id: 3,
-            studentName: "Ahmad Fauzi",
-            studentNim: "1122334455",
-            week: 3,
-            date: "2024-02-19",
-            activity:
-                "Mengikuti pelatihan teknologi yang digunakan di perusahaan",
-            status: "Menunggu Validasi",
-            feedback: "",
-            photo: null,
-        },
-        {
-            id: 4,
-            studentName: "Budi Santoso",
-            studentNim: "2233445566",
-            week: 2,
-            date: "2024-02-12",
-            activity: "Membantu implementasi modul login pada sistem",
-            status: "Menunggu Validasi",
-            feedback: "",
-            photo: "https://via.placeholder.com/150",
-        },
-    ]);
+    const dispatch = useDispatch();
+    const { logbooks, loading, submitLoading, error } = useSelector((state) => state.logbooks);
 
+    const [searchTerm, setSearchTerm] = useState("");
     const [selectedLogbook, setSelectedLogbook] = useState(null);
-    const [showDetailModal, setShowDetailModal] = useState(false);
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [feedback, setFeedback] = useState("");
-    const [action, setAction] = useState(""); // 'approve' or 'reject'
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [actionType, setActionType] = useState(null); // 'approve' | 'reject'
+    const [rejectionReason, setRejectionReason] = useState("");
 
-    const handleAction = (logbookId, actionType) => {
-        const logbook = logbooks.find((l) => l.id === logbookId);
+    useEffect(() => {
+        dispatch(fetchLogbooks());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error]);
+
+    const filteredLogbooks = logbooks.filter(logbook =>
+        logbook.internship?.leader?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        logbook.activity.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleAction = (logbook, type) => {
         setSelectedLogbook(logbook);
-        setAction(actionType);
-        setFeedback("");
-        setShowFeedbackModal(true);
+        setActionType(type);
+        setRejectionReason("");
+        setIsActionModalOpen(true);
     };
 
-    const confirmAction = () => {
-        setLogbooks((prev) =>
-            prev.map((log) => {
-                if (log.id === selectedLogbook.id) {
-                    return {
-                        ...log,
-                        status:
-                            action === "approve"
-                                ? "Disetujui"
-                                : "Perlu Perbaikan",
-                        feedback:
-                            feedback || "Perlu perbaikan sesuai masukan dosen",
-                    };
-                }
-                return log;
-            })
-        );
-        setShowFeedbackModal(false);
-        setFeedback("");
-    };
+    const submitAction = async () => {
+        if (!selectedLogbook || !actionType) return;
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "Disetujui":
-                return "bg-green-100 text-green-800";
-            case "Perlu Perbaikan":
-                return "bg-red-100 text-red-800";
-            case "Menunggu Validasi":
-                return "bg-yellow-100 text-yellow-800";
-            default:
-                return "bg-gray-100 text-gray-800";
+        try {
+            await dispatch(validateLogbook({
+                id: selectedLogbook.id,
+                status: actionType === 'approve' ? 'approved' : 'rejected',
+                reason: actionType === 'reject' ? rejectionReason : null
+            })).unwrap();
+
+            toast.success(`Logbook berhasil ${actionType === 'approve' ? 'disetujui' : 'ditolak'}`);
+            setIsActionModalOpen(false);
+        } catch (err) {
+            toast.error(err || "Gagal memproses aksi");
         }
     };
 
-    const pendingLogbooks = logbooks.filter(
-        (log) => log.status === "Menunggu Validasi"
-    );
-    const approvedLogbooks = logbooks.filter(
-        (log) => log.status === "Disetujui"
-    );
-    const needsRevisionLogbooks = logbooks.filter(
-        (log) => log.status === "Perlu Perbaikan"
-    );
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case "approved":
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" /> Disetujui</span>;
+            case "rejected":
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" /> Ditolak</span>;
+            default:
+                return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" /> Menunggu</span>;
+        }
+    };
 
-    const [searchTerm, setSearchTerm] = useState("");
-
-    const filteredPending = pendingLogbooks.filter((log) =>
-        [log.studentName, log.studentNim].some((field) =>
-            field.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+    const TableSkeleton = () => (
+        <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex gap-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                    </div>
+                </div>
+            ))}
+        </div>
     );
 
     return (
-        <>
-            <div className="space-y-6">
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* ... stats ... */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-                                <div className="text-yellow-600 text-lg font-bold">
-                                    {pendingLogbooks.length}
-                                </div>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Menunggu Validasi
-                                    </dt>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                                <div className="text-green-600 text-lg font-bold">
-                                    {approvedLogbooks.length}
-                                </div>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Disetujui
-                                    </dt>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 bg-red-100 rounded-md p-3">
-                                <div className="text-red-600 text-lg font-bold">
-                                    {needsRevisionLogbooks.length}
-                                </div>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
-                                        Perlu Perbaikan
-                                    </dt>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Validasi Logbook</h1>
+                    <p className="mt-1 text-sm text-gray-500">Validasi aktivitas harian mahasiswa bimbingan</p>
                 </div>
-
-                {/* Tabs, Search & Table */}
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="border-b border-gray-200 px-4 pt-5 sm:px-6">
-                        <div className="flex justify-between items-center mb-4">
-                             <nav className="-mb-px flex space-x-6">
-                                <button className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">
-                                    Menunggu Validasi ({pendingLogbooks.length})
-                                </button>
-                                {/* Other tabs can be active if implementing full tab switching logic, for now static display based on original code structure which focused on Pending View */}
-                            </nav>
-                            <div className="w-1/3 pb-4">
-                                <input
-                                    type="text"
-                                    placeholder="Cari mahasiswa..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                        </div>
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
                     </div>
-
-                    <div className="px-4 py-5 sm:p-6">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Mahasiswa
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Minggu
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Aksi
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredPending.map((logbook) => (
-                                        <tr key={logbook.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {logbook.studentName}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {logbook.studentNim}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                Minggu {logbook.week}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {logbook.date}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                                                        logbook.status
-                                                    )}`}
-                                                >
-                                                    {logbook.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedLogbook(logbook);
-                                                            setShowDetailModal(true);
-                                                        }}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                        title="Detail"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAction(logbook.id, "approve")}
-                                                        className="text-green-600 hover:text-green-900"
-                                                        title="Setujui"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAction(logbook.id, "reject")}
-                                                        className="text-red-600 hover:text-red-900"
-                                                        title="Revisi"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <input
+                        type="text"
+                        placeholder="Cari mahasiswa atau aktivitas..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm"
+                    />
                 </div>
             </div>
 
-            {/* Logbook Detail Modal */}
-            {showDetailModal && selectedLogbook && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <div className="flex justify-between items-start">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                    Detail Logbook
-                                </h3>
-                                <button
-                                    onClick={() => setShowDetailModal(false)}
-                                    className="text-gray-400 hover:text-gray-500"
-                                >
-                                    <span className="text-2xl">&times;</span>
-                                </button>
-                            </div>
+            {loading ? (
+                <TableSkeleton />
+            ) : filteredLogbooks.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada logbook</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada logbook yang perlu divalidasi atau sesuai pencarian.</p>
+                </div>
+            ) : (
+                <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul className="divide-y divide-gray-200">
+                        {filteredLogbooks.map((logbook) => (
+                            <li key={logbook.id}>
+                                <div className="px-4 py-4 sm:px-6 hover:bg-gray-50 transition duration-150 ease-in-out">
+                                    <div className="flex flex-col sm:flex-row justify-between gap-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-shrink-0">
+                                                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                                    <User className="w-5 h-5" />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h3 className="text-sm font-bold text-gray-900">
+                                                        {logbook.internship?.leader?.user?.name}
+                                                    </h3>
+                                                    <span className="text-xs text-gray-500">
+                                                        • {new Date(logbook.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mb-2">{logbook.activity}</p>
+                                                {logbook.evidence_photo && (
+                                                    <a
+                                                        href={logbook.evidence_photo}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center text-xs text-indigo-600 hover:text-indigo-800"
+                                                    >
+                                                        <Image className="w-3 h-3 mr-1" /> Lihat Bukti
+                                                    </a>
+                                                )}
+                                                {logbook.rejection_reason && (
+                                                    <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-100">
+                                                        <strong>Alasan Penolakan:</strong> {logbook.rejection_reason}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <h4 className="text-md font-medium text-gray-900 mb-2">
-                                        Informasi Mahasiswa
-                                    </h4>
-                                    <div className="space-y-2">
-                                        <p>
-                                            <span className="font-medium">
-                                                Nama:
-                                            </span>{" "}
-                                            {selectedLogbook.studentName}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                NIM:
-                                            </span>{" "}
-                                            {selectedLogbook.studentNim}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Minggu:
-                                            </span>{" "}
-                                            {selectedLogbook.week}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">
-                                                Tanggal:
-                                            </span>{" "}
-                                            {selectedLogbook.date}
-                                        </p>
+                                        <div className="flex items-start gap-2 sm:flex-col sm:items-end">
+                                            {getStatusBadge(logbook.status)}
+
+                                            {logbook.status === 'pending' && (
+                                                <div className="flex gap-2 mt-2">
+                                                    <button
+                                                        onClick={() => handleAction(logbook, 'approve')}
+                                                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm"
+                                                    >
+                                                        <CheckCircle className="w-3 h-3 mr-1" /> Terima
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction(logbook, 'reject')}
+                                                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm"
+                                                    >
+                                                        <XCircle className="w-3 h-3 mr-1" /> Tolak
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <h4 className="text-md font-medium text-gray-900 mb-2">
-                                        Status
-                                    </h4>
-                                    <div className="space-y-2">
-                                        <p>
-                                            <span className="font-medium">
-                                                Status:
-                                            </span>
-                                            <span
-                                                className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                                                    selectedLogbook.status
-                                                )}`}
-                                            >
-                                                {selectedLogbook.status}
-                                            </span>
-                                        </p>
-                                        {selectedLogbook.feedback && (
-                                            <p>
-                                                <span className="font-medium">
-                                                    Feedback:
-                                                </span>{" "}
-                                                {selectedLogbook.feedback}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mb-6">
-                                <h4 className="text-md font-medium text-gray-900 mb-2">
-                                    Aktivitas Mingguan
-                                </h4>
-                                <p className="text-gray-700">
-                                    {selectedLogbook.activity}
-                                </p>
-                            </div>
-
-                            {selectedLogbook.photo && (
-                                <div className="mb-6">
-                                    <h4 className="text-md font-medium text-gray-900 mb-2">
-                                        Foto Kegiatan
-                                    </h4>
-                                    <img
-                                        src={selectedLogbook.photo}
-                                        alt="Aktivitas mingguan"
-                                        className="w-full h-64 object-cover rounded-md"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex justify-end space-x-3 pt-4">
-                                <button
-                                    onClick={() => {
-                                        handleAction(
-                                            selectedLogbook.id,
-                                            "approve"
-                                        );
-                                        setShowDetailModal(false);
-                                    }}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200"
-                                >
-                                    Setujui
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        handleAction(
-                                            selectedLogbook.id,
-                                            "reject"
-                                        );
-                                        setShowDetailModal(false);
-                                    }}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
-                                >
-                                    Perlu Revisi
-                                </button>
-                                <button
-                                    onClick={() => setShowDetailModal(false)}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                >
-                                    Tutup
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
-            {/* Feedback Modal */}
-            {showFeedbackModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                {action === "approve"
-                                    ? "Setujui Logbook"
-                                    : "Revisi Logbook"}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                {action === "approve"
-                                    ? `Apakah Anda yakin ingin menyetujui logbook minggu ${selectedLogbook?.week} milik ${selectedLogbook?.studentName}?`
-                                    : `Berikan masukan untuk logbook minggu ${selectedLogbook?.week} milik ${selectedLogbook?.studentName}:`}
-                            </p>
+            <Modal
+                isOpen={isActionModalOpen}
+                onClose={() => setIsActionModalOpen(false)}
+                title={actionType === 'approve' ? "Setujui Logbook" : "Tolak Logbook"}
+            >
+                <div>
+                    <p className="text-sm text-gray-500 mb-4">
+                        {actionType === 'approve'
+                            ? "Apakah Anda yakin ingin menyetujui logbook ini?"
+                            : "Silahkan berikan alasan penolakan untuk logbook ini."}
+                    </p>
 
-                            {action === "reject" && (
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Catatan Revisi
-                                    </label>
-                                    <textarea
-                                        value={feedback}
-                                        onChange={(e) =>
-                                            setFeedback(e.target.value)
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        rows="4"
-                                        placeholder="Tulis masukan atau saran perbaikan..."
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex justify-end space-x-3 pt-4">
-                                <button
-                                    onClick={() => {
-                                        setShowFeedbackModal(false);
-                                        setFeedback("");
-                                    }}
-                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={confirmAction}
-                                    className={`px-4 py-2 text-white rounded-md transition duration-200 ${
-                                        action === "approve"
-                                            ? "bg-green-600 hover:bg-green-700"
-                                            : "bg-red-600 hover:bg-red-700"
-                                    }`}
-                                >
-                                    {action === "approve"
-                                        ? "Setujui"
-                                        : "Kirim Revisi"}
-                                </button>
-                            </div>
+                    {actionType === 'reject' && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Alasan Penolakan</label>
+                            <textarea
+                                required
+                                rows={3}
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                placeholder="Contoh: Aktivitas kurang jelas..."
+                            />
                         </div>
+                    )}
+
+                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button
+                            type="button"
+                            disabled={submitLoading || (actionType === 'reject' && !rejectionReason.trim())}
+                            onClick={submitAction}
+                            className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:col-start-2 sm:text-sm disabled:opacity-50 ${actionType === 'approve'
+                                    ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                                    : 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                                }`}
+                        >
+                            {submitLoading ? "Memproses..." : (actionType === 'approve' ? "Setujui" : "Tolak")}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsActionModalOpen(false)}
+                            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                        >
+                            Batal
+                        </button>
                     </div>
                 </div>
-            )}
-        </>
+            </Modal>
+        </div>
     );
 };
 

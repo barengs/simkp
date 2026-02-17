@@ -38,8 +38,12 @@ class InternshipController extends Controller
 
     public function index(Request $request)
     {
-        $internships = $this->internshipService->getAllInternships($request->only('status', 'search'));
-        return response()->json($internships);
+        try {
+            $internships = $this->internshipService->getAllInternships($request->only('status', 'search'));
+            return response()->json($internships);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal memuat data pendaftaran: ' . $e->getMessage()], 500);
+        }
     }
 
     public function myInternship(Request $request)
@@ -138,5 +142,21 @@ class InternshipController extends Controller
         $this->internshipService->assignSupervisor($internship, $request->lecturer_id);
 
         return response()->json(['message' => 'Dosen pembimbing berhasil di-plot']);
+    }
+
+    public function assignTeacher(Request $request)
+    {
+        $request->validate([
+            'internship_ids' => 'required|array',
+            'internship_ids.*' => 'exists:internships,id',
+            'teacher_id' => 'required|exists:lecturers,id'
+        ]);
+
+        try {
+            $this->internshipService->assignTeacher($request->internship_ids, $request->teacher_id);
+            return response()->json(['message' => 'Dosen pembimbing berhasil ditugaskan.']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal menugaskan dosen: ' . $e->getMessage()], 500);
+        }
     }
 }

@@ -154,3 +154,10 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+untuk plotting dosen itu tampilkan tempat nya dan ketika di buka itu
+menampilkan mahasiswa yang mengambil kerja praktek di tempat tersebut dan di sebelah kanan itu ada tombol untuk memilih dosen pembimbing
+
+satu kelompok memiliki satu dosen pembimbing
+satu dosen bisa membimbing lebih dari satu kelompok

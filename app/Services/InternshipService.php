@@ -42,7 +42,7 @@ class InternshipService
         ])
             ->with([
                 'leader:id,user_id,nim',
-                'leader.user:id,name,nim', // student user needs nim? No, student has nim. User has name.
+                'leader.user:id,name',
                 'company:id,name',
                 'theme:id,name',
                 'period:id,academic_year,semester',
@@ -59,9 +59,16 @@ class InternshipService
 
         if (isset($filters['search'])) {
             $search = $filters['search'];
-            $query->whereHas('leader.user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('nim', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('leader.user', function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('leader', function ($subQ) use ($search) {
+                        $subQ->where('nim', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('company', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -190,5 +197,15 @@ class InternshipService
         $internship->supervisor_id = $lecturerId;
         $internship->status = 'ongoing';
         $internship->save();
+    }
+
+    public function assignTeacher(array $internshipIds, int $teacherId): void
+    {
+        foreach ($internshipIds as $id) {
+            $internship = Internship::find($id);
+            if ($internship) {
+                $this->assignSupervisor($internship, $teacherId);
+            }
+        }
     }
 }

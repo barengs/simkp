@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, Children } from "react";
+import { useDispatch } from "react-redux";
+import { resetInternshipState } from "../store/slices/internshipSlice";
 import api from "../../src/api";
 import { toast } from "react-toastify";
 
@@ -10,6 +12,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         checkAuth();
@@ -94,6 +97,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('USER_DATA');
             setUser(null);
             setIsAuthenticated(false);
+            dispatch(resetInternshipState());
         }
     };
 
