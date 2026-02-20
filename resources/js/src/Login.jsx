@@ -1,13 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, clearError } from "./store/slice/authSlice";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import { Eye, EyeOff } from 'lucide-react';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
+    const [showPassword, setShowPassword] = useState(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { loading, error, isAuthenticated, user } = useSelector(
+        (state) => state.auth
+    );
+    const location = useLocation();
+
+    // Show toast for logout success
+    useEffect(() => {
+        if (location.state?.logoutSuccess) {
+            toast.success("Anda telah berhasil keluar.");
+            // Clear state to avoid showing toast again on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
     const [credentials, setCredentials] = useState({
         email: "",
         password: "",
-        role: "admin",
     });
-
     const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            navigate(user.redirect_url || "/", { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
+
+    // Show toast for errors
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+            dispatch(clearError());
+        }
+    }, [error, dispatch]);
+
+    // Clear redux error on mount
+    useEffect(() => {
+        dispatch(clearError());
+    }, [dispatch]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -15,7 +54,6 @@ const Login = ({ onLogin }) => {
             ...credentials,
             [name]: value,
         });
-        // Clear error when user starts typing
         if (errors[name]) {
             setErrors({
                 ...errors,
@@ -46,24 +84,11 @@ const Login = ({ onLogin }) => {
             setErrors(formErrors);
             return;
         }
-
-        // Simulate login process
-        console.log("Login attempt with:", credentials);
-        // In a real app, you would send this to your backend
-
-        // Create user object based on credentials
-        const userData = {
-            name: credentials.email.split("@")[0], // Use email prefix as name
-            role: credentials.role,
-            email: credentials.email,
-        };
-
-        // Call the onLogin function passed from parent
-        if (onLogin) {
-            onLogin(userData);
-        } else {
-            alert(`Login berhasil sebagai ${credentials.role}!`);
-        }
+        dispatch(loginUser(credentials))
+            .unwrap()
+            .then((user) => {
+                toast.success("Login berhasil! Selamat datang, " + (user.name || "User"));
+            });
     };
 
     return (
@@ -93,6 +118,13 @@ const Login = ({ onLogin }) => {
                     </p>
                 </div>
 
+                {/* Internal Validation Errors */}
+                {Object.keys(errors).length > 0 && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-600 text-center">Silakan periksa kembali form anda.</p>
+                    </div>
+                )}
+
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
@@ -108,11 +140,10 @@ const Login = ({ onLogin }) => {
                                 type="email"
                                 value={credentials.email}
                                 onChange={handleInputChange}
-                                className={`mt-1 block w-full px-3 py-2 border ${
-                                    errors.email
-                                        ? "border-red-300"
-                                        : "border-gray-300"
-                                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                                className={`mt-1 block w-full px-3 py-2 border ${errors.email
+                                    ? "border-red-300"
+                                    : "border-gray-300"
+                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                                 placeholder="email@university.ac.id"
                             />
                             {errors.email && (
@@ -129,44 +160,33 @@ const Login = ({ onLogin }) => {
                             >
                                 Password
                             </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                value={credentials.password}
-                                onChange={handleInputChange}
-                                className={`mt-1 block w-full px-3 py-2 border ${
-                                    errors.password
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={credentials.password}
+                                    onChange={handleInputChange}
+                                    className={`mt-1 block w-full px-3 py-2 border ${errors.password
                                         ? "border-red-300"
                                         : "border-gray-300"
-                                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-                                placeholder="••••••••"
-                            />
+                                        } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                                </button>
+                            </div>
+
                             {errors.password && (
                                 <p className="mt-1 text-sm text-red-600">
                                     {errors.password}
                                 </p>
                             )}
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="role"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Peran
-                            </label>
-                            <select
-                                id="role"
-                                name="role"
-                                value={credentials.role}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            >
-                                <option value="admin">Administrator</option>
-                                <option value="student">Mahasiswa</option>
-                                <option value="dosen">Dosen Pembimbing</option>
-                            </select>
                         </div>
                     </div>
 
@@ -199,9 +219,10 @@ const Login = ({ onLogin }) => {
                     <div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            disabled={loading}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Masuk
+                            {loading ? "Memproses..." : "Masuk"}
                         </button>
                     </div>
                 </form>
@@ -209,12 +230,12 @@ const Login = ({ onLogin }) => {
                 <div className="text-center text-sm text-gray-600">
                     <p>
                         Belum punya akun?{" "}
-                        <a
-                            href="#"
+                        <Link
+                            to="/register"
                             className="font-medium text-indigo-600 hover:text-indigo-500"
                         >
                             Daftar
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>
