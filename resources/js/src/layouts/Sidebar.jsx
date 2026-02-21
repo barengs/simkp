@@ -171,9 +171,9 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                         id: "master-data",
                         icon: <Database size={18} />,
                         children: [
-                            { name: "Dosen", path: "/admin/master-dosen" },
+                            { name: "Dosen", path: "/admin/master/dosen" },
                             { name: "Mahasiswa", path: "/admin/master-mahasiswa" },
-                            { name: "Mitra", path: "/admin/master-mitra" },
+                            { name: "Mitra", path: "/admin/master/mitra" },
                         ],
                     },
                     { name: "Validasi", path: "/admin/registration-validation", icon: <CheckSquare size={18} /> },

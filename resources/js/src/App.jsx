@@ -12,10 +12,10 @@ const Register = lazy(() => import("./Register"));
 const MainLayout = lazy(() => import("./layouts/MainLayout"));
 const Dashboard = lazy(() => import("./Dashboard"));
 const PeriodManagement = lazy(() => import("./admin/Periods/PeriodManagement"));
-const ThemeManagement = lazy(() => import("./admin/ThemeManagement"));
-const MasterDosen = lazy(() => import("./admin/master/MasterDosen"));
+const ThemeManagement = React.lazy(() => import("./admin/Themes/ThemeManagement"));
+const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerList"));
 const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
-const MasterMitra = lazy(() => import("./admin/master/MasterMitra"));
+const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
 const Registration = lazy(() => import("./student/Registration"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
 
@@ -172,13 +172,27 @@ const App = () => {
                         }
                     />
                     <Route
-                        path="/admin/master-mitra"
+                        path="/admin/master/mitra"
                         element={
                             <ProtectedRoute>
                                 <ProfileGuard>
                                     <Suspense fallback={null}>
                                         <MainLayout>
-                                            <MasterMitra />
+                                            <CompanyList />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/master/dosen"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <LecturerList />
                                         </MainLayout>
                                     </Suspense>
                                 </ProfileGuard>
@@ -199,20 +213,6 @@ const App = () => {
                             </ProtectedRoute>
                         }
                     />
-                    <Route
-                        path="/admin/master-dosen"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <MasterDosen />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
                     {/* Catch all */}
                     <Route
                         path="*"
@@ -220,7 +220,7 @@ const App = () => {
                     />
                 </Routes>
             </Suspense>
-            <ToastContainer autoClose={2500}/>
+            <ToastContainer autoClose={2500} />
         </>
     );
 };
