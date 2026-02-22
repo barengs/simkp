@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import { Plus, Edit2, Trash2, Search, Palette, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { CirclePlus, Edit2, Trash2, Search, Palette, Calendar, CheckCircle, XCircle } from "lucide-react";
 import { fetchThemes, deleteTheme } from "../../store/slice/themeSlice";
 import Skeleton from "../../components/Skeleton";
 import AddTheme from "./AddTheme";
@@ -154,64 +154,55 @@ const ThemeManagement = () => {
         },
     };
 
-    if (loading && themes.length === 0) {
-        return (
-            <div className="p-6">
-                <Skeleton count={5} />
-            </div>
-        );
-    }
-
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                        <Palette className="mr-3 text-indigo-600" />
+        <>
+            <div className="space-y-6">
+                <div className="border-b border-gray-200 pb-5">
+                    <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Manajemen Tema
-                    </h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Kelola tema Kerja Praktek berdasarkan periode aktif.
-                    </p>
+                    </h2>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md transition group"
-                >
-                    <Plus size={18} className="mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                    Tambah Tema
-                </button>
-            </div>
 
-            {/* Content Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                    <div className="relative w-full md:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <div className="flex justify-between items-center">
+                    <div className="w-1/3">
                         <input
                             type="text"
                             placeholder="Cari tema..."
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         />
+                    </div>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
+                        >
+                            <CirclePlus />
+                            Tambah Tema
+                        </button>
                     </div>
                 </div>
 
-                <DataTable
-                    columns={columns}
-                    data={filteredThemes}
-                    pagination
-                    highlightOnHover
-                    responsive
-                    noDataComponent={
-                        <div className="p-10 text-center text-gray-500">
-                            Tidak ada data tema ditemukan.
-                        </div>
-                    }
-                    customStyles={customStyles}
-                />
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                        <DataTable
+                            columns={columns}
+                            data={filteredThemes}
+                            pagination
+                            highlightOnHover
+                            responsive
+                            progressPending={loading}
+                            progressComponent={<Skeleton />}
+                            noDataComponent={
+                                <div className="p-10 text-center text-gray-500">
+                                    Tidak ada data tema ditemukan.
+                                </div>
+                            }
+                            customStyles={customStyles}
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Modals */}
@@ -229,7 +220,7 @@ const ThemeManagement = () => {
                 isLoading={isDeleting}
                 message={`Apakah Anda yakin ingin menghapus tema "${themeToDelete?.name}"?`}
             />
-        </div>
+        </>
     );
 };
 

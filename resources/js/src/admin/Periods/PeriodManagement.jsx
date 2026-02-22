@@ -206,7 +206,7 @@ const PeriodManagement = () => {
                             paginationRowsPerPageOptions={[10, 25, 50, 100]}
                             highlightOnHover
                             pointerOnHover
-                            responsive
+                            responsive 
                             progressPending={loading}
                             progressComponent={<Skeleton />}
                             noDataComponent={

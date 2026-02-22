@@ -16,7 +16,7 @@ class InternshipResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'leader' => $this->leader,
+            'leader' => new StudentResource($this->leader),
             'period' => $this->period,
             'company' => $this->company ? $this->company : [
                 'name' => $this->company_name_manual,
@@ -32,7 +32,7 @@ class InternshipResource extends JsonResource
             'krs_url' => $this->krs_url,
             'ktp_url' => $this->ktp_url,
             'surat_rekomendasi_url' => $this->surat_rekomendasi_url,
-            'members' => StudentResource::collection($this->students),
+            'students' => StudentResource::collection($this->students),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];

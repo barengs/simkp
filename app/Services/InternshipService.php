@@ -92,4 +92,51 @@ class InternshipService
             ->with(['leader', 'period', 'company', 'theme', 'supervisor', 'students'])
             ->first();
     }
+
+    // --- ADMIN METHODS ---
+
+    public function getSubmittedInternships()
+    {
+        return Internship::with(['leader', 'period', 'company', 'theme', 'supervisor', 'students'])
+            ->where('status', 'submitted')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function getApprovedInternships()
+    {
+        return Internship::with(['leader', 'period', 'company', 'theme', 'supervisor', 'students'])
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function approveInternship(int $id)
+    {
+        $internship = Internship::findOrFail($id);
+        $internship->status = 'approved';
+        $internship->save();
+        Log::info("Internship approved: " . $internship->id);
+        return $internship;
+    }
+
+    public function rejectInternship(int $id, string $note)
+    {
+        $internship = Internship::findOrFail($id);
+        $internship->status = 'rejected';
+        $internship->rejection_note = $note;
+        $internship->save();
+        Log::info("Internship rejected: " . $internship->id . " Reason: " . $note);
+        return $internship;
+    }
+
+    public function assignSupervisor(int $id, int $supervisorId)
+    {
+        $internship = Internship::findOrFail($id);
+        $internship->supervisor_id = $supervisorId;
+        $internship->status = 'ongoing';
+        $internship->save();
+        Log::info("Internship supervisor assigned: " . $internship->id . " Supervisor: " . $supervisorId);
+        return $internship;
+    }
 }

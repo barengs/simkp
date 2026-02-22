@@ -43,4 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Internships (KP)
     Route::apiResource('internships', \App\Http\Controllers\Api\InternshipController::class);
+
+    // Admin Internship Validation & Plotting
+    Route::prefix('admin/internships')->group(function () {
+        Route::get('submitted', [\App\Http\Controllers\Api\Admin\InternshipController::class, 'submitted']);
+        Route::get('approved', [\App\Http\Controllers\Api\Admin\InternshipController::class, 'approved']);
+        Route::post('{id}/approve', [\App\Http\Controllers\Api\Admin\InternshipController::class, 'approve']);
+        Route::post('{id}/reject', [\App\Http\Controllers\Api\Admin\InternshipController::class, 'reject']);
+        Route::post('{id}/assign-supervisor', [\App\Http\Controllers\Api\Admin\InternshipController::class, 'assignSupervisor']);
+    });
 });

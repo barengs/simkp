@@ -53,7 +53,13 @@ class InternshipController extends Controller
             // Re-check if student already has an internship
             $existing = $this->internshipService->getStudentInternship($studentId);
             if ($existing) {
-                return response()->json(['message' => 'Anda sudah terdaftar di KP lain.'], 422);
+                if ($existing->status === 'rejected') {
+                    // Delete old rejected internship members and itself to allow a fresh re-registration
+                    $existing->members()->delete();
+                    $existing->delete();
+                } else {
+                    return response()->json(['message' => 'Anda sudah terdaftar di KP lain.'], 422);
+                }
             }
 
             $internship = $this->internshipService->register($request->validated(), $studentId);

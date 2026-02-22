@@ -6,6 +6,7 @@ import themeReducer from "./slice/themeSlice";
 import lecturerReducer from "./slice/lecturerSlice";
 import companyReducer from "./slice/companySlice";
 import internshipReducer from "./slice/internshipSlice";
+import adminInternshipReducer from "./slice/adminInternshipSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +17,6 @@ export const store = configureStore({
     lecturers: lecturerReducer,
     companies: companyReducer,
     internships: internshipReducer,
+    adminInternships: adminInternshipReducer,
   },
 });

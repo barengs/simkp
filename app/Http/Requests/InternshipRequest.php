@@ -29,10 +29,18 @@ class InternshipRequest extends FormRequest
                 'exists:students,id',
                 'distinct',
                 function ($attribute, $value, $fail) {
-                    $isRegistered = \App\Models\InternshipMember::where('student_id', $value)->exists() ||
-                        \App\Models\Internship::where('leader_id', $value)->exists();
-                    if ($isRegistered) {
-                        $fail('Mahasiswa dengan ID ' . $value . ' sudah terdaftar di kelompok lain.');
+                    // Check if member is part of any non-rejected internship
+                    $isRegisteredAsMember = \App\Models\InternshipMember::where('student_id', $value)
+                        ->whereHas('internship', function ($query) {
+                        $query->where('status', '!=', 'rejected');
+                    })->exists();
+
+                    $isRegisteredAsLeader = \App\Models\Internship::where('leader_id', $value)
+                        ->where('status', '!=', 'rejected')
+                        ->exists();
+
+                    if ($isRegisteredAsMember || $isRegisteredAsLeader) {
+                        $fail('Mahasiswa dengan ID ' . $value . ' sudah terdaftar di kelompok lain yang aktif.');
                     }
                 }
             ],

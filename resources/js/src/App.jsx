@@ -16,6 +16,8 @@ const ThemeManagement = React.lazy(() => import("./admin/Themes/ThemeManagement"
 const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerList"));
 const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
 const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
+const ValidationIndex = lazy(() => import("./admin/Internships/Validation/Index"));
+const PlottingIndex = lazy(() => import("./admin/Internships/Plotting/Index"));
 const Registration = lazy(() => import("./student/Registration"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
 
@@ -165,6 +167,34 @@ const App = () => {
                                     <Suspense fallback={null}>
                                         <MainLayout>
                                             <StudentList />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/registration-validation"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <ValidationIndex />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/lecturer-plotting"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <PlottingIndex />
                                         </MainLayout>
                                     </Suspense>
                                 </ProfileGuard>

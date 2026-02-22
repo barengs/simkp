@@ -82,10 +82,10 @@ const Registration = () => {
     }, [registrationSuccess, internshipError, dispatch]);
 
     const addMemberInput = () => {
-        if (dynamicMembers.length < 3) {
+        if (dynamicMembers.length < 2) {
             setDynamicMembers([...dynamicMembers, { id: Date.now(), search: "", selected: null }]);
         } else {
-            toast.warning("Maksimal 3 anggota tambahan.");
+            toast.warning("Maksimal 2 anggota tambahan.");
         }
     };
 
@@ -226,79 +226,79 @@ const Registration = () => {
             );
         }
 
-        if (myInternship) {
+        if (myInternship && myInternship.status !== 'rejected') {
             return (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="bg-green-50 border border-green-200 rounded-3xl p-8 mb-8 flex items-center gap-6">
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg shadow-green-100">
-                            <CheckCircle size={32} />
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-5">
+                        <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-md shadow-green-100 mt-1">
+                            <CheckCircle size={28} />
                         </div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-green-900 leading-tight">Anda Sudah Terdaftar!</h3>
-                            <p className="text-green-700 mt-1 font-medium">Pendaftaran Kerja Praktek Anda telah diterima dan sedang diproses.</p>
+                        <div className="text-center md:text-left">
+                            <h3 className="text-xl font-bold text-green-900 leading-tight">Anda Sudah Terdaftar!</h3>
+                            <p className="text-green-700 mt-1 text-sm font-medium">Pendaftaran Kerja Praktek Anda telah diterima dan sedang diproses.</p>
                         </div>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-                        <div className="p-8 border-b border-gray-100 bg-gray-50/50">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em]">Detail Penempatan</span>
-                                <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-widest">{myInternship.status}</span>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-start">
+                            <div>
+                                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">Detail Penempatan</span>
+                                <h4 className="text-lg font-bold text-gray-900 mt-2">{myInternship.company?.name || myInternship.company_name_manual}</h4>
+                                <p className="text-gray-500 text-sm mt-0.5">{myInternship.company?.address || myInternship.company_address_manual}</p>
                             </div>
-                            <h4 className="text-xl font-bold text-gray-900">{myInternship.company?.name || myInternship.company_name_manual}</h4>
-                            <p className="text-gray-500 text-sm mt-1">{myInternship.company?.address || myInternship.company_address_manual}</p>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider border border-green-200 shadow-sm whitespace-nowrap">{myInternship.status}</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2">
-                            <section className="p-8 border-b md:border-b-0 md:border-r border-gray-100">
-                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Anggota Kelompok</h4>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-4 bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100 shadow-sm">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">K</div>
+                            <section className="p-6 border-b md:border-b-0 md:border-r border-gray-100">
+                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Daftar Anggota</h4>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">K</div>
                                         <div className="min-w-0">
                                             <p className="text-gray-900 font-bold text-sm truncate">{myInternship.leader?.name}</p>
-                                            <p className="text-[10px] text-indigo-500 font-bold tracking-tight">{myInternship.leader?.nim} • Ketua</p>
+                                            <p className="text-[10px] text-blue-600 font-bold tracking-tight">{myInternship.leader?.nim} • Ketua</p>
                                         </div>
                                     </div>
-                                    {myInternship.students?.filter(s => s.id !== myInternship.leader_id).map((student, i) => (
-                                        <div key={student.id} className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold shrink-0">{i + 2}</div>
+                                    {myInternship.students?.filter(s => String(s.id) !== String(myInternship.leader?.id)).map((student, i) => (
+                                        <div key={student.id} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-xs font-bold shrink-0">{i + 2}</div>
                                             <div className="min-w-0">
-                                                <p className="text-gray-900 font-bold text-sm truncate">{student.name}</p>
-                                                <p className="text-[10px] text-gray-400 font-bold tracking-tight">{student.nim}</p>
+                                                <p className="text-gray-900 font-semibold text-sm truncate">{student.name}</p>
+                                                <p className="text-[10px] text-gray-500 mt-0.5">{student.nim}</p>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </section>
 
-                            <section className="p-8 space-y-6">
+                            <section className="p-6 space-y-5">
                                 <div>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Tema KP</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Tema KP</p>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                            <HelpCircle size={16} className="text-gray-400" />
+                                        <div className="p-2 border border-gray-100 rounded bg-gray-50 shrink-0">
+                                            <HelpCircle size={16} className="text-gray-500" />
                                         </div>
-                                        <p className="text-gray-700 font-bold text-sm">{myInternship.theme?.name}</p>
+                                        <p className="text-gray-800 font-semibold text-sm leading-snug">{myInternship.theme?.name}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Periode</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Periode Akademik</p>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                            <Calendar size={16} className="text-gray-400" />
+                                        <div className="p-2 border border-blue-100 rounded bg-blue-50 shrink-0">
+                                            <Calendar size={16} className="text-blue-500" />
                                         </div>
-                                        <p className="text-gray-700 font-bold text-sm">{myInternship.period ? `${myInternship.period.semester} ${myInternship.period.academic_year}` : "-"}</p>
+                                        <p className="text-gray-800 font-semibold text-sm">{myInternship.period ? `${myInternship.period.semester} ${myInternship.period.academic_year}` : "-"}</p>
                                     </div>
                                 </div>
                                 {myInternship.supervisor && (
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Dosen Pembimbing</p>
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Dosen Pembimbing</p>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                                                <User size={16} className="text-indigo-500" />
+                                            <div className="p-2 border border-indigo-100 rounded bg-indigo-50 shrink-0">
+                                                <User size={16} className="text-indigo-600" />
                                             </div>
-                                            <p className="text-indigo-600 font-bold text-sm">{myInternship.supervisor?.name}</p>
+                                            <p className="text-indigo-700 font-bold text-sm">{myInternship.supervisor?.name}</p>
                                         </div>
                                     </div>
                                 )}
@@ -311,99 +311,137 @@ const Registration = () => {
 
         switch (step) {
             case 1:
+                const isNewCompany = formData.companyId === "new";
                 return (
                     <div className="animate-in fade-in duration-500">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                            <Building className="text-indigo-600" />
-                            Pilih Perusahaan atau Ajukan Baru
-                        </h3>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <Building size={20} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">
+                                Langkah 1: Pemilihan Perusahaan
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-8 ml-11">Pilih mitra perusahaan yang sudah terdaftar atau usulkan perusahaan baru jika belum tersedia.</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                            {companies.map((company) => (
-                                <div
-                                    key={company.id}
-                                    className={`p-5 border-2 rounded-xl cursor-pointer transition-all duration-300 transform ${formData.companyId == company.id.toString()
-                                        ? "border-indigo-500 bg-indigo-50 scale-[1.02] shadow-md"
-                                        : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
-                                        }`}
-                                    onClick={() => setFormData({ ...formData, companyId: company.id.toString() })}
-                                >
-                                    <h4 className="font-bold text-gray-900">{company.name}</h4>
-                                    <p className="text-sm text-gray-600 mt-1">{company.address}</p>
-                                    <div className="flex justify-between mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
-                                        <span>{company.contact_person}</span>
-                                        <span>{company.phone}</span>
+                            <label className={`relative flex cursor-pointer rounded-xl border-2 p-4 transition-all ${!isNewCompany && formData.companyId !== "" ? "border-blue-600 bg-blue-50/30" : "border-gray-200 hover:border-blue-200"
+                                }`}>
+                                <input type="radio" name="company_type" className="sr-only" checked={!isNewCompany && formData.companyId !== ""} onChange={() => setFormData({ ...formData, companyId: companies[0]?.id.toString() || "" })} />
+                                <div className="flex w-full items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${!isNewCompany && formData.companyId !== "" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+                                            <CheckCircle size={16} />
+                                        </div>
+                                        <div>
+                                            <p className={`font-semibold text-sm ${!isNewCompany && formData.companyId !== "" ? "text-blue-900" : "text-gray-900"}`}>Pilih Mitra Terdaftar</p>
+                                            <p className="text-xs text-gray-500">Pilih dari {companies.length}+ mitra aktif kami</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!isNewCompany && formData.companyId !== "" ? "border-blue-600" : "border-gray-300"}`}>
+                                        {!isNewCompany && formData.companyId !== "" && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>}
                                     </div>
                                 </div>
-                            ))}
+                            </label>
+
+                            <label className={`relative flex cursor-pointer rounded-xl border-2 p-4 transition-all ${isNewCompany ? "border-blue-600 bg-blue-50/30" : "border-gray-200 hover:border-blue-200"
+                                }`}>
+                                <input type="radio" name="company_type" className="sr-only" checked={isNewCompany} onChange={() => setFormData({ ...formData, companyId: "new" })} />
+                                <div className="flex w-full items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isNewCompany ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"}`}>
+                                            <Building size={16} />
+                                        </div>
+                                        <div>
+                                            <p className={`font-semibold text-sm ${isNewCompany ? "text-blue-900" : "text-gray-900"}`}>Tambah Perusahaan Baru</p>
+                                            <p className="text-xs text-gray-500">Usulkan tempat KP mandiri</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isNewCompany ? "border-blue-600" : "border-gray-300"}`}>
+                                        {isNewCompany && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>}
+                                    </div>
+                                </div>
+                            </label>
                         </div>
 
-                        <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <input
-                                    type="radio"
-                                    id="newCompany"
-                                    name="companyOption"
-                                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500"
-                                    checked={formData.companyId === "new"}
-                                    onChange={() => setFormData({ ...formData, companyId: "new" })}
-                                />
-                                <label htmlFor="newCompany" className="text-lg font-medium text-gray-700 cursor-pointer">
-                                    Gunakan Perusahaan Lain (Baru)
-                                </label>
-                            </div>
-
-                            {formData.companyId === "new" && (
-                                <div className="space-y-4 pt-4 border-t border-gray-100 mt-4">
+                        {isNewCompany ? (
+                            <div className="space-y-5 animate-in slide-in-from-top-4 duration-300">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Perusahaan/Instansi*</label>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Nama Perusahaan</label>
                                         <input
                                             type="text"
-                                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
-                                            placeholder="Contoh: PT. Teknologi Maju"
+                                            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm text-gray-800"
+                                            placeholder="Masukkan nama resmi perusahaan"
                                             value={formData.newCompanyName}
                                             onChange={(e) => setFormData({ ...formData, newCompanyName: e.target.value })}
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Alamat Lengkap*</label>
-                                        <textarea
-                                            rows="3"
-                                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm resize-none"
-                                            placeholder="Alamat lengkap instansi..."
-                                            value={formData.newCompanyAddress}
-                                            onChange={(e) => setFormData({ ...formData, newCompanyAddress: e.target.value })}
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Pemilik/Pimpinan Perusahaan</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm text-gray-800"
+                                            placeholder="Nama pemilik/pimpinan perusahaan"
+                                            value={formData.newCompanyContact}
+                                            onChange={(e) => setFormData({ ...formData, newCompanyContact: e.target.value })}
                                             required
                                         />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Contact Person*</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
-                                                placeholder="Nama penanggung jawab"
-                                                value={formData.newCompanyContact}
-                                                onChange={(e) => setFormData({ ...formData, newCompanyContact: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">No. Telepon/WA*</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
-                                                placeholder="081xxx"
-                                                value={formData.newCompanyPhone}
-                                                onChange={(e) => setFormData({ ...formData, newCompanyPhone: e.target.value })}
-                                                required
-                                            />
-                                        </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5">No WhatsApp</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm text-gray-800"
+                                            placeholder="Contoh: 081234567890"
+                                            value={formData.newCompanyPhone}
+                                            onChange={(e) => setFormData({ ...formData, newCompanyPhone: e.target.value })}
+                                            required
+                                        />
                                     </div>
                                 </div>
-                            )}
-                        </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Alamat</label>
+                                    <textarea
+                                        rows="3"
+                                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-sm resize-none text-gray-800"
+                                        placeholder="Jl. Nama Jalan No. XX, Kota, Provinsi"
+                                        value={formData.newCompanyAddress}
+                                        onChange={(e) => setFormData({ ...formData, newCompanyAddress: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="bg-blue-50/50 rounded-lg p-4 flex gap-3 text-sm text-blue-800">
+                                    <Info className="text-blue-500 shrink-0" size={18} />
+                                    <p>Perusahaan baru yang Anda usulkan akan diverifikasi terlebih dahulu oleh Koordinator KP sebelum pendaftaran dapat dilanjutkan sepenuhnya.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Pilih dari Daftar Mitra</label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {companies.map((company) => (
+                                        <div
+                                            key={company.id}
+                                            className={`p-4 border rounded-xl cursor-pointer transition-all ${formData.companyId === company.id.toString()
+                                                ? "border-blue-500 bg-blue-50 shadow-sm ring-1 ring-blue-500"
+                                                : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                                                }`}
+                                            onClick={() => setFormData({ ...formData, companyId: company.id.toString() })}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-gray-900 text-sm">{company.name}</h4>
+                                                {formData.companyId === company.id.toString() && <CheckCircle size={16} className="text-blue-600 shrink-0" />}
+                                            </div>
+                                            <p className="text-xs text-gray-500 line-clamp-2">{company.address}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             case 2:
@@ -483,8 +521,8 @@ const Registration = () => {
                             </h3>
                             <button
                                 onClick={addMemberInput}
-                                disabled={dynamicMembers.length >= 3}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-200 transition-all disabled:opacity-50"
+                                disabled={dynamicMembers.length >= 2}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Plus size={16} />
                                 Tambah Anggota
@@ -497,7 +535,7 @@ const Registration = () => {
                                 <p className="text-blue-800 font-medium font-inter uppercase tracking-widest text-[10px]">Peran Anda</p>
                                 <p className="text-blue-900 font-bold text-lg">{user?.name}</p>
                                 <p className="text-sm text-blue-700">
-                                    Anda adalah <strong>Ketua Kelompok</strong> (Otomatis Terdaftar). Anda dapat menambahkan hingga 3 anggota tambahan menggunakan NIM mereka.
+                                    Anda adalah <strong>Ketua Kelompok</strong> (Otomatis Terdaftar). Anda dapat menambhakan hingga 2 anggota tambahan (total 3 orang) menggunakan NIM mereka.
                                 </p>
                             </div>
                         </div>
@@ -786,98 +824,95 @@ const Registration = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                {/* Header Section */}
-                <div className="bg-indigo-600 p-8 text-white relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h2 className="text-3xl font-extrabold tracking-tight">Pendaftaran Kerja Praktek</h2>
-                        <p className="mt-2 text-indigo-100 text-sm font-medium opacity-90">Sistem Informasi Manajemen Kerja Praktek</p>
+        <div className="max-w-5xl mx-auto py-3 px-4 sm:px-6 lg:px-8 bg-gray-50/50 min-h-screen">
+            <div className="mb-8 text-center sm:text-left">
+                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Pendaftaran KP Online</h2>
+                <p className="mt-2 text-gray-500 text-sm">Silakan lengkapi langkah-langkah di bawah ini untuk mengajukan kerja praktek.</p>
+            </div>
+
+            {myInternship && myInternship.status === 'rejected' && (
+                <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 shadow-sm animate-in fade-in">
+                    <Info className="text-red-500 shrink-0 mt-0.5" size={24} />
+                    <div>
+                        <h4 className="text-lg font-bold text-red-900">Pendaftaran Sebelumnya Ditolak</h4>
+                        <p className="text-sm text-red-700 mt-2">Alasan penolakan: <strong className="bg-red-100 px-2 py-0.5 rounded">{myInternship.rejection_note || "-"}</strong></p>
+                        <p className="text-sm text-red-700 mt-3 font-medium">Silakan lengkapi form di bawah ini untuk mengajukan ulang pendaftaran Kerja Praktek Anda.</p>
                     </div>
-                    {/* Decorative Background Element */}
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500 rounded-full opacity-20 transform scale-150"></div>
                 </div>
+            )}
 
-                {!myInternship && (
-                    <div className="border-b border-gray-100 px-8 py-6">
-                        <div className="flex items-center justify-between">
-                            {[1, 2, 3, 4, 5].map((item) => (
-                                <React.Fragment key={item}>
-                                    <div className="flex flex-col items-center">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${step === item
-                                            ? "bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 scale-110"
-                                            : step > item
-                                                ? "bg-green-500 text-white"
-                                                : "bg-gray-100 text-gray-400"
-                                            }`}>
-                                            {step > item ? "✓" : item}
-                                        </div>
-                                    </div>
-                                    {item < 5 && (
-                                        <div className={`flex-1 h-1 mx-4 rounded transition-all duration-700 ${step > item ? "bg-green-500" : "bg-gray-100"}`}></div>
-                                    )}
-                                </React.Fragment>
-                            ))}
+            {(!myInternship || myInternship.status === 'rejected') && (
+                <div className="flex justify-between items-center py-4 mb-8 max-w-2xl mx-auto relative px-4">
+                    <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 -z-10 -translate-y-2.5"></div>
+                    {[
+                        { id: 1, label: 'Perusahaan' },
+                        { id: 2, label: 'Tema / Periode' },
+                        { id: 3, label: 'Anggota' },
+                        { id: 4, label: 'Dokumen' },
+                        { id: 5, label: 'Konfirmasi' }
+                    ].map((item) => (
+                        <div key={item.id} className="flex flex-col items-center relative">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 z-10 ${step === item.id
+                                ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                                : step > item.id
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 text-gray-400"
+                                }`}>
+                                {step > item.id ? "✓" : item.id}
+                            </div>
+                            <span className={`text-[10px] mt-3 font-medium absolute top-8 w-24 text-center ${step === item.id || step > item.id ? 'text-blue-600 font-bold' : 'text-gray-500'
+                                }`}>
+                                {item.label}
+                            </span>
                         </div>
-                        <div className="flex justify-between mt-3 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                            <span className={step === 1 ? "text-indigo-600" : ""}>Instansi</span>
-                            <span className={step === 2 ? "text-indigo-600" : ""}>Topik</span>
-                            <span className={step === 3 ? "text-indigo-600" : ""}>Anggota</span>
-                            <span className={step === 4 ? "text-indigo-600" : ""}>Dokumen</span>
-                            <span className={step === 5 ? "text-indigo-600" : ""}>Konfirmasi</span>
-                        </div>
-                    </div>
-                )}
+                    ))}
+                </div>
+            )}
 
-                {/* Step Content */}
-                <div className="p-8 min-h-[500px]">
+            {/* The White Card for Form */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative z-20 mt-4">
+                <div className="p-6 sm:p-10 min-h-[400px]">
                     {renderStepContent()}
                 </div>
 
-                {/* Footer Actions - Only show if not registered */}
-                {!myInternship && !isCheckingStatus && (
-                    <div className="px-8 py-6 bg-gray-50 flex justify-between items-center border-t border-gray-100">
+                {(!myInternship || myInternship.status === 'rejected') && !isCheckingStatus && (
+                    <div className="px-6 sm:px-10 py-6 bg-gray-50 flex justify-between items-center border-t border-gray-100">
                         <button
                             onClick={prevStep}
                             disabled={step === 1 || internshipLoading}
-                            className={`px-6 py-3 rounded-xl font-bold transition-all ${step === 1
-                                ? "bg-transparent text-gray-300 cursor-not-allowed"
-                                : "bg-white text-gray-700 border border-gray-200 hover:bg-white hover:shadow-md active:scale-95"
+                            className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${step === 1
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
                                 }`}
                         >
-                            Sebelumnya
+                            &larr; Kembali
                         </button>
 
                         <div className="flex items-center gap-4">
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest hidden sm:block">Langkah {step} dari 5</p>
+                            <span className="text-xs text-gray-400 font-medium hidden sm:block">Simpan Draft</span>
                             {step < 5 ? (
                                 <button
                                     onClick={nextStep}
-                                    className="px-10 py-3 bg-indigo-600 text-white rounded-xl font-bold font-inter shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all"
+                                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2"
                                 >
-                                    Lanjutkan
+                                    Selanjutnya &rarr;
                                 </button>
                             ) : (
                                 <button
                                     onClick={submitRegistration}
                                     disabled={internshipLoading}
-                                    className="px-10 py-3 bg-green-600 text-white rounded-xl font-bold font-inter shadow-lg shadow-green-100 hover:bg-green-700 active:scale-95 disabled:opacity-50 flex items-center gap-2 transition-all"
+                                    className="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
                                 >
                                     {internshipLoading && (
-                                        <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                     )}
-                                    {internshipLoading ? "Mengirim Data..." : "Kirim Sekarang"}
+                                    {internshipLoading ? "Mengirim..." : "Kirim Sekarang"}
                                 </button>
                             )}
                         </div>
                     </div>
                 )}
             </div>
-
-            {/* Help/Support Text */}
-            <p className="text-center mt-6 text-xs text-gray-400 flex items-center justify-center gap-1 font-inter">
-                <Info size={14} /> Butuh bantuan dalam proses pendaftaran? Hubungi Admin Koordinator KP.
-            </p>
         </div>
     );
 };
