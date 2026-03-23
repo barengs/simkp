@@ -22,4 +22,9 @@ class Student extends Model
     {
         return $this->hasMany(InternshipMember::class);
     }
+
+    public function internships()
+    {
+        return $this->hasMany(Internship::class, 'leader_id');
+    }
 }

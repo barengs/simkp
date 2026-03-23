@@ -1,65 +1,21 @@
-import React from "react";
-
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchDashboardStats } from "../store/slices/dashboardSlice";
+import {
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar
+} from 'recharts';
 
 const Dashboard = () => {
-    // Mock data for dashboard
-    const stats = [
-        {
-            name: "Total Mahasiswa KP",
-            value: "128",
-            change: "+12%",
-            changeType: "positive",
-        },
-        {
-            name: "Pendaftaran Disetujui",
-            value: "95",
-            change: "+5%",
-            changeType: "positive",
-        },
-        {
-            name: "Menunggu Validasi",
-            value: "23",
-            change: "-2%",
-            changeType: "negative",
-        },
-        {
-            name: "Selesai KP",
-            value: "67",
-            change: "+8%",
-            changeType: "positive",
-        },
-    ];
+    const dispatch = useDispatch();
+    const { stats, monthlyTrends, recentActivities, loading } = useSelector(state => state.dashboard);
 
-    const recentActivities = [
-        {
-            id: 1,
-            name: "Budi Santoso",
-            status: "Menunggu Validasi",
-            date: "2024-01-15",
-            type: "Pendaftaran",
-        },
-        {
-            id: 2,
-            name: "Ani Lestari",
-            status: "Disetujui",
-            date: "2024-01-14",
-            type: "Logbook",
-        },
-        {
-            id: 3,
-            name: "Rudi Hartono",
-            status: "Ditolak",
-            date: "2024-01-14",
-            type: "Pendaftaran",
-        },
-        {
-            id: 4,
-            name: "Siti Nurhaliza",
-            status: "Menunggu Nilai",
-            date: "2024-01-13",
-            type: "Laporan",
-        },
-    ];
+    useEffect(() => {
+        dispatch(fetchDashboardStats());
+    }, [dispatch]);
+
+    if (loading && !stats.length) {
+        return <div className="flex items-center justify-center min-h-[400px]">Loading Admin Dashboard...</div>;
+    }
 
     return (
         <>
@@ -83,12 +39,11 @@ const Dashboard = () => {
                                         </dt>
                                         <dd className="flex items-baseline">
                                             <div
-                                                className={`text-2xl font-semibold ${
-                                                    stat.changeType ===
-                                                    "positive"
+                                                className={`text-2xl font-semibold ${stat.changeType ===
+                                                        "positive"
                                                         ? "text-green-600"
-                                                        : "text-red-600"
-                                                }`}
+                                                        : stat.changeType === "negative" ? "text-red-600" : "text-gray-600"
+                                                    }`}
                                             >
                                                 {stat.change}
                                             </div>
@@ -119,17 +74,16 @@ const Dashboard = () => {
                                     </div>
                                     <div className="ml-2 flex-shrink-0 flex">
                                         <span
-                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                activity.status === "Disetujui"
+                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${activity.status === "Disetujui"
                                                     ? "bg-green-100 text-green-800"
                                                     : activity.status ===
-                                                      "Ditolak"
-                                                    ? "bg-red-100 text-red-800"
-                                                    : activity.status ===
-                                                      "Menunggu Validasi"
-                                                    ? "bg-yellow-100 text-yellow-800"
-                                                    : "bg-blue-100 text-blue-800"
-                                            }`}
+                                                        "Ditolak"
+                                                        ? "bg-red-100 text-red-800"
+                                                        : activity.status ===
+                                                            "Menunggu Validasi"
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : "bg-blue-100 text-blue-800"
+                                                }`}
                                         >
                                             {activity.status}
                                         </span>
@@ -144,7 +98,7 @@ const Dashboard = () => {
                     </ul>
                 </div>
 
-                {/* Chart Placeholder */}
+                {/* Chart Section */}
                 <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -152,8 +106,16 @@ const Dashboard = () => {
                         </h3>
                     </div>
                     <div className="px-4 py-5 sm:p-6">
-                        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-64 flex items-center justify-center text-gray-500">
-                            Grafik Statistik KP
+                        <div className="h-64 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthlyTrends}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="month" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="count" fill="#4f46e5" radius={[4, 4, 0, 0]} name="Pendaftaran" />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
                 </div>

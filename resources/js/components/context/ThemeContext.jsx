@@ -49,7 +49,7 @@ export const ThemeProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [addToast]);
+    }, []);
 
     const refreshThemes = useCallback(async () => {
         if (lastParamsRef.current) {
@@ -73,7 +73,7 @@ export const ThemeProvider = ({ children }) => {
         } else {
             getThemes();
         }
-    }, [getThemes, addToast]);
+    }, [getThemes]);
 
     const value = {
         themes,

@@ -50,4 +50,19 @@ class Internship extends Model
     {
         return $this->belongsTo(Lecturer::class, 'supervisor_id');
     }
+
+    public function report()
+    {
+        return $this->hasOne(Report::class);
+    }
+
+    public function evaluation()
+    {
+        return $this->hasOne(Evaluation::class);
+    }
+
+    public function logbooks()
+    {
+        return $this->hasMany(Logbook::class);
+    }
 }

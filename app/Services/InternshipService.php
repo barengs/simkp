@@ -77,7 +77,7 @@ class InternshipService
 
     public function getStudentInternship(int $studentId): ?Internship
     {
-        return Internship::with(['leader.user', 'members.student.user', 'company', 'theme', 'period', 'lecturer.user'])
+        return Internship::with(['leader.user', 'members.student.user', 'company', 'theme', 'period', 'lecturer.user', 'report', 'evaluation'])
             ->whereHas('members', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
             })
@@ -87,7 +87,7 @@ class InternshipService
 
     public function getStudentHistory(int $studentId): Collection
     {
-        return Internship::with(['leader.user', 'members.student.user', 'company', 'theme', 'period', 'lecturer.user'])
+        return Internship::with(['leader.user', 'members.student.user', 'company', 'theme', 'period', 'lecturer.user', 'report', 'evaluation'])
             ->whereHas('members', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
             })
@@ -201,11 +201,7 @@ class InternshipService
 
     public function assignTeacher(array $internshipIds, int $teacherId): void
     {
-        foreach ($internshipIds as $id) {
-            $internship = Internship::find($id);
-            if ($internship) {
-                $this->assignSupervisor($internship, $teacherId);
-            }
-        }
+        Internship::whereIn('id', $internshipIds)
+            ->update(['supervisor_id' => $teacherId, 'status' => 'ongoing']);
     }
 }

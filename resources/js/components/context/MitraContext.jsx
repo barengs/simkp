@@ -49,7 +49,7 @@ export const MitraProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [addToast]);
+    }, []);
 
     const refreshMitra = useCallback(async () => {
         if (lastParamsRef.current) {
@@ -73,7 +73,7 @@ export const MitraProvider = ({ children }) => {
         } else {
             getMitra();
         }
-    }, [getMitra, addToast]);
+    }, [getMitra]);
 
     const value = {
         mitra,

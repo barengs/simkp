@@ -48,7 +48,7 @@ export const StudentDashboardProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [addToast, isAuthenticated, user?.role]);
+    }, [isAuthenticated, user?.role]);
 
     const refreshInternship = useCallback(async () => {
         if (!isAuthenticated || user?.role !== 'mahasiswa') return;

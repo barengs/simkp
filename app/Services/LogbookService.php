@@ -16,13 +16,15 @@ class LogbookService
         // Get active internship for student
         $internship = Internship::whereHas('members', function ($q) use ($student) {
             $q->where('student_id', $student->id);
-        })->where('status', 'ongoing')->first();
+        })->whereIn('status', ['ongoing', 'grading', 'finished'])->first();
 
         if (!$internship) {
             return [];
         }
 
+        // Return logbooks ONLY for this student
         return Logbook::where('internship_id', $internship->id)
+            ->where('student_id', $student->id)
             ->latest('date')
             ->get();
     }
@@ -40,6 +42,7 @@ class LogbookService
 
         $logbook = new Logbook();
         $logbook->internship_id = $internship->id;
+        $logbook->student_id = $student->id;
         $logbook->date = $data['date'];
         $logbook->activity = $data['activity'];
         $logbook->status = 'pending';
@@ -57,7 +60,7 @@ class LogbookService
     public function getLogbooksForLecturer($lecturer)
     {
         // Get logbooks from internships where this lecturer is supervisor
-        return Logbook::with(['internship.leader.user'])
+        return Logbook::with(['internship.leader.user', 'student.user'])
             ->whereHas('internship', function ($q) use ($lecturer) {
                 $q->where('supervisor_id', $lecturer->id);
             })

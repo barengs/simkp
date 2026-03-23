@@ -36,7 +36,7 @@ export const AdminInternshipProvider = ({ children }) => {
         } finally {
             setLoadingSubmitted(false);
         }
-    }, [isAuthenticated, user, addToast]);
+    }, [isAuthenticated, user]);
 
     const fetchApproved = useCallback(async (force = false) => {
         if (!isAuthenticated || user?.role !== 'admin') return;
@@ -55,7 +55,7 @@ export const AdminInternshipProvider = ({ children }) => {
         } finally {
             setLoadingApproved(false);
         }
-    }, [isAuthenticated, user, addToast]);
+    }, [isAuthenticated, user]);
 
     const fetchLecturers = useCallback(async (force = false) => {
         if (!isAuthenticated || user?.role !== 'admin') return;

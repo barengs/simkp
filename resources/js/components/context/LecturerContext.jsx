@@ -52,7 +52,7 @@ export const LecturerProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [lecturers.length, addToast]); // Dependencies: lecturers.length (to know if valid cache exists)
+    }, [lecturers.length]); // Dependencies: lecturers.length (to know if valid cache exists)
 
     // Force refresh (e.g., after add/edit/delete)
     const refreshLecturers = useCallback(async () => {
@@ -82,7 +82,7 @@ export const LecturerProvider = ({ children }) => {
             // If never fetched, fetch default
             getLecturers();
         }
-    }, [getLecturers, addToast]);
+    }, [getLecturers]);
 
     const value = {
         lecturers,

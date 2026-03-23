@@ -85,6 +85,7 @@ const Sidebar = ({
                         icon: FileText,
                     },
                     { name: "Logbook", path: "student/logbook", icon: BookOpen },
+                    { name: "Report", path: "student/report", icon: FileText },
                 ];
             case "dosen":
                 return [
@@ -95,6 +96,7 @@ const Sidebar = ({
                         icon: CheckCircle,
                     },
                     { name: "Bimbingan", path: "guidance", icon: Users },
+                    { name: "Grading", path: "grading", icon: FileText },
                 ];
             default:
                 return [{ name: "Dashboard", path: "dashboard", icon: LayoutDashboard }];

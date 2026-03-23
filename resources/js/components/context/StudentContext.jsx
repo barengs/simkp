@@ -49,7 +49,7 @@ export const StudentProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, [students.length, addToast]);
+    }, [students.length]);
 
     const refreshStudents = useCallback(async () => {
         if (lastParamsRef.current) {
@@ -73,7 +73,7 @@ export const StudentProvider = ({ children }) => {
         } else {
             getStudents();
         }
-    }, [getStudents, addToast]);
+    }, [getStudents]);
 
     const value = {
         students,

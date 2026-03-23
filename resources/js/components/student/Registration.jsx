@@ -669,7 +669,7 @@ const Registration = () => {
                                 )}
 
                                 {/* Member Cards */}
-                                {existingInternship.members?.map((m) => (
+                                {existingInternship.members?.filter(m => m.student_id !== existingInternship.leader_id).map((m) => (
                                     <div key={m.id} className="group flex items-center gap-4 bg-white/60 backdrop-blur-md p-5 rounded-[24px] border border-gray-100 transition-all hover:bg-white hover:border-gray-200">
                                         <div className="w-12 h-12 shrink-0 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold text-sm group-hover:bg-gray-50 transition-colors">
                                             {m.student?.user?.name?.substring(0, 2).toUpperCase()}

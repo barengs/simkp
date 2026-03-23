@@ -8,6 +8,7 @@ class Logbook extends Model
 {
     protected $fillable = [
         'internship_id',
+        'student_id',
         'date',
         'activity',
         'evidence_photo',
@@ -18,5 +19,10 @@ class Logbook extends Model
     public function internship()
     {
         return $this->belongsTo(Internship::class);
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
 }

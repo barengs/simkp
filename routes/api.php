@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/internships/register', [\App\Http\Controllers\Api\InternshipController::class, 'registerKp']);
 
     Route::get('/admin/internships', [\App\Http\Controllers\Api\InternshipController::class, 'index']);
+    Route::get('/admin/dashboard-stats', [\App\Http\Controllers\Api\DashboardController::class, 'adminStats']);
     Route::patch('/admin/internships/{internship}/status', [\App\Http\Controllers\Api\InternshipController::class, 'updateStatus']);
     Route::patch('/admin/internships/{internship}/plot', [\App\Http\Controllers\Api\InternshipController::class, 'plotLecturer']); // Keeping for backward compatibility if needed
     Route::patch('/admin/internships/assign-teacher', [\App\Http\Controllers\Api\InternshipController::class, 'assignTeacher']);
@@ -34,4 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/logbooks', [\App\Http\Controllers\Api\LogbookController::class, 'index']);
     Route::post('/logbooks', [\App\Http\Controllers\Api\LogbookController::class, 'store']);
     Route::patch('/logbooks/{logbook}/validate', [\App\Http\Controllers\Api\LogbookController::class, 'validateLogbook']);
+
+    // Report & Evaluation Routes
+    Route::post('/reports', [\App\Http\Controllers\Api\ReportController::class, 'store']);
+    Route::get('/internships/bimbingan', [\App\Http\Controllers\Api\EvaluationController::class, 'bimbingan']);
+    Route::post('/evaluations', [\App\Http\Controllers\Api\EvaluationController::class, 'store']);
 });
