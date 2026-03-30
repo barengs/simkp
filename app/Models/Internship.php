@@ -58,4 +58,14 @@ class Internship extends Model
     {
         return $this->belongsToMany(Student::class, 'internship_members');
     }
+
+    public function logbooks()
+    {
+        return $this->hasMany(Logbook::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

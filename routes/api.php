@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LogbookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,6 +44,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Internships (KP)
     Route::apiResource('internships', \App\Http\Controllers\Api\InternshipController::class);
+
+    // Logbooks
+    Route::apiResource('logbooks', LogbookController::class);
+    Route::post('logbooks/{logbook}/approve', [LogbookController::class, 'approve']);
+
+    // Reports
+    Route::apiResource('reports', \App\Http\Controllers\Api\ReportController::class);
 
     // Admin Internship Validation & Plotting
     Route::prefix('admin/internships')->group(function () {

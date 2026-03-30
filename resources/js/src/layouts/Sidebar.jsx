@@ -179,6 +179,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                     { name: "Validasi", path: "/admin/registration-validation", icon: <CheckSquare size={18} /> },
                     { name: "Plotting", path: "/admin/lecturer-plotting", icon: <UserPlus size={18} /> },
                     { name: "Monitoring", path: "/admin/monitoring", icon: <TrendingUp size={18} /> },
+                    { name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> },
                     { name: "Laporan", path: "/admin/reports", icon: <FileText size={18} /> },
                     { name: "Pengaturan", path: "/admin/settings", icon: <Settings size={18} /> },
                 ];
@@ -187,12 +188,14 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
                     { name: "Pendaftaran", path: "/student/registration", icon: <FileEdit size={18} /> },
                     { name: "Logbook", path: "/student/logbook", icon: <Book size={18} /> },
+                    { name: "Laporan", path: "/student/reports", icon: <FileText size={18} /> },
                 ];
             case "dosen":
                 return [
                     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
-                    { name: "Validasi Logbook", path: "/dosen/logbook-validation", icon: <CheckSquare size={18} /> },
+                    { name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> },
                     { name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> },
+                    { name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> },
                 ];
             default:
                 return [{ name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> }];

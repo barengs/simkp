@@ -20,6 +20,12 @@ const ValidationIndex = lazy(() => import("./admin/Internships/Validation/Index"
 const PlottingIndex = lazy(() => import("./admin/Internships/Plotting/Index"));
 const Registration = lazy(() => import("./student/Registration"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
+const StudentLogbook = lazy(() => import("./student/Logbooks/Logbook"));
+const DosenLogbook = lazy(() => import("./dosen/Logbooks/Logbook"));
+const AdminLogbook = lazy(() => import("./admin/Logbooks/Logbook"));
+const StudentReport = lazy(() => import("./student/Reports/Report"));
+const DosenReport = lazy(() => import("./dosen/Reports/Report"));
+const AdminReport = lazy(() => import("./admin/Reports/Report"));
 
 
 
@@ -243,6 +249,91 @@ const App = () => {
                             </ProtectedRoute>
                         }
                     />
+                    <Route
+                        path="/student/logbook"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <StudentLogbook />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dosen/logbook"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <DosenLogbook />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/logbook"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <AdminLogbook />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/student/reports"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <StudentReport />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dosen/reports"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <DosenReport />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/reports"
+                        element={
+                            <ProtectedRoute>
+                                <ProfileGuard>
+                                    <Suspense fallback={null}>
+                                        <MainLayout>
+                                            <AdminReport />
+                                        </MainLayout>
+                                    </Suspense>
+                                </ProfileGuard>
+                            </ProtectedRoute>
+                        }
+                    />
+
                     {/* Catch all */}
                     <Route
                         path="*"

@@ -25,7 +25,11 @@ class InternshipResource extends JsonResource
                 'phone' => $this->company_phone_manual,
             ],
             'theme' => $this->theme,
-            'supervisor' => $this->supervisor,
+            'supervisor' => $this->supervisor ? [
+                'id' => $this->supervisor->id,
+                'name' => $this->supervisor->user ? $this->supervisor->user->name : null,
+                'nip' => $this->supervisor->nip,
+            ] : null,
             'status' => $this->status,
             'rejection_note' => $this->rejection_note,
             'proposal_url' => $this->proposal_url,

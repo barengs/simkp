@@ -9,7 +9,7 @@ services:
     ports:
       # Expose vite port for development
       - "5177:5173"
-    command: sh -c "mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache bootstrap/cache && chmod -R 775 storage bootstrap/cache && php-fpm"
+    command: sh -c "mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && chmod -R 777 storage bootstrap/cache && php-fpm"
     volumes:
       - ./:/var/www
       - ./docker/app/php.ini:/usr/local/etc/php/conf.d/custom.ini

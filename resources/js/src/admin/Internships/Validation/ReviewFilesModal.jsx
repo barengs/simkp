@@ -20,8 +20,8 @@ const ReviewFilesModal = ({ isOpen, onClose, internship }) => {
             </div>
         );
 
-        const storageUrl = `${(import.meta.env.VITE_API_URL || '').replace('/api', '')}/storage/${url}`;
-
+        const storageUrl = url?.startsWith('http') ? url : `${(import.meta.env.VITE_API_URL || '').replace('/api', '')}/storage/${url}`;
+        
         return (
             <a href={storageUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-white hover:bg-indigo-50 rounded-xl border border-gray-200 hover:border-indigo-200 transition-all group">
                 <div className="flex items-center gap-3">
@@ -42,9 +42,32 @@ const ReviewFilesModal = ({ isOpen, onClose, internship }) => {
         <Modal isOpen={isOpen} onClose={onClose} title="Review Berkas Pendaftaran">
             <div className="space-y-6">
                 <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                    <h4 className="text-sm font-bold text-indigo-900 mb-1">Ketua Kelompok</h4>
-                    <p className="text-sm text-indigo-700">{internship.leader?.name} ({internship.leader?.nim})</p>
-                    <p className="text-xs text-indigo-500 mt-1">Mengajukan KP di: <span className="font-semibold">{internship.company?.name || internship.company_name_manual}</span></p>
+                    <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-bold text-indigo-900">Daftar Anggota Kelompok</h4>
+                        <span className="text-xs font-semibold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">
+                            {internship.students?.length || 1} Orang
+                        </span>
+                    </div>
+                    <ul className="text-sm text-indigo-800 space-y-1.5 mb-3 bg-white/60 p-3 rounded-lg border border-indigo-50">
+                        {internship.students && internship.students.length > 0 ? (
+                            internship.students.map((student, idx) => (
+                                <li key={student.id} className="flex justify-between items-center">
+                                    <span>{idx + 1}. {student.name} <span className="text-gray-500 text-xs ml-1">({student.nim})</span></span>
+                                    {student.id === internship.leader_id && (
+                                        <span className="text-[10px] font-bold uppercase bg-indigo-600 text-white px-2 py-0.5 rounded shadow-sm">Ketua</span>
+                                    )}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="flex justify-between items-center">
+                                <span>1. {internship.leader?.name} <span className="text-gray-500 text-xs ml-1">({internship.leader?.nim})</span></span>
+                                <span className="text-[10px] font-bold uppercase bg-indigo-600 text-white px-2 py-0.5 rounded shadow-sm">Ketua</span>
+                            </li>
+                        )}
+                    </ul>
+                    <p className="text-xs text-indigo-600 border-t border-indigo-100/50 pt-2">
+                        Mengajukan KP di: <span className="font-semibold">{internship.company?.name || internship.company_name_manual}</span>
+                    </p>
                 </div>
 
                 <div className="space-y-3">

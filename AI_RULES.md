@@ -25,6 +25,10 @@
 | **API Resource** | `app/Http/Resources/[Feature]Resource.php` |
 | **Model** | `app/Models/[Feature].php` |
 | **Migration** | `database/migrations/[timestamp]_create_[table]_table.php` |
+| **Role Admin** | `resources/js/src/admin/[Feature]/[FileFeature].jsx` |
+| **Role Dosen** | `resources/js/src/dosen/[Feature]/[FileFeature].jsx` |
+| **Role Mahasiswa** | `resources/js/src/student/[Feature]/[FileFeature]jsx` |
+
 
 ### **B. Backend Coding Standard**
 - **Controller:** Hanya memanggil Service dan return `JsonResource`.
