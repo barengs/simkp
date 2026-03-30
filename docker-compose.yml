@@ -1,0 +1,64 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: simkp-app
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      # Expose vite port for development
+      - "5177:5173"
+    command: sh -c "mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache bootstrap/cache && chmod -R 775 storage bootstrap/cache && php-fpm"
+    volumes:
+      - ./:/var/www
+      - ./docker/app/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    depends_on:
+      - db
+    networks:
+      - simkp-network
+
+  web:
+    image: nginx:alpine
+    container_name: simkp-web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - simkp-network
+
+  db:
+    image: mysql:8.0
+    container_name: simkp-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: simkp
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_USER: simkp_user
+      MYSQL_PASSWORD: secret
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - simkp-network
+  adminer:
+    image: adminer
+    container_name: simkp-adminer
+    restart: unless-stopped
+    ports:
+      - "8082:8080" # Kita pakai 8082 agar tidak bentrok dengan AMT (8226) atau PPDB (8081)
+    networks:
+      - simkp-network
+
+networks:
+  simkp-network:
+    driver: bridge
+
+volumes:
+  db-data:

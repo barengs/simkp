@@ -14,7 +14,7 @@
 
 ---
 
-## 🐘 2. BACKEND PROTOCOL (LARAVEL 11+)
+## 🐘 2. BACKEND PROTOCOL (LARAVEL 12+)
 
 ### **A. Folder Hierarchy & Path**
 | Component | Destination Path |
