@@ -4,24 +4,20 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage;
 
-class ReportResource extends JsonResource
+class EvaluationResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
             'internship_id' => $this->internship_id,
             'internship' => new InternshipResource($this->whenLoaded('internship')),
-            'type' => $this->type,
-            'status' => $this->status,
-            'file_url' => $this->file_url ? url('storage/' . $this->file_url) : null,
+            'score_field' => $this->score_field,
+            'score_report' => $this->score_report,
+            'score_seminar' => $this->score_seminar,
+            'final_grade' => $this->final_grade,
+            'notes' => $this->notes,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];

@@ -30,10 +30,23 @@ export const registerInternship = createAsyncThunk(
     }
 );
 
+export const fetchInternshipGroups = createAsyncThunk(
+    'internship/fetchInternshipGroups',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await api.get('/internships/groups');
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Gagal mengambil daftar kelompok');
+        }
+    }
+);
+
 const internshipSlice = createSlice({
     name: 'internship',
     initialState: {
         data: null,
+        groups: [],
         loading: false,
         error: null,
         registrationSuccess: false,
@@ -53,9 +66,19 @@ const internshipSlice = createSlice({
                 state.loading = false;
                 state.data = action.payload;
             })
-            .addCase(fetchMyInternship.rejected, (state, action) => {
+            .addCase(fetchMyInternship.rejected, (state) => {
                 state.loading = false;
-                // state.error = action.payload; // Don't always set error on index fetch if 404
+            })
+            .addCase(fetchInternshipGroups.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchInternshipGroups.fulfilled, (state, action) => {
+                state.loading = false;
+                state.groups = action.payload;
+            })
+            .addCase(fetchInternshipGroups.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             })
             .addCase(registerInternship.pending, (state) => {
                 state.loading = true;

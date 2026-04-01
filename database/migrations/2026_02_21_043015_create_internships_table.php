@@ -16,6 +16,9 @@ return new class extends Migration {
             $table->foreignId('period_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //tahun ajaran
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //perusahaan
             $table->string('company_name_manual')->nullable(); // Nama perusahaan manual
+            $table->text('company_address_manual')->nullable();
+            $table->string('company_contact_manual')->nullable();
+            $table->string('company_phone_manual')->nullable();
             $table->foreignId('theme_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate(); //tema KP
             $table->foreignId('supervisor_id')->nullable()->constrained('lecturers')->cascadeOnDelete()->cascadeOnUpdate(); //dosen pembimbing
             $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'ongoing', 'grading', 'finished'])->default('draft');

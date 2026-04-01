@@ -18,7 +18,8 @@ class PeriodRequest extends FormRequest
             'semester' => 'required|string|in:ganjil,genap',
             'theme_name' => 'nullable|string|max:255',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'is_active' => 'boolean',
         ];
     }
 }

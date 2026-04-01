@@ -123,20 +123,22 @@ const PeriodManagement = () => {
         },
         {
             name: "Status",
-            selector: (row) => row.is_active,
+            selector: (row) => row.status,
             sortable: true,
-            cell: (row) => (
-                <button
-                    onClick={() => handleToggleActive(row)}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold transition ${row.is_active
-                        ? "bg-green-100 text-green-700 cursor-default"
-                        : "bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600"
-                        }`}
-                >
-                    {row.is_active ? <CheckCircle size={14} /> : <Circle size={14} />}
-                    <span>{row.is_active ? "Aktif" : "Nonaktif"}</span>
-                </button>
-            )
+            cell: (row) => {
+                const statusConfig = {
+                    'active': { class: 'bg-green-100 text-green-700', label: 'Aktif' },
+                    'finished': { class: 'bg-blue-100 text-blue-700', label: 'Selesai' },
+                    'inactive': { class: 'bg-gray-100 text-gray-500', label: 'Nonaktif' },
+                };
+                const config = statusConfig[row.status] || statusConfig['inactive'];
+                
+                return (
+                    <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold ${config.class}`}>
+                        <span>{config.label}</span>
+                    </div>
+                );
+            }
         },
         {
             name: "Aksi",

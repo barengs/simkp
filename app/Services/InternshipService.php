@@ -139,4 +139,18 @@ class InternshipService
         Log::info("Internship supervisor assigned: " . $internship->id . " Supervisor: " . $supervisorId);
         return $internship;
     }
+
+    public function getInternshipsForUser($user)
+    {
+        $query = Internship::with(['leader.user', 'period', 'company', 'theme', 'supervisor.user', 'students.user']);
+
+        if ($user->role === 'dosen') {
+            $lecturerId = $user->lecturer->id ?? null;
+            $query->where('supervisor_id', $lecturerId);
+        } elseif ($user->role !== 'admin') {
+            return collect(); // Restrict others
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
+    }
 }

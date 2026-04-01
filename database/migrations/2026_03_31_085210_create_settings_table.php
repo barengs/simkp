@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reports', function (Blueprint $table) {
+        Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('internship_id')->constrained()->onDelete('cascade');
-            $table->string('file_url')->nullable();
-            $table->enum('type', ['draft', 'final']);
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->string('key')->unique()->index();
+            $table->text('value')->nullable();
+            $table->string('type')->default('text'); // text, file, switch, select
+            $table->string('group')->default('general'); // general, branding, etc.
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reports');
+        Schema::dropIfExists('settings');
     }
 };

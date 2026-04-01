@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InternshipRequest;
 use App\Http\Resources\InternshipResource;
 use App\Services\InternshipService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Log;
@@ -69,5 +70,11 @@ class InternshipController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function listGroups(Request $request)
+    {
+        $internships = $this->internshipService->getInternshipsForUser($request->user());
+        return InternshipResource::collection($internships);
     }
 }

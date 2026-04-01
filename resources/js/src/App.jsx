@@ -2,7 +2,8 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCurrentUser } from "./store/slice/authSlice";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { fetchPublicSettings } from "./store/slice/settingSlice";
+import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -26,6 +27,12 @@ const AdminLogbook = lazy(() => import("./admin/Logbooks/Logbook"));
 const StudentReport = lazy(() => import("./student/Reports/Report"));
 const DosenReport = lazy(() => import("./dosen/Reports/Report"));
 const AdminReport = lazy(() => import("./admin/Reports/Report"));
+const StudentEvaluation = lazy(() => import("./student/Evaluations/Evaluation"));
+const DosenEvaluation = lazy(() => import("./dosen/Evaluations/Evaluation"));
+const AdminEvaluation = lazy(() => import("./admin/Evaluations/Evaluation"));
+const AdminInternshipGroups = lazy(() => import("./admin/Internships/InternshipList"));
+const DosenInternshipGroups = lazy(() => import("./dosen/Internships/InternshipList"));
+const Settings = lazy(() => import("./admin/Settings/Settings"));
 
 
 
@@ -79,11 +86,30 @@ const GuestRoute = ({ children }) => {
 const App = () => {
     const dispatch = useDispatch();
     const { initialLoading } = useSelector((state) => state.auth);
+    const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
 
     // On mount, try to restore session
     useEffect(() => {
         dispatch(fetchCurrentUser());
+        dispatch(fetchPublicSettings());
     }, [dispatch]);
+
+    // Dynamic Branding (Title & Favicon)
+    useEffect(() => {
+        if (publicSettings.app_name) {
+            document.title = publicSettings.app_name;
+        }
+        if (publicSettings.app_favicon) {
+            let favicon = document.getElementById("favicon");
+            if (!favicon) {
+                favicon = document.createElement("link");
+                favicon.id = "favicon";
+                favicon.rel = "icon";
+                document.head.appendChild(favicon);
+            }
+            favicon.href = publicSettings.app_favicon;
+        }
+    }, [publicSettings]);
 
     // Show nothing while checking session
     if (initialLoading) return null;
@@ -92,253 +118,67 @@ const App = () => {
         <>
             <Suspense fallback={null}>
                 <Routes>
-                    {/* Guest route: Login/Register */}
-                    <Route
-                        path="/login"
-                        element={
-                            <GuestRoute>
-                                <Login />
-                            </GuestRoute>
-                        }
-                    />
+                    {/* Guest Routes: Only accessible when logged out */}
+                    <Route element={<GuestRoute><Outlet /></GuestRoute>}>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                    </Route>
 
-                    {/* Guest route: Register */}
-                    <Route
-                        path="/register"
-                        element={
-                            <GuestRoute>
-                                <Register />
-                            </GuestRoute>
-                        }
-                    />
+                    {/* Profile Completion: Protected but lacks ProfileGuard */}
+                    <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
+                        <Route path="/student/profile" element={<StudentProfile />} />
+                    </Route>
 
-                    {/* Student profile completion (protected but no ProfileGuard) */}
+                    {/* Protected Application Shell: Layout + Guarded */}
                     <Route
-                        path="/student/profile"
                         element={
                             <ProtectedRoute>
-                                <StudentProfile />
+                                <ProfileGuard>
+                                    <MainLayout />
+                                </ProfileGuard>
                             </ProtectedRoute>
                         }
-                    />
+                    >
+                        {/* Universal */}
+                        <Route index element={<Dashboard />} />
 
-                    {/* All protected routes wrapped with ProfileGuard */}
-                    <Route
-                        path="/"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <Dashboard />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/period-management"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <PeriodManagement />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/theme-management"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <ThemeManagement />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/master-mahasiswa"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <StudentList />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/registration-validation"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <ValidationIndex />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/lecturer-plotting"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <PlottingIndex />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/master/mitra"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <CompanyList />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/master/dosen"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <LecturerList />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/student/registration"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <Registration />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/student/logbook"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <StudentLogbook />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/dosen/logbook"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <DosenLogbook />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/logbook"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <AdminLogbook />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/student/reports"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <StudentReport />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/dosen/reports"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <DosenReport />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/reports"
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <Suspense fallback={null}>
-                                        <MainLayout>
-                                            <AdminReport />
-                                        </MainLayout>
-                                    </Suspense>
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* Admin Routes */}
+                        <Route path="admin">
+                            <Route path="period-management" element={<PeriodManagement />} />
+                            <Route path="theme-management" element={<ThemeManagement />} />
+                            <Route path="master-mahasiswa" element={<StudentList />} />
+                            <Route path="registration-validation" element={<ValidationIndex />} />
+                            <Route path="lecturer-plotting" element={<PlottingIndex />} />
+                            <Route path="internship-groups" element={<AdminInternshipGroups />} />
+                            <Route path="logbook" element={<AdminLogbook />} />
+                            <Route path="reports" element={<AdminReport />} />
+                            <Route path="evaluations" element={<AdminEvaluation />} />
+                            <Route path="settings" element={<Settings />} />
+                            <Route path="master">
+                                <Route path="mitra" element={<CompanyList />} />
+                                <Route path="dosen" element={<LecturerList />} />
+                            </Route>
+                        </Route>
+
+                        {/* Student Routes */}
+                        <Route path="student">
+                            <Route path="registration" element={<Registration />} />
+                            <Route path="logbook" element={<StudentLogbook />} />
+                            <Route path="reports" element={<StudentReport />} />
+                            <Route path="evaluations" element={<StudentEvaluation />} />
+                        </Route>
+
+                        {/* Lecturer (Dosen) Routes */}
+                        <Route path="dosen">
+                            <Route path="internship-groups" element={<DosenInternshipGroups />} />
+                            <Route path="logbook" element={<DosenLogbook />} />
+                            <Route path="reports" element={<DosenReport />} />
+                            <Route path="evaluations" element={<DosenEvaluation />} />
+                        </Route>
+                    </Route>
 
                     {/* Catch all */}
-                    <Route
-                        path="*"
-                        element={<Navigate to="/login" replace />}
-                    />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
                 </Routes>
             </Suspense>
             <ToastContainer autoClose={2500} />

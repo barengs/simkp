@@ -37,6 +37,8 @@ class InternshipResource extends JsonResource
             'ktp_url' => $this->ktp_url,
             'surat_rekomendasi_url' => $this->surat_rekomendasi_url,
             'students' => StudentResource::collection($this->students),
+            'evaluation' => new EvaluationResource($this->whenLoaded('evaluation')),
+            'has_final_report' => $this->hasFinalReport(),
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];

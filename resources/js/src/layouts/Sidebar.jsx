@@ -142,6 +142,7 @@ const MenuItem = ({
 // --- Komponen Utama Sidebar ---
 const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) => {
     const { loading: logoutLoading } = useSelector((state) => state.auth);
+    const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
     const [expandedMenus, setExpandedMenus] = useState({});
     const navigate = useNavigate();
     const location = useLocation();
@@ -179,8 +180,10 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                     { name: "Validasi", path: "/admin/registration-validation", icon: <CheckSquare size={18} /> },
                     { name: "Plotting", path: "/admin/lecturer-plotting", icon: <UserPlus size={18} /> },
                     { name: "Monitoring", path: "/admin/monitoring", icon: <TrendingUp size={18} /> },
+                    { name: "Daftar Kelompok", path: "/admin/internship-groups", icon: <Users size={18} /> },
                     { name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> },
                     { name: "Laporan", path: "/admin/reports", icon: <FileText size={18} /> },
+                    { name: "Rekap Penilaian", path: "/admin/evaluations", icon: <CheckSquare size={18} /> },
                     { name: "Pengaturan", path: "/admin/settings", icon: <Settings size={18} /> },
                 ];
             case "mahasiswa":
@@ -189,13 +192,16 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                     { name: "Pendaftaran", path: "/student/registration", icon: <FileEdit size={18} /> },
                     { name: "Logbook", path: "/student/logbook", icon: <Book size={18} /> },
                     { name: "Laporan", path: "/student/reports", icon: <FileText size={18} /> },
+                    { name: "Penilaian Akhir", path: "/student/evaluations", icon: <CheckSquare size={18} /> },
                 ];
             case "dosen":
                 return [
                     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
+                    { name: "Daftar Kelompok", path: "/dosen/internship-groups", icon: <Users size={18} /> },
                     { name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> },
                     { name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> },
                     { name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> },
+                    { name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> },
                 ];
             default:
                 return [{ name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> }];
@@ -227,7 +233,14 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl"
                         >
                             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto px-4">
-                                <h1 className="text-xl font-bold text-indigo-600 mb-6 px-2">SIMKP</h1>
+                                <div className="flex items-center gap-3 mb-6 px-2">
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 italic font-bold text-indigo-600">
+                                        {publicSettings.app_logo ? (
+                                            <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
+                                        ) : "S"}
+                                    </div>
+                                    <h1 className="text-xl font-bold text-indigo-600 truncate">{publicSettings.app_name || "SIMKP"}</h1>
+                                </div>
                                 <nav className="space-y-1">
                                     {navigation.map((item) => (
                                         <MenuItem
@@ -272,14 +285,12 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                 <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
                     <div className={`flex-1 flex flex-col pt-5 pb-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                         <div className={`flex items-center shrink-0 px-5 mb-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100">
-                                <img
-                                    src="https://simat.uim.ac.id/assets/images/logo_0758bf53311ae872765158c3f00b323a.png"
-                                    alt="Logo"
-                                    className="w-full h-full object-cover"
-                                />
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 italic font-bold text-indigo-600">
+                                {publicSettings.app_logo ? (
+                                    <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
+                                ) : "S"}
                             </div>
-                            {!isCollapsed && <span className="ml-3 text-lg font-bold text-gray-900">SIMKP</span>}
+                            {!isCollapsed && <span className="ml-3 text-lg font-bold text-gray-900 truncate">{publicSettings.app_name || "SIMKP"}</span>}
                         </div>
                         <nav className="flex-1 px-3 space-y-1">
                             {navigation.map((item) => (

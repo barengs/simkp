@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addReport } from '../../store/slice/reportSlice';
 import { toast } from 'react-toastify';
 
-const AddReport = ({ onClose }) => {
+const AddReport = ({ onClose, type = 'draft' }) => {
     const dispatch = useDispatch();
     const { loading } = useSelector(state => state.reports || { loading: false });
     const { data: internships } = useSelector((state) => state.internships || { data: [] });
@@ -13,7 +13,7 @@ const AddReport = ({ onClose }) => {
 
     const [formData, setFormData] = useState({
         internship_id: activeInternship ? activeInternship.id : '',
-        type: 'draft',
+        type: type,
         file_url: null,
     });
 
@@ -55,19 +55,10 @@ const AddReport = ({ onClose }) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Tipe Laporan</label>
-                <select
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    required
-                >
-                    <option value="draft">Draft (Revisi Berjalan)</option>
-                    <option value="final">Final (Siap Sidang)</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">Pilih Draft jika Anda masih akan mengunggah ulang, pilih Final jika laporan sudah disetujui untuk sidang.</p>
+            <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 mb-4 text-center">
+                <span className="text-sm font-semibold text-indigo-700 uppercase tracking-widest">
+                    Uploading {type === 'final' ? 'Laporan Final' : 'Draft Laporan'}
+                </span>
             </div>
             
             <div>

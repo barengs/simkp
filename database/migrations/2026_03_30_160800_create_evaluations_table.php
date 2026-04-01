@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reports', function (Blueprint $table) {
+        Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('internship_id')->constrained()->onDelete('cascade');
-            $table->string('file_url')->nullable();
-            $table->enum('type', ['draft', 'final']);
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->decimal('score_field', 5, 2)->nullable();
+            $table->decimal('score_report', 5, 2)->nullable();
+            $table->decimal('score_seminar', 5, 2)->nullable();
+            $table->string('final_grade', 2)->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reports');
+        Schema::dropIfExists('evaluations');
     }
 };

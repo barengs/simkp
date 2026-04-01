@@ -119,7 +119,7 @@ const authSlice = createSlice({
         isAuthenticated: false,
         loading: false,
         error: null,
-        initialLoading: true,
+        initialLoading: false,
     },
     reducers: {
         clearError(state) {

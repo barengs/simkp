@@ -20,4 +20,18 @@ class Period extends Model
         'end_date' => 'date',
         'is_active' => 'boolean',
     ];
+
+    protected $appends = ['status'];
+
+    public function getStatusAttribute()
+    {
+        $now = now();
+        if ($this->end_date && $now->greaterThan($this->end_date)) {
+            return 'finished';
+        }
+        if ($this->is_active) {
+            return 'active';
+        }
+        return 'inactive';
+    }
 }

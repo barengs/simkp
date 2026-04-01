@@ -47,6 +47,30 @@ export const deleteReport = createAsyncThunk(
     }
 );
 
+export const approveReport = createAsyncThunk(
+    'reports/approve',
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`/reports/${id}/approve`);
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Gagal menyetujui laporan');
+        }
+    }
+);
+
+export const rejectReport = createAsyncThunk(
+    'reports/reject',
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await api.post(`/reports/${id}/reject`);
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Gagal menolak laporan');
+        }
+    }
+);
+
 const initialState = {
     data: [],
     loading: false,
@@ -99,6 +123,38 @@ const reportSlice = createSlice({
                 state.data = state.data.filter((r) => r.id !== action.payload);
             })
             .addCase(deleteReport.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Approve
+            .addCase(approveReport.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(approveReport.fulfilled, (state, action) => {
+                state.loading = false;
+                const index = state.data.findIndex((r) => r.id === action.payload.id);
+                if (index !== -1) {
+                    state.data[index] = action.payload;
+                }
+            })
+            .addCase(approveReport.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Reject
+            .addCase(rejectReport.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(rejectReport.fulfilled, (state, action) => {
+                state.loading = false;
+                const index = state.data.findIndex((r) => r.id === action.payload.id);
+                if (index !== -1) {
+                    state.data[index] = action.payload;
+                }
+            })
+            .addCase(rejectReport.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

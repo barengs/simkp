@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Report extends Model
+class Evaluation extends Model
 {
     protected $fillable = [
         'internship_id',
-        'file_url',
-        'type', // 'draft' or 'final'
-        'status', // 'pending', 'approved', 'rejected'
+        'score_field',
+        'score_report',
+        'score_seminar',
+        'final_grade',
+        'notes',
     ];
 
     public function internship()

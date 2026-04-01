@@ -64,8 +64,20 @@ class Internship extends Model
         return $this->hasMany(Logbook::class);
     }
 
+    public function evaluation()
+    {
+        return $this->hasOne(Evaluation::class);
+    }
+
     public function reports()
     {
         return $this->hasMany(Report::class);
+    }
+
+    public function hasFinalReport()
+    {
+        $hasFinal = $this->reports()->where('type', 'final')->exists();
+        $draftApproved = $this->reports()->where('type', 'draft')->where('status', 'approved')->exists();
+        return $hasFinal && $draftApproved;
     }
 }

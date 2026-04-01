@@ -4,9 +4,9 @@ import { logoutUser } from "../store/slice/authSlice";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 
-const MainLayout = ({ children }) => {
+const MainLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const navigate = useNavigate();
@@ -44,7 +44,7 @@ const MainLayout = ({ children }) => {
                 />
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                    {children}
+                    <Outlet />
                 </main>
             </div>
         </div>

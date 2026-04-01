@@ -50,6 +50,13 @@ class ReportService
                 $data['file_url'] = $path;
             }
 
+            // Automate approval for FINAL
+            if (isset($data['type']) && $data['type'] === 'final') {
+                $data['status'] = 'approved';
+            } else {
+                $data['status'] = 'pending';
+            }
+
             return Report::create($data);
         } catch (\Exception $e) {
             Log::error('Error creating report: ' . $e->getMessage());
