@@ -40,12 +40,12 @@ const PeriodManagement = () => {
     }, [dispatch, periods.length]);
 
     const handleToggleActive = async (period) => {
-        if (period.is_active) return;
         try {
+            const actionLabel = period.is_active ? "dinonaktifkan" : "diaktifkan";
             await dispatch(togglePeriodActive(period.id)).unwrap();
-            toast.success("Periode berhasil diaktifkan");
+            toast.success(`Periode berhasil ${actionLabel}`);
         } catch (error) {
-            toast.error("Gagal mengaktifkan periode: " + error);
+            toast.error("Gagal mengubah status periode: " + error);
         }
     };
 
@@ -122,21 +122,37 @@ const PeriodManagement = () => {
             )
         },
         {
+            name: "Pengumuman",
+            selector: (row) => row.announcement_date,
+            sortable: true,
+            cell: (row) => (
+                <div className="text-xs text-gray-600 font-bold">
+                    <div>{row.announcement_date || "Belum Set"}</div>
+                </div>
+            )
+        },
+        {
             name: "Status",
             selector: (row) => row.status,
             sortable: true,
             cell: (row) => {
                 const statusConfig = {
-                    'active': { class: 'bg-green-100 text-green-700', label: 'Aktif' },
-                    'finished': { class: 'bg-blue-100 text-blue-700', label: 'Selesai' },
-                    'inactive': { class: 'bg-gray-100 text-gray-500', label: 'Nonaktif' },
+                    'active': { class: 'bg-green-100 text-green-700 hover:bg-green-200', label: 'Aktif', icon: CheckCircle },
+                    'finished': { class: 'bg-blue-100 text-blue-700', label: 'Selesai', icon: Circle },
+                    'inactive': { class: 'bg-gray-100 text-gray-500 hover:bg-gray-200', label: 'Nonaktif', icon: Circle },
                 };
                 const config = statusConfig[row.status] || statusConfig['inactive'];
+                const Icon = config.icon;
                 
                 return (
-                    <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold ${config.class}`}>
+                    <button 
+                        onClick={() => handleToggleActive(row)}
+                        title={row.is_active ? "Klik untuk nonaktifkan" : "Klik untuk aktifkan"}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${config.class}`}
+                    >
+                        <Icon size={12} fill={row.is_active ? "currentColor" : "none"} />
                         <span>{config.label}</span>
-                    </div>
+                    </button>
                 );
             }
         },

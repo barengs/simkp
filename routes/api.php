@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LogbookController;
 use App\Http\Controllers\Api\EvaluationController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +70,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Evaluations
     Route::apiResource('evaluations', EvaluationController::class);
+
+    // Dashboard stats
+    Route::get('dashboard/stats', [DashboardController::class, 'getStats']);
+
+    // Activities
+    Route::get('activities', [ActivityController::class, 'index']);
+    Route::get('activities/latest', [ActivityController::class, 'latest']);
 
     // Settings (Admin)
     Route::get('settings', [\App\Http\Controllers\Api\SettingController::class, 'index']);

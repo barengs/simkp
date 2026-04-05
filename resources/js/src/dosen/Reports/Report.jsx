@@ -15,6 +15,7 @@ const Report = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [historyModal, setHistoryModal] = useState({ isOpen: false, group: null });
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null, reportId: null });
 
     useEffect(() => {
         dispatch(fetchReports());
@@ -42,26 +43,32 @@ const Report = () => {
         }));
     }, [reports]);
 
-    const handleApprove = async (id) => {
-        if (window.confirm("Apakah Anda yakin ingin MENYETUJUI draft laporan ini?")) {
-            const action = await dispatch(approveReport(id));
+    const handleConfirmAction = async () => {
+        const { type, reportId } = confirmModal;
+        if (type === 'approve') {
+            const action = await dispatch(approveReport(reportId));
             if (approveReport.fulfilled.match(action)) {
                 toast.success("Draft laporan disetujui");
             } else {
                 toast.error(action.payload || "Gagal menyetujui laporan");
             }
-        }
-    };
-
-    const handleReject = async (id) => {
-        if (window.confirm("Apakah Anda yakin ingin MENOLAK draft laporan ini?")) {
-            const action = await dispatch(rejectReport(id));
+        } else {
+            const action = await dispatch(rejectReport(reportId));
             if (rejectReport.fulfilled.match(action)) {
                 toast.success("Draft laporan ditolak");
             } else {
                 toast.error(action.payload || "Gagal menolak laporan");
             }
         }
+        setConfirmModal({ isOpen: false, type: null, reportId: null });
+    };
+
+    const handleApprove = (id) => {
+        setConfirmModal({ isOpen: true, type: 'approve', reportId: id });
+    };
+
+    const handleReject = (id) => {
+        setConfirmModal({ isOpen: true, type: 'reject', reportId: id });
     };
 
     const filteredData = groupedData.filter(
@@ -224,6 +231,47 @@ const Report = () => {
                     >
                         Tutup
                     </button>
+                </div>
+            </Modal>
+            <Modal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ isOpen: false, type: null, reportId: null })}
+                title={confirmModal.type === 'approve' ? 'Konfirmasi Persetujuan' : 'Konfirmasi Penolakan'}
+                size="sm"
+            >
+                <div className="py-2">
+                    <div className={`p-4 rounded-xl border mb-6 flex items-start gap-4 ${
+                        confirmModal.type === 'approve' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'
+                    }`}>
+                        {confirmModal.type === 'approve' ? <CheckCircle className="shrink-0 mt-0.5" size={20} /> : <XCircle className="shrink-0 mt-0.5" size={20} />}
+                        <div className="text-sm">
+                            <p className="font-bold mb-1">
+                                {confirmModal.type === 'approve' ? 'Setujui Laporan?' : 'Tolak / Revisi Laporan?'}
+                            </p>
+                            <p className="leading-relaxed opacity-80">
+                                {confirmModal.type === 'approve' 
+                                    ? 'Apakah Anda yakin ingin menyetujui draft laporan ini? Mahasiswa akan dapat melanjutkan ke tahap upload laporan FINAL.' 
+                                    : 'Apakah Anda yakin ingin menolak atau meminta revisi pada draft laporan ini?'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                        <button 
+                            onClick={() => setConfirmModal({ isOpen: false, type: null, reportId: null })}
+                            className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 transition-all"
+                        >
+                            Batal
+                        </button>
+                        <button 
+                            onClick={handleConfirmAction}
+                            className={`px-8 py-2 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 ${
+                                confirmModal.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                            }`}
+                        >
+                            {confirmModal.type === 'approve' ? 'Ya, Setujui' : 'Ya, Tolak'}
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </>

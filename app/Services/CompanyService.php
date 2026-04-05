@@ -9,7 +9,13 @@ class CompanyService
 {
     public function getAllCompanies()
     {
-        return Company::latest()->get();
+        $activePeriod = \App\Models\Period::where('is_active', true)->first();
+
+        if (!$activePeriod) {
+            return collect();
+        }
+
+        return Company::where('period_id', $activePeriod->id)->latest()->get();
     }
 
     public function createCompany(array $data)

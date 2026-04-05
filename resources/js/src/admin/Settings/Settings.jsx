@@ -90,6 +90,16 @@ const Settings = () => {
                             <p className="text-[10px] text-gray-400 mt-2">Maksimal 2MB. Format: PNG, JPG, SVG.</p>
                         </div>
                     </div>
+                ) : key === 'max_group_members' ? (
+                    <input 
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono"
+                        placeholder="Contoh: 3"
+                    />
                 ) : (
                     <input 
                         type="text"
@@ -147,12 +157,15 @@ const Settings = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="min-h-[300px]">
                                 {settings.filter(s => s.group === activeTab).length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                                        <SettingsIcon size={48} className="mb-4 opacity-20" />
-                                        <p className="text-sm">Belum ada pengaturan untuk kategori ini.</p>
+                                    <div className="flex flex-col items-center justify-center py-20 text-gray-400 bg-gray-50/30 rounded-2xl border-2 border-dashed border-gray-100">
+                                        <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                                            <SettingsIcon size={32} className="opacity-20" />
+                                        </div>
+                                        <p className="text-sm font-medium">Belum ada pengaturan untuk kategori ini.</p>
+                                        <p className="text-[10px] uppercase tracking-widest font-bold mt-1 opacity-50">Hubungi Developer untuk Menambah Konfigurasi</p>
                                     </div>
                                 ) : (
-                                    settings.map(renderField)
+                                    settings.filter(s => s.group === activeTab).map(renderField)
                                 )}
                             </div>
 

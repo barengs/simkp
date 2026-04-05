@@ -3,12 +3,7 @@ import api from '../../api';
 
 export const fetchEvaluations = createAsyncThunk(
     'evaluations/fetchAll',
-    async (_, { rejectWithValue, getState }) => {
-        const state = getState();
-        if (state.evaluations && state.evaluations.data && state.evaluations.data.length > 0) {
-            return state.evaluations.data;
-        }
-
+    async (_, { rejectWithValue }) => {
         try {
             const response = await api.get('/evaluations');
             return response.data.data;
@@ -78,11 +73,14 @@ const evaluationSlice = createSlice({
             })
             .addCase(saveEvaluation.fulfilled, (state, action) => {
                 state.loading = false;
-                const index = state.data.findIndex((item) => item.internship_id === action.payload.internship_id);
+                // action.payload is the Evaluation object. 
+                // We find the internship in our list and update its evaluation.
+                // Ensure correct ID comparison (matching evaluated internship)
+                const internshipId = Number(action.payload.internship_id);
+                const index = state.data.findIndex((item) => Number(item.id) === internshipId);
+                
                 if (index !== -1) {
-                    state.data[index] = action.payload;
-                } else {
-                    state.data.unshift(action.payload);
+                    state.data[index].evaluation = action.payload;
                 }
             })
             .addCase(saveEvaluation.rejected, (state, action) => {

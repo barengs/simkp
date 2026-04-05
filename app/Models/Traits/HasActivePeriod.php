@@ -12,14 +12,6 @@ trait HasActivePeriod
      */
     public static function bootHasActivePeriod()
     {
-        // Apply Global Scope for filtering
-        static::addGlobalScope('active_period', function (Builder $builder) {
-            $activePeriod = Period::where('is_active', true)->first();
-            if ($activePeriod) {
-                $builder->where('period_id', $activePeriod->id);
-            }
-        });
-
         // Automatically set period_id on creation
         static::creating(function ($model) {
             if (!$model->period_id) {

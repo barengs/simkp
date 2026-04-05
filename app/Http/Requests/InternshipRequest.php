@@ -16,31 +16,54 @@ class InternshipRequest extends FormRequest
 
     public function rules(): array
     {
+        $settings = app(\App\Services\SettingService::class)->getAllSettings();
+        $maxMembers = (int)($settings['max_group_members'] ?? 3);
+
         return [
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => [
+                'required',
+                'exists:periods,id',
+                function ($attribute, $value, $fail) {
+                    $period = \App\Models\Period::find($value);
+                    if (!$period) return;
+
+                    $now = \Illuminate\Support\Carbon::now();
+                    $start = \Illuminate\Support\Carbon::parse($period->start_date);
+                    $end = \Illuminate\Support\Carbon::parse($period->end_date);
+
+                    if ($now->lt($start)) {
+                        $fail("Masa pendaftaran untuk periode ini belum dibuka (Dimulai: {$start->format('d M Y')}).");
+                    }
+
+                    if ($now->gt($end)) {
+                        $fail("Masa pendaftaran untuk periode ini telah berakhir (Berakhir: {$end->format('d M Y')}).");
+                    }
+                }
+            ],
             'company_id' => 'nullable|exists:companies,id',
             'company_name_manual' => 'required_without:company_id|string|max:255',
             'company_address_manual' => 'required_without:company_id|string|max:500',
             'company_contact_manual' => 'required_without:company_id|string|max:255',
             'company_phone_manual' => 'required_without:company_id|string|max:50',
             'theme_id' => 'required|exists:themes,id',
-            'members' => 'nullable|array|max:3',
+            'members' => 'nullable|array|max:' . ($maxMembers - 1),
             'members.*' => [
                 'exists:students,id',
                 'distinct',
                 function ($attribute, $value, $fail) {
+                    $student = \App\Models\Student::find($value);
+                    if (!$student) return;
+
                     // Check if member is part of any non-rejected internship
-                    $isRegisteredAsMember = \App\Models\InternshipMember::where('student_id', $value)
+                    $conflict = \App\Models\InternshipMember::where('student_id', $value)
                         ->whereHas('internship', function ($query) {
                         $query->where('status', '!=', 'rejected');
-                    })->exists();
-
-                    $isRegisteredAsLeader = \App\Models\Internship::where('leader_id', $value)
+                    })->exists() || \App\Models\Internship::where('leader_id', $value)
                         ->where('status', '!=', 'rejected')
                         ->exists();
 
-                    if ($isRegisteredAsMember || $isRegisteredAsLeader) {
-                        $fail('Mahasiswa dengan ID ' . $value . ' sudah terdaftar di kelompok lain yang aktif.');
+                    if ($conflict) {
+                        $fail("Mahasiswa {$student->name} sudah terdaftar di kelompok lain.");
                     }
                 }
             ],

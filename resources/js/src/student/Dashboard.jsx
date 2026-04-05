@@ -1,97 +1,133 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
+import api from "../api";
+import { 
+    Users, 
+    CheckCircle2, 
+    Clock, 
+    GraduationCap, 
+    Activity, 
+    FileText,
+    TrendingUp,
+    ChevronRight,
+    Info,
+    BookCheck,
+    Award
+} from "lucide-react";
+import { 
+    PieChart, 
+    Pie, 
+    Cell, 
+    ResponsiveContainer, 
+    Tooltip, 
+    Legend 
+} from "recharts";
+import { fetchLatestActivities } from "../store/slice/activitySlice";
+import { SkeletonCard, SkeletonList } from "../components/Skeleton";
 
+const StudentDashboard = () => {
+    const dispatch = useDispatch();
+    const { latestActivities, loading: activitiesLoading } = useSelector((state) => state.activities);
+    const [stats, setStats] = useState(null);
+    const [chartData, setChartData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-const Dashboard = () => {
-    // Mock data for dashboard
-    const stats = [
-        {
-            name: "Total Mahasiswa KP",
-            value: "128",
-            change: "+12%",
-            changeType: "positive",
-        },
-        {
-            name: "Pendaftaran Disetujui",
-            value: "95",
-            change: "+5%",
-            changeType: "positive",
-        },
-        {
-            name: "Menunggu Validasi",
-            value: "23",
-            change: "-2%",
-            changeType: "negative",
-        },
-        {
-            name: "Selesai KP",
-            value: "67",
-            change: "+8%",
-            changeType: "positive",
-        },
-    ];
+    const COLORS = ["#F59E0B", "#10B981", "#6366F1", "#3B82F6", "#EF4444"];
 
-    const recentActivities = [
-        {
-            id: 1,
-            name: "Budi Santoso",
-            status: "Menunggu Validasi",
-            date: "2024-01-15",
-            type: "Pendaftaran",
-        },
-        {
-            id: 2,
-            name: "Ani Lestari",
-            status: "Disetujui",
-            date: "2024-01-14",
-            type: "Logbook",
-        },
-        {
-            id: 3,
-            name: "Rudi Hartono",
-            status: "Ditolak",
-            date: "2024-01-14",
-            type: "Pendaftaran",
-        },
-        {
-            id: 4,
-            name: "Siti Nurhaliza",
-            status: "Menunggu Nilai",
-            date: "2024-01-13",
-            type: "Laporan",
-        },
-    ];
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                const response = await api.get("/dashboard/stats");
+                if (response.data && response.data.stats) {
+                    setStats(response.data.stats);
+                    setChartData(response.data.chartData || []);
+                }
+            } catch (error) {
+                console.error("Failed to fetch dashboard stats", error);
+                // Fallback empty stats to prevent crash
+                setStats({
+                    widget1: { label: 'Status Pendaftaran', value: 'Error', icon: 'info' },
+                    widget2: { label: 'Total Logbook', value: 0, icon: 'book-open' },
+                    widget3: { label: 'Status Laporan', value: 'Error', icon: 'file-text' },
+                    widget4: { label: 'Nilai Akhir', value: '-', icon: 'award' },
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+        dispatch(fetchLatestActivities());
+    }, [dispatch]);
+
+    const getIcon = (iconName) => {
+        switch (iconName) {
+            case 'users': return <Users className="text-indigo-600" size={24} />;
+            case 'check-circle': return <CheckCircle2 className="text-emerald-600" size={24} />;
+            case 'clock': return <Clock className="text-amber-600" size={24} />;
+            case 'graduation-cap': return <GraduationCap className="text-blue-600" size={24} />;
+            case 'info': return <Info className="text-blue-600" size={24} />;
+            case 'book-check': return <BookCheck className="text-emerald-600" size={24} />;
+            case 'book-open': return <BookCheck className="text-indigo-600" size={24} />;
+            case 'file-text': return <FileText className="text-indigo-600" size={24} />;
+            case 'award': return <Award className="text-amber-600" size={24} />;
+            default: return <Activity className="text-indigo-600" size={24} />;
+        }
+    };
+
+    const getBgColor = (iconName) => {
+        switch (iconName) {
+            case 'users': return 'bg-indigo-50';
+            case 'check-circle': return 'bg-emerald-50';
+            case 'clock': return 'bg-amber-50';
+            case 'graduation-cap': return 'bg-blue-50';
+            case 'info': return 'bg-blue-50';
+            case 'book-check': return 'bg-emerald-50';
+            case 'book-open': return 'bg-indigo-50';
+            case 'file-text': return 'bg-indigo-50';
+            case 'award': return 'bg-amber-50';
+            default: return 'bg-indigo-50';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="p-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <SkeletonList items={5} />
+                    </div>
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center">
+                        <div className="animate-pulse bg-gray-100 rounded-full w-48 h-48"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <>
+        <div className="p-1">
+            {/* Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {stats.map((stat, index) => (
-                    <div
-                        key={index}
-                        className="bg-white overflow-hidden shadow rounded-lg"
-                    >
-                        <div className="px-4 py-5 sm:p-6">
+                {['widget1', 'widget2', 'widget3', 'widget4'].map((key) => (
+                    <div key={key} className="bg-white overflow-hidden shadow-sm border border-gray-100 rounded-2xl hover:shadow-md transition-shadow duration-300">
+                        <div className="px-5 py-6">
                             <div className="flex items-center">
-                                <div className="shrink-0 bg-indigo-100 rounded-md p-3">
-                                    <div className="text-indigo-600 text-lg font-bold">
-                                        {stat.value}
-                                    </div>
+                                <div className={`shrink-0 rounded-xl p-3 ${getBgColor(stats?.[key]?.icon)}`}>
+                                    {getIcon(stats?.[key]?.icon)}
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">
-                                            {stat.name}
+                                        <dt className="text-sm font-medium text-gray-500 truncate mb-1">
+                                            {stats?.[key]?.label || '...'}
                                         </dt>
-                                        <dd className="flex items-baseline">
-                                            <div
-                                                className={`text-2xl font-semibold ${
-                                                    stat.changeType ===
-                                                    "positive"
-                                                        ? "text-green-600"
-                                                        : "text-red-600"
-                                                }`}
-                                            >
-                                                {stat.change}
-                                            </div>
+                                        <dd className="text-2xl font-bold text-gray-900">
+                                            {stats?.[key]?.value ?? 0}
                                         </dd>
                                     </dl>
                                 </div>
@@ -103,62 +139,97 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Activities */}
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                <div className="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-2xl flex flex-col">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Activity size={20} className="text-indigo-600" />
                             Aktivitas Terbaru
                         </h3>
+                        <Link to="/student/activities" className="text-sm text-indigo-600 font-semibold hover:text-indigo-700 flex items-center gap-1">
+                            Lihat Semua <ChevronRight size={14} />
+                        </Link>
                     </div>
-                    <ul className="divide-y divide-gray-200">
-                        {recentActivities.map((activity) => (
-                            <li key={activity.id} className="px-4 py-4 sm:px-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-medium text-indigo-600 truncate">
-                                        {activity.name}
-                                    </div>
-                                    <div className="ml-2 shrink-0 flex">
-                                        <span
-                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                activity.status === "Disetujui"
-                                                    ? "bg-green-100 text-green-800"
-                                                    : activity.status ===
-                                                      "Ditolak"
-                                                    ? "bg-red-100 text-red-800"
-                                                    : activity.status ===
-                                                      "Menunggu Validasi"
-                                                    ? "bg-yellow-100 text-yellow-800"
-                                                    : "bg-blue-100 text-blue-800"
-                                            }`}
-                                        >
-                                            {activity.status}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="mt-2 flex justify-between text-sm text-gray-500">
-                                    <span>{activity.type}</span>
-                                    <span>{activity.date}</span>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="flex-1 overflow-y-auto min-h-[350px]">
+                        {activitiesLoading ? (
+                            <div className="p-6">
+                                <SkeletonList items={5} />
+                            </div>
+                        ) : latestActivities.length > 0 ? (
+                            <ul className="divide-y divide-gray-50">
+                                {latestActivities.map((activity) => (
+                                    <li key={activity.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm font-semibold text-gray-800">
+                                                {activity.user_name}
+                                            </div>
+                                            <div className="ml-2">
+                                                <span className="px-3 py-1 text-[10px] uppercase font-bold rounded-lg bg-indigo-50 text-indigo-700">
+                                                    {activity.human_date}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-1 flex flex-col gap-1">
+                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                {activity.description}
+                                            </p>
+                                            <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                                                 <FileText size={12} />
+                                                 <span className="uppercase font-medium tracking-wider">{activity.type.replace('_', ' ')}</span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-2">
+                                <Activity size={40} className="opacity-20" />
+                                <span className="text-sm">Belum ada aktivitas baru</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Chart Placeholder */}
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">
-                            Statistik KP
+                {/* Statistics Chart */}
+                <div className="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-2xl flex flex-col">
+                    <div className="px-6 py-5 border-b border-gray-50">
+                        <h3 className="text-lg font-bold text-gray-900">
+                            Statistik Status KP
                         </h3>
                     </div>
-                    <div className="px-4 py-5 sm:p-6">
-                        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-64 flex items-center justify-center text-gray-500">
-                            Grafik Statistik KP
-                        </div>
+                    <div className="p-6 flex-1 flex flex-col items-center justify-center min-h-[350px]">
+                        {chartData.some(d => d.value > 0) ? (
+                            <ResponsiveContainer width="100%" height={350}>
+                                <PieChart>
+                                    <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={120}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend verticalAlign="bottom" height={36}/>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2 min-h-[250px]">
+                                <Activity size={40} className="opacity-20" />
+                                <span className="text-sm font-black uppercase tracking-widest italic tracking-tighter">Statistik Belum Tersedia</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
-export default Dashboard;
+export default StudentDashboard;

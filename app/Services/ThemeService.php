@@ -9,7 +9,11 @@ class ThemeService
 {
     public function getAllThemes()
     {
-        return Theme::latest()->get();
+        $activePeriod = \App\Models\Period::where('is_active', true)->first();
+        if (!$activePeriod) {
+            return collect();
+        }
+        return Theme::where('period_id', $activePeriod->id)->latest()->get();
     }
 
     public function createTheme(array $data)

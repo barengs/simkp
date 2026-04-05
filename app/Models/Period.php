@@ -12,12 +12,14 @@ class Period extends Model
         'theme_name',
         'start_date',
         'end_date',
+        'announcement_date',
         'is_active',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'announcement_date' => 'date',
         'is_active' => 'boolean',
     ];
 

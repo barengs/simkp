@@ -115,11 +115,18 @@ export const completeProfile = createAsyncThunk(
 const authSlice = createSlice({
     name: "auth",
     initialState: {
-        user: null,
-        isAuthenticated: false,
+        user: (() => {
+            try {
+                const data = sessionStorage.getItem("USER_DATA");
+                return data ? JSON.parse(data) : null;
+            } catch (e) {
+                return null;
+            }
+        })(),
+        isAuthenticated: !!sessionStorage.getItem("AUTH_TOKEN"),
         loading: false,
         error: null,
-        initialLoading: false,
+        initialLoading: !!sessionStorage.getItem("AUTH_TOKEN"),
     },
     reducers: {
         clearError(state) {

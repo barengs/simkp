@@ -132,13 +132,15 @@ const Report = () => {
                                         >
                                             <FileDown size={18} />
                                         </a>
-                                        <button
-                                            onClick={() => setDeleteModal({ isOpen: true, data: report })}
-                                            className="p-2 text-red-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                                            title="Hapus"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {report.status !== 'approved' && (
+                                            <button
+                                                onClick={() => setDeleteModal({ isOpen: true, data: report })}
+                                                className="p-2 text-red-600 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+                                                title="Hapus"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

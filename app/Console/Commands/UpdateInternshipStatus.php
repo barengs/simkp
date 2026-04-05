@@ -16,18 +16,29 @@ class UpdateInternshipStatus extends Command
     {
         $now = now()->toDateString();
         
-        // Find periods where today is the announcement date (or passed)
-        $periods = Period::where('announcement_date', '<=', $now)->get();
+        // 1. Transition 'ongoing' to 'grading' when period ends
+        $endedPeriods = Period::where('end_date', '<', $now)->get();
+        foreach ($endedPeriods as $period) {
+            $gradingCount = Internship::where('period_id', $period->id)
+                ->where('status', 'ongoing')
+                ->update(['status' => 'grading']);
+            
+            if ($gradingCount > 0) {
+                $this->info("Moved {$gradingCount} internships to 'grading' for period: {$period->academic_year}");
+                Log::info("Auto-grading {$gradingCount} internships for period ID: {$period->id}");
+            }
+        }
 
-        foreach ($periods as $period) {
-            $updatedCount = Internship::where('period_id', $period->id)
-                ->where('status', '!=', 'finished')
-                ->where('status', '!=', 'rejected')
+        // 2. Transition to 'finished' when grades are announced
+        $announcedPeriods = Period::where('announcement_date', '<=', $now)->get();
+        foreach ($announcedPeriods as $period) {
+            $finishedCount = Internship::where('period_id', $period->id)
+                ->whereIn('status', ['ongoing', 'grading'])
                 ->update(['status' => 'finished']);
             
-            if ($updatedCount > 0) {
-                $this->info("Updated {$updatedCount} internships to 'finished' for period: {$period->academic_year}");
-                Log::info("Auto-finished {$updatedCount} internships for period ID: {$period->id}");
+            if ($finishedCount > 0) {
+                $this->info("Completed {$finishedCount} internships for period: {$period->academic_year}");
+                Log::info("Auto-finished {$finishedCount} internships for period ID: {$period->id}");
             }
         }
 

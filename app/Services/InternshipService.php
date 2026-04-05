@@ -11,10 +11,34 @@ use Exception;
 
 class InternshipService
 {
+    protected $activityService;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
+
     public function register(array $data, int $leaderId)
     {
         DB::beginTransaction();
         try {
+            // --- VALIDATE DUPLICATE REGISTRATION FOR ALL MEMBERS ---
+            $allStudentIds = array_merge([$leaderId], $data['members'] ?? []);
+            $allStudentIds = array_unique($allStudentIds);
+
+            foreach ($allStudentIds as $studentId) {
+                $existingMember = InternshipMember::where('student_id', $studentId)
+                    ->whereHas('internship', function($q) {
+                        $q->whereIn('status', ['submitted', 'approved', 'ongoing', 'grading', 'finished']);
+                    })
+                    ->first();
+
+                if ($existingMember) {
+                    $student = \App\Models\Student::find($studentId);
+                    throw new Exception("Mahasiswa {$student->name} sudah terdaftar di kelompok lain.");
+                }
+            }
+
             // Automatically create a new company if manually submitted
             if (empty($data['company_id']) && !empty($data['company_name_manual'])) {
                 $newCompany = \App\Models\Company::create([
@@ -74,6 +98,9 @@ class InternshipService
                 }
             }
 
+            // Log activity
+            $this->activityService->log('registration_submitted', "Mahasiswa {$internship->leader->user->name} mendaftarkan kelompok KP baru.");
+
             DB::commit();
             return $internship;
         } catch (Exception $e) {
@@ -116,6 +143,9 @@ class InternshipService
         $internship = Internship::findOrFail($id);
         $internship->status = 'approved';
         $internship->save();
+        
+        $this->activityService->log('registration_approved', "Admin menyetujui pendaftaran KP kelompok {$internship->leader->user->name}.");
+        
         Log::info("Internship approved: " . $internship->id);
         return $internship;
     }
@@ -126,6 +156,9 @@ class InternshipService
         $internship->status = 'rejected';
         $internship->rejection_note = $note;
         $internship->save();
+        
+        $this->activityService->log('registration_rejected', "Admin menolak pendaftaran KP kelompok {$internship->leader->user->name}. Alasan: {$note}");
+        
         Log::info("Internship rejected: " . $internship->id . " Reason: " . $note);
         return $internship;
     }
@@ -136,6 +169,9 @@ class InternshipService
         $internship->supervisor_id = $supervisorId;
         $internship->status = 'ongoing';
         $internship->save();
+        
+        $this->activityService->log('supervisor_assigned', "Admin menetapkan Dosen Pembimbing untuk kelompok {$internship->leader->user->name}.");
+        
         Log::info("Internship supervisor assigned: " . $internship->id . " Supervisor: " . $supervisorId);
         return $internship;
     }
@@ -146,8 +182,15 @@ class InternshipService
 
         if ($user->role === 'dosen') {
             $lecturerId = $user->lecturer->id ?? null;
-            $query->where('supervisor_id', $lecturerId);
-        } elseif ($user->role !== 'admin') {
+            $query->where('supervisor_id', $lecturerId)
+                  ->whereHas('period', function ($q) {
+                      $q->where('is_active', true);
+                  });
+        } elseif ($user->role === 'admin') {
+            $query->whereHas('period', function ($q) {
+                $q->where('is_active', true);
+            });
+        } else {
             return collect(); // Restrict others
         }
 

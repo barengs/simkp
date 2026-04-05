@@ -8,6 +8,9 @@ export const fetchMyInternship = createAsyncThunk(
             const response = await api.get('/internships');
             return response.data.data;
         } catch (error) {
+            if (error.response?.status === 404) {
+                return null;
+            }
             return rejectWithValue(error.response?.data?.message || 'Gagal mengambil data KP');
         }
     }

@@ -6,6 +6,7 @@ import { fetchThemes } from "../store/slice/themeSlice";
 import { fetchPeriods } from "../store/slice/periodSlice";
 import { fetchCompanies } from "../store/slice/companySlice";
 import { fetchStudents } from "../store/slice/studentSlice";
+import { fetchPublicSettings } from "../store/slice/settingSlice";
 import {
     registerInternship,
     resetRegistrationStatus,
@@ -19,6 +20,7 @@ const Registration = () => {
     const { data: periods } = useSelector((state) => state.periods);
     const { data: companies } = useSelector((state) => state.companies);
     const { data: students } = useSelector((state) => state.students);
+    const { publicSettings } = useSelector((state) => state.settings);
     const { data: myInternship, loading: internshipLoading, error: internshipError, registrationSuccess } = useSelector((state) => state.internships);
 
     const [step, setStep] = useState(1); // 1: Company, 2: Theme & Period, 3: Members, 4: Documents, 5: Review
@@ -48,6 +50,7 @@ const Registration = () => {
         dispatch(fetchPeriods());
         dispatch(fetchCompanies());
         dispatch(fetchStudents());
+        dispatch(fetchPublicSettings());
         dispatch(fetchMyInternship()).finally(() => setIsCheckingStatus(false));
     }, [dispatch]);
 
@@ -82,10 +85,13 @@ const Registration = () => {
     }, [registrationSuccess, internshipError, dispatch]);
 
     const addMemberInput = () => {
-        if (dynamicMembers.length < 2) {
+        const maxMembers = parseInt(publicSettings.max_group_members) || 3;
+        const maxAdditional = maxMembers - 1;
+
+        if (dynamicMembers.length < maxAdditional) {
             setDynamicMembers([...dynamicMembers, { id: Date.now(), search: "", selected: null }]);
         } else {
-            toast.warning("Maksimal 2 anggota tambahan.");
+            toast.warning(`Maksimal ${maxAdditional} anggota tambahan.`);
         }
     };
 
@@ -173,9 +179,32 @@ const Registration = () => {
             toast.error("Pilih perusahaan terlebih dahulu.");
             return;
         }
-        if (step === 2 && (!formData.themeId || !formData.periodId)) {
-            toast.error("Pilih tema dan periode terlebih dahulu.");
-            return;
+        if (step === 2) {
+            if (!formData.themeId || !formData.periodId) {
+                toast.error("Pilih tema dan periode terlebih dahulu.");
+                return;
+            }
+            
+            // Check period date range
+            const selectedPeriod = periods.find(p => p.id.toString() === formData.periodId);
+            if (selectedPeriod) {
+                const now = new Date();
+                const start = new Date(selectedPeriod.start_date);
+                const end = new Date(selectedPeriod.end_date);
+                // Standardize dates to midnight for comparison
+                now.setHours(0,0,0,0);
+                start.setHours(0,0,0,0);
+                end.setHours(0,0,0,0);
+
+                if (now < start) {
+                    toast.error(`Masa pendaftaran belum dibuka (Mulai: ${selectedPeriod.start_date})`);
+                    return;
+                }
+                if (now > end) {
+                    toast.error(`Masa pendaftaran telah berakhir (Berakhir: ${selectedPeriod.end_date})`);
+                    return;
+                }
+            }
         }
         if (step === 4 && (!formData.documents.proposal || !formData.documents.krs || !formData.documents.ktp)) {
             toast.error("Proposal, KRS, dan KTP wajib diunggah.");
@@ -228,7 +257,7 @@ const Registration = () => {
 
         if (myInternship && myInternship.status !== 'rejected') {
             return (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <>
                     <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center md:items-start gap-5">
                         <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-md shadow-green-100 mt-1">
                             <CheckCircle size={28} />
@@ -243,10 +272,18 @@ const Registration = () => {
                         <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-start">
                             <div>
                                 <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">Detail Penempatan</span>
-                                <h4 className="text-lg font-bold text-gray-900 mt-2">{myInternship.company?.name || myInternship.company_name_manual}</h4>
+                             <h4 className="text-lg font-bold text-gray-900 mt-2">{myInternship.company?.name || myInternship.company_name_manual}</h4>
                                 <p className="text-gray-500 text-sm mt-0.5">{myInternship.company?.address || myInternship.company_address_manual}</p>
                             </div>
-                            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg uppercase tracking-wider border border-green-200 shadow-sm whitespace-nowrap">{myInternship.status}</span>
+                            <span className={`px-3 py-1 text-xs font-bold rounded-lg uppercase tracking-wider border shadow-sm whitespace-nowrap ${
+                                myInternship.status === 'ongoing' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                myInternship.status === 'grading' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                myInternship.status === 'finished' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                myInternship.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                                'bg-green-100 text-green-700 border-green-200'
+                            }`}>
+                                {myInternship.status}
+                            </span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2">
@@ -305,7 +342,7 @@ const Registration = () => {
                             </section>
                         </div>
                     </div>
-                </div>
+                </>
             );
         }
 
@@ -313,7 +350,7 @@ const Registration = () => {
             case 1:
                 const isNewCompany = formData.companyId === "new";
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <>
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                                 <Building size={20} />
@@ -365,7 +402,7 @@ const Registration = () => {
                         </div>
 
                         {isNewCompany ? (
-                            <div className="space-y-5 animate-in slide-in-from-top-4 duration-300">
+                            <>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-700 mb-1.5">Nama Perusahaan</label>
@@ -418,9 +455,9 @@ const Registration = () => {
                                     <Info className="text-blue-500 shrink-0" size={18} />
                                     <p>Perusahaan baru yang Anda usulkan akan diverifikasi terlebih dahulu oleh Koordinator KP sebelum pendaftaran dapat dilanjutkan sepenuhnya.</p>
                                 </div>
-                            </div>
+                            </>
                         ) : (
-                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                            <>
                                 <label className="block text-xs font-bold text-gray-700 mb-1.5">Pilih dari Daftar Mitra</label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                     {companies.map((company) => (
@@ -440,13 +477,13 @@ const Registration = () => {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </>
                         )}
-                    </div>
+                    </>
                 );
             case 2:
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <>
                         <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
                             <FileText className="text-indigo-600" />
                             Pilih Tema dan Periode KP
@@ -478,7 +515,16 @@ const Registration = () => {
                             <label className="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Pilih Periode KP*</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {periods.map((period) => {
-                                    const isActive = period.is_active || period.active; // Handle different naming
+                                    const isActive = period.is_active || period.active;
+                                    const nowAtMidnight = new Date();
+                                    nowAtMidnight.setHours(0, 0, 0, 0);
+                                    const startAtMidnight = new Date(period.start_date);
+                                    startAtMidnight.setHours(0, 0, 0, 0);
+                                    const endAtMidnight = new Date(period.end_date);
+                                    endAtMidnight.setHours(0, 0, 0, 0);
+                                    
+                                    const isOpen = nowAtMidnight >= startAtMidnight && nowAtMidnight <= endAtMidnight;
+                                    
                                     return (
                                         <div
                                             key={period.id}
@@ -490,30 +536,66 @@ const Registration = () => {
                                                 }`}
                                             onClick={() => setFormData({ ...formData, periodId: period.id.toString() })}
                                         >
-                                            {isActive && (
-                                                <div className="absolute top-0 right-0">
-                                                    <span className="bg-green-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-widest">Aktif</span>
-                                                </div>
-                                            )}
+                                            <div className="absolute top-0 right-0">
+                                                {isOpen ? (
+                                                    <span className="bg-green-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-widest">Terbuka</span>
+                                                ) : (
+                                                    <span className="bg-amber-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-widest">Tertutup</span>
+                                                )}
+                                            </div>
                                             <div className="flex justify-between items-start">
                                                 <p className={`font-semibold ${isActive ? "text-gray-900" : "text-gray-600"}`}>{period.semester} {period.academic_year}</p>
                                                 {formData.periodId == period.id.toString() && <CheckCircle size={18} className="text-indigo-600 shrink-0" />}
                                             </div>
                                             <div className="mt-3 flex items-center gap-2 text-[10px] text-gray-500 font-medium">
-                                                <span className="bg-white/80 border border-gray-100 px-2 py-0.5 rounded italic">{period.start_date}</span>
+                                                <span className={`bg-white/80 border border-gray-100 px-2 py-0.5 rounded italic ${!isOpen ? 'text-red-400' : ''}`}>{period.start_date}</span>
                                                 <span>s/d</span>
-                                                <span className="bg-white/80 border border-gray-100 px-2 py-0.5 rounded italic">{period.end_date}</span>
+                                                <span className={`bg-white/80 border border-gray-100 px-2 py-0.5 rounded italic ${!isOpen ? 'text-red-400' : ''}`}>{period.end_date}</span>
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
+
+                            {/* Validation Alert */}
+                            {formData.periodId && (() => {
+                                const selP = periods.find(p => p.id.toString() === formData.periodId);
+                                if (!selP) return null;
+                                
+                                const n = new Date(); n.setHours(0,0,0,0);
+                                const s = new Date(selP.start_date); s.setHours(0,0,0,0);
+                                const e = new Date(selP.end_date); e.setHours(0,0,0,0);
+                                
+                                if (n < s) {
+                                    return (
+                                        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 text-amber-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <Info size={20} className="text-amber-500 shrink-0" />
+                                            <div>
+                                                <p className="font-bold text-sm">Pendaftaran Belum Dibuka</p>
+                                                <p className="text-xs mt-1">Sistem hanya mengizinkan pendaftaran pada tanggal yang telah ditentukan. Anda dapat mendaftar mulai tanggal <strong>{selP.start_date}</strong>.</p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                if (n > e) {
+                                    return (
+                                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3 text-red-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <Info size={20} className="text-red-500 shrink-0" />
+                                            <div>
+                                                <p className="font-bold text-sm">Masa Pendaftaran Berakhir</p>
+                                                <p className="text-xs mt-1">Batas akhir pendaftaran untuk periode ini adalah <strong>{selP.end_date}</strong>. Silakan hubungi admin untuk informasi lebih lanjut.</p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
-                    </div>
+                    </>
                 );
             case 3:
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <>
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                                 <Users className="text-indigo-600" />
@@ -521,7 +603,7 @@ const Registration = () => {
                             </h3>
                             <button
                                 onClick={addMemberInput}
-                                disabled={dynamicMembers.length >= 2}
+                                disabled={dynamicMembers.length >= ((parseInt(publicSettings.max_group_members) || 3) - 1)}
                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Plus size={16} />
@@ -535,7 +617,7 @@ const Registration = () => {
                                 <p className="text-blue-800 font-medium font-inter uppercase tracking-widest text-[10px]">Peran Anda</p>
                                 <p className="text-blue-900 font-bold text-lg">{user?.name}</p>
                                 <p className="text-sm text-blue-700">
-                                    Anda adalah <strong>Ketua Kelompok</strong> (Otomatis Terdaftar). Anda dapat menambhakan hingga 2 anggota tambahan (total 3 orang) menggunakan NIM mereka.
+                                    Anda adalah <strong>Ketua Kelompok</strong> (Otomatis Terdaftar). Anda dapat menambhakan hingga {(parseInt(publicSettings.max_group_members) || 3) - 1} anggota tambahan (total {publicSettings.max_group_members || 3} orang) menggunakan NIM mereka.
                                 </p>
                             </div>
                         </div>
@@ -605,7 +687,7 @@ const Registration = () => {
 
                                                     {/* Results dropdown for partial matches */}
                                                     {!m.selected && matchedStudents.length > 0 && (
-                                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200 pt-1">
+                                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 pt-1">
                                                             <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pilih Mahasiswa</div>
                                                             {matchedStudents.map((student) => (
                                                                 <button
@@ -663,11 +745,11 @@ const Registration = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </>
                 );
             case 4:
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <>
                         <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
                             <FileText className="text-indigo-600" />
                             Unggah Dokumen Administrasi
@@ -716,7 +798,7 @@ const Registration = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </>
                 );
             case 5:
                 const selCompany = formData.companyId === "new" ? { name: formData.newCompanyName } : companies.find(c => c.id.toString() === formData.companyId);
@@ -724,7 +806,7 @@ const Registration = () => {
                 const selPeriod = periods.find(p => p.id.toString() === formData.periodId);
 
                 return (
-                    <div className="animate-in fade-in duration-500">
+                    <>
                         <h3 className="text-xl font-semibold text-gray-800 mb-6 font-inter underline decoration-indigo-200 underline-offset-8">Review Ringkasan Pendaftaran</h3>
 
                         <div className="bg-white border-2 border-gray-100 rounded-3xl overflow-hidden shadow-sm">
@@ -816,7 +898,7 @@ const Registration = () => {
                                 <strong>Deklarasi:</strong> Kami menyatakan bahwa data di atas adalah benar. Pendaftaran akan dikirim ke sistem untuk proses verifikasi. Perubahan tidak dapat dilakukan setelah pengiriman.
                             </p>
                         </div>
-                    </div>
+                    </>
                 );
             default:
                 return null;
@@ -831,7 +913,7 @@ const Registration = () => {
             </div>
 
             {myInternship && myInternship.status === 'rejected' && (
-                <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 shadow-sm animate-in fade-in">
+                <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 shadow-sm">
                     <Info className="text-red-500 shrink-0 mt-0.5" size={24} />
                     <div>
                         <h4 className="text-lg font-bold text-red-900">Pendaftaran Sebelumnya Ditolak</h4>

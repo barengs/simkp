@@ -24,4 +24,9 @@ class Student extends Model
     {
         return $this->belongsTo(Period::class);
     }
+
+    public function internships()
+    {
+        return $this->belongsToMany(Internship::class, 'internship_members');
+    }
 }

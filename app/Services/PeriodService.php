@@ -52,17 +52,21 @@ class PeriodService
     {
         DB::beginTransaction();
         try {
-            // Nonaktifkan semua periode lain
-            Period::where('id', '!=', $period->id)->update(['is_active' => false]);
+            $newStatus = !$period->is_active;
 
-            // Aktifkan periode ini
-            $period->update(['is_active' => true]);
+            if ($newStatus) {
+                // Nonaktifkan semua periode lain sebelum mengaktifkan yang ini
+                Period::where('id', '!=', $period->id)->update(['is_active' => false]);
+            }
+
+            // Update status periode ini
+            $period->update(['is_active' => $newStatus]);
 
             DB::commit();
             return $period;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Gagal mengaktifkan periode: ' . $e->getMessage());
+            Log::error('Gagal mengubah status aktif periode: ' . $e->getMessage());
             throw $e;
         }
     }

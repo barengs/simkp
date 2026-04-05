@@ -59,7 +59,7 @@ class InternshipController extends Controller
                     $existing->members()->delete();
                     $existing->delete();
                 } else {
-                    return response()->json(['message' => 'Anda sudah terdaftar di KP lain.'], 422);
+                    return response()->json(['message' => "Mahasiswa {$student->name} sudah terdaftar di kelompok lain."], 422);
                 }
             }
 

@@ -65,7 +65,7 @@ const Report = () => {
         },
         {
             name: 'Dosen Pembimbing',
-            selector: (row) => row.internship?.supervisor?.user?.name || '-',
+            selector: (row) => row.internship?.supervisor?.name || '-',
             sortable: true,
         },
         {

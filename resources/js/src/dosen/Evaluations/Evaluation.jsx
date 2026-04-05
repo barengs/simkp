@@ -67,7 +67,6 @@ const Evaluation = () => {
         if (saveEvaluation.fulfilled.match(action)) {
             toast.success("Penilaian berhasil disimpan");
             setModalConfig({ isOpen: false, data: null });
-            dispatch(fetchEvaluations()); // Re-fetch to update internship tree with evaluation relation
         } else {
             toast.error(action.payload || "Gagal menyimpan penilaian");
         }

@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Log;
 
 class ReportService
 {
+    protected $activityService;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
+
     /**
      * Get reports based on user role.
      */
@@ -28,12 +35,19 @@ class ReportService
         } elseif ($user->role === 'dosen' && $user->lecturer) {
             $lecturerId = $user->lecturer->id;
             
-            // Find internships supervised by this lecturer
+            // Find internships supervised by this lecturer and in the active period
             $query->whereHas('internship', function ($q) use ($lecturerId) {
-                $q->where('supervisor_id', $lecturerId);
+                $q->where('supervisor_id', $lecturerId)
+                  ->whereHas('period', function($qp) {
+                      $qp->where('is_active', true);
+                  });
+            });
+        } else {
+            // Admin sees all BUT only within the current active period
+            $query->whereHas('internship.period', function ($q) {
+                $q->where('is_active', true);
             });
         }
-        // Admin sees all
 
         return $query->latest()->get();
     }
@@ -57,7 +71,10 @@ class ReportService
                 $data['status'] = 'pending';
             }
 
-            return Report::create($data);
+            $report = Report::create($data);
+            $typeText = $report->type === 'final' ? 'Laporan Akhir' : 'Draft Laporan';
+            $this->activityService->log('report_submitted', "Mahasiswa mengunggah {$typeText} baru.");
+            return $report;
         } catch (\Exception $e) {
             Log::error('Error creating report: ' . $e->getMessage());
             throw $e;

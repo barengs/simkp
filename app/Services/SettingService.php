@@ -31,20 +31,30 @@ class SettingService
                 $setting = Setting::where('key', $key)->first();
                 
                 if ($setting) {
-                    // If it's a file type and we are replacing it, delete old one
-                    if ($setting->type === 'file' && $value instanceof \Illuminate\Http\UploadedFile) {
+                    $type = $setting->type;
+                    $finalValue = $value;
+
+                    // Handle File uploads
+                    if ($type === 'file' && $value instanceof \Illuminate\Http\UploadedFile) {
                         $this->deleteOldFile($setting->value);
-                        $value = $this->uploadFile($value);
+                        $finalValue = $this->uploadFile($value);
                     }
                     
-                    $setting->update(['value' => $value]);
+                    $setting->update(['value' => $finalValue]);
                 } else {
-                    // Create if not exists (though usually we define them first)
+                    // Create if not exists
+                    $type = $this->determineType($key, $value);
+                    $finalValue = $value;
+
+                    if ($type === 'file' && $value instanceof \Illuminate\Http\UploadedFile) {
+                        $finalValue = $this->uploadFile($value);
+                    }
+
                     Setting::create([
                         'key' => $key,
-                        'value' => $value,
-                        'type' => $this->determineType($key, $value),
-                        'group' => 'general'
+                        'value' => $finalValue,
+                        'type' => $type,
+                        'group' => ($key === 'max_group_members' || str_starts_with($key, 'app_name')) ? 'general' : 'branding'
                     ]);
                 }
             }

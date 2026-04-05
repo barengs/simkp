@@ -11,7 +11,9 @@ import "react-toastify/dist/ReactToastify.css";
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
 const MainLayout = lazy(() => import("./layouts/MainLayout"));
-const Dashboard = lazy(() => import("./Dashboard"));
+const AdminDashboard = lazy(() => import("./admin/Dashboard"));
+const DosenDashboard = lazy(() => import("./dosen/Dashboard"));
+const StudentDashboard = lazy(() => import("./student/Dashboard"));
 const PeriodManagement = lazy(() => import("./admin/Periods/PeriodManagement"));
 const ThemeManagement = React.lazy(() => import("./admin/Themes/ThemeManagement"));
 const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerList"));
@@ -33,6 +35,9 @@ const AdminEvaluation = lazy(() => import("./admin/Evaluations/Evaluation"));
 const AdminInternshipGroups = lazy(() => import("./admin/Internships/InternshipList"));
 const DosenInternshipGroups = lazy(() => import("./dosen/Internships/InternshipList"));
 const Settings = lazy(() => import("./admin/Settings/Settings"));
+const AdminActivity = lazy(() => import("./admin/Activities/ActivityIndex"));
+const DosenActivity = lazy(() => import("./dosen/Activities/ActivityIndex"));
+const StudentActivity = lazy(() => import("./student/Activities/ActivityIndex"));
 
 
 
@@ -81,6 +86,18 @@ const GuestRoute = ({ children }) => {
     }
 
     return children;
+};
+
+/**
+ * DashboardSwitcher - Renders the dashboard based on user role.
+ */
+const DashboardSwitcher = () => {
+    const { user } = useSelector((state) => state.auth);
+    const role = user?.role?.toLowerCase();
+
+    if (role === "admin") return <AdminDashboard />;
+    if (role === "dosen") return <DosenDashboard />;
+    return <StudentDashboard />;
 };
 
 const App = () => {
@@ -140,7 +157,7 @@ const App = () => {
                         }
                     >
                         {/* Universal */}
-                        <Route index element={<Dashboard />} />
+                        <Route index element={<DashboardSwitcher />} />
 
                         {/* Admin Routes */}
                         <Route path="admin">
@@ -154,6 +171,7 @@ const App = () => {
                             <Route path="reports" element={<AdminReport />} />
                             <Route path="evaluations" element={<AdminEvaluation />} />
                             <Route path="settings" element={<Settings />} />
+                            <Route path="activities" element={<AdminActivity />} />
                             <Route path="master">
                                 <Route path="mitra" element={<CompanyList />} />
                                 <Route path="dosen" element={<LecturerList />} />
@@ -166,6 +184,7 @@ const App = () => {
                             <Route path="logbook" element={<StudentLogbook />} />
                             <Route path="reports" element={<StudentReport />} />
                             <Route path="evaluations" element={<StudentEvaluation />} />
+                            <Route path="activities" element={<StudentActivity />} />
                         </Route>
 
                         {/* Lecturer (Dosen) Routes */}
@@ -174,6 +193,7 @@ const App = () => {
                             <Route path="logbook" element={<DosenLogbook />} />
                             <Route path="reports" element={<DosenReport />} />
                             <Route path="evaluations" element={<DosenEvaluation />} />
+                            <Route path="activities" element={<DosenActivity />} />
                         </Route>
                     </Route>
 

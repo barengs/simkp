@@ -8,16 +8,31 @@ use Illuminate\Support\Facades\Log;
 
 class LogbookService
 {
+    protected $activityService;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
+
     public function getAllLogbooks()
     {
-        return Logbook::with('internship.company', 'internship.leader.user')->latest()->get();
+        return Logbook::with('internship.company', 'internship.leader.user')
+            ->whereHas('internship.period', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->latest()
+            ->get();
     }
     
     public function getLogbooksBySupervisor($supervisorId)
     {
         return Logbook::with('internship.company', 'internship.leader.user')
             ->whereHas('internship', function($q) use ($supervisorId) {
-                $q->where('supervisor_id', $supervisorId);
+                $q->where('supervisor_id', $supervisorId)
+                  ->whereHas('period', function($qp) {
+                      $qp->where('is_active', true);
+                  });
             })
             ->latest()
             ->get();
@@ -40,7 +55,9 @@ class LogbookService
                 $data['evidence_photo'] = $data['evidence_photo']->store('logbooks', 'public');
             }
 
-            return Logbook::create($data);
+            $logbook = Logbook::create($data);
+            $this->activityService->log('logbook_submitted', "Mahasiswa memperbarui logbook harian untuk kegiatan: {$logbook->activity}.");
+            return $logbook;
         } catch (\Exception $e) {
             Log::error('Failed to create logbook: ' . $e->getMessage());
             throw $e;
@@ -86,6 +103,8 @@ class LogbookService
     {
         try {
             $logbook->update(['status' => $status]);
+            $statusText = $status === 'approved' ? 'menyetujui' : 'menolak';
+            $this->activityService->log("logbook_{$status}", "Pembimbing {$statusText} logbook mahasiswa untuk kegiatan: {$logbook->activity}.");
             return $logbook;
         } catch (\Exception $e) {
             Log::error('Failed to update logbook status: ' . $e->getMessage());

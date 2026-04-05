@@ -8,10 +8,20 @@ use Illuminate\Support\Facades\Log;
 
 class EvaluationService
 {
+    protected $activityService;
+
+    public function __construct(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
+
     public function getAllInternshipsWithEvaluations()
     {
         return Internship::with(['company', 'leader.user', 'evaluation', 'period', 'theme', 'supervisor.user', 'students.user'])
-            ->whereIn('status', ['ongoing', 'approved', 'finished'])
+            ->whereHas('period', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->whereIn('status', ['ongoing', 'grading', 'approved', 'finished'])
             ->latest()
             ->get();
     }
@@ -20,7 +30,10 @@ class EvaluationService
     {
         return Internship::with(['company', 'leader.user', 'evaluation', 'period', 'theme', 'students.user'])
             ->where('supervisor_id', $supervisorId)
-            ->whereIn('status', ['ongoing', 'approved', 'finished'])
+            ->whereHas('period', function($q) {
+                $q->where('is_active', true);
+            })
+            ->whereIn('status', ['ongoing', 'grading', 'approved', 'finished'])
             ->latest()
             ->get();
     }
@@ -56,10 +69,20 @@ class EvaluationService
             }
             $data['final_grade'] = $grade;
 
-            return Evaluation::updateOrCreate(
+            $evaluation = Evaluation::updateOrCreate(
                 ['internship_id' => $data['internship_id']],
                 $data
             );
+
+            // Automatically transition status to finished
+            $internship = $evaluation->internship;
+            if ($internship) {
+                $internship->status = 'finished';
+                $internship->save();
+            }
+
+            $this->activityService->log('evaluation_submitted', "Pembimbing memberikan penilaian akhir dan grade: {$evaluation->final_grade}. Status KP diubah menjadi 'finished'.");
+            return $evaluation;
         } catch (\Exception $e) {
             Log::error('Failed to process evaluation: ' . $e->getMessage());
             throw $e;

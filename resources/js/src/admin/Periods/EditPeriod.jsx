@@ -14,6 +14,7 @@ const EditPeriod = ({ show, onClose, period }) => {
         theme_name: "",
         start_date: "",
         end_date: "",
+        announcement_date: "",
     });
 
     useEffect(() => {
@@ -24,6 +25,7 @@ const EditPeriod = ({ show, onClose, period }) => {
                 theme_name: period.theme_name || "",
                 start_date: period.start_date || "",
                 end_date: period.end_date || "",
+                announcement_date: period.announcement_date || "",
             });
         }
     }, [period]);
@@ -119,6 +121,21 @@ const EditPeriod = ({ show, onClose, period }) => {
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
                             required
                         />
+                    </div>
+
+                    <div className="col-span-2">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                            Tanggal Pengumuman Nilai
+                        </label>
+                        <input
+                            type="date"
+                            name="announcement_date"
+                            value={formData.announcement_date}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
+                            required
+                        />
+                        <p className="mt-1 text-[10px] text-gray-400 italic">* Tanggal di mana status KP otomatis berubah menjadi 'Selesai'.</p>
                     </div>
                 </div>
 
