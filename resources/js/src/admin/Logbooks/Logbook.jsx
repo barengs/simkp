@@ -1,86 +1,102 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLogbooks } from '../../store/slice/logbookSlice';
+import { useNavigate } from 'react-router-dom';
+import { fetchInternshipGroups } from '../../store/slice/internshipSlice';
 import DataTable from 'react-data-table-component';
-import { Search, Eye } from 'lucide-react';
+import { Search, ChevronRight, Building2, Users, BookOpen, CheckCircle, Clock } from 'lucide-react';
 import Skeleton from '../../components/Skeleton';
-import Modal from '../../components/Modal';
-
-// Reusing Dosen's ShowLogbook as Admin just needs to view
-import ShowLogbook from '../../dosen/Logbooks/ShowLogbook';
 
 const Logbook = () => {
     const dispatch = useDispatch();
-    const { data: logbooks, loading } = useSelector((state) => state.logbooks || state.logbook || { data: [], loading: false });
-
+    const navigate = useNavigate();
+    const { groups, loading } = useSelector((state) => state.internships || { groups: [], loading: false });
     const [searchTerm, setSearchTerm] = useState('');
-    const [modalConfig, setModalConfig] = useState({ isOpen: false, data: null });
 
     useEffect(() => {
-        dispatch(fetchLogbooks());
+        dispatch(fetchInternshipGroups());
     }, [dispatch]);
 
-    const filteredData = Array.isArray(logbooks) ? logbooks.filter(
-        (item) => 
-            item.activity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.internship?.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.internship?.company?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : [];
+    const filteredGroups = useMemo(() => {
+        if (!Array.isArray(groups)) return [];
+        return groups.filter((group) =>
+            group.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            group.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            group.company_name_manual?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [groups, searchTerm]);
 
     const columns = [
         {
-            name: 'Tanggal',
-            selector: (row) => row.date,
+            name: 'Kelompok / Ketua',
             sortable: true,
-            width: '120px'
-        },
-        {
-            name: 'Mahasiswa (Ketua)',
-            selector: (row) => row.internship?.leader?.name || '-',
-            sortable: true,
-            width: '180px'
-        },
-        {
-            name: 'Mitra KP',
-            selector: (row) => row.internship?.company?.name || row.internship?.company_name_manual || '-',
-            sortable: true,
-            width: '180px'
-        },
-        {
-            name: 'Aktivitas',
-            selector: (row) => row.activity,
-            wrap: true,
-            cell: row => <div className="py-2 line-clamp-2 text-sm">{row.activity}</div>
-        },
-        {
-            name: 'Status',
-            selector: (row) => row.status,
-            sortable: true,
-            width: '130px',
-            cell: row => (
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    row.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                    {row.status === 'approved' ? 'Disetujui' : 'Menunggu'}
-                </span>
+            selector: (row) => row.leader?.name,
+            cell: (row) => (
+                <div className="py-3">
+                    <div className="flex items-center gap-2">
+                        <Users size={16} className="text-gray-400" />
+                        <span className="font-bold text-gray-900">{row.leader?.name}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 pl-6">
+                        {row.leader?.nim} • {row.students?.length} Anggota
+                    </div>
+                </div>
             )
         },
         {
+            name: 'Mitra KP',
+            sortable: true,
+            cell: (row) => (
+                <div className="flex items-center gap-2 py-2">
+                    <Building2 size={16} className="text-indigo-400 shrink-0" />
+                    <span className="text-sm">{row.company?.name || row.company_name_manual || '-'}</span>
+                </div>
+            )
+        },
+        {
+            name: 'Dosen Pembimbing',
+            sortable: true,
+            selector: (row) => row.supervisor?.name || '-',
+            cell: (row) => (
+                <span className="text-sm text-gray-700">{row.supervisor?.name || <span className="text-gray-400 italic text-xs">Belum diplot</span>}</span>
+            )
+        },
+        {
+            name: 'Status KP',
+            sortable: true,
+            width: '130px',
+            cell: (row) => {
+                const statusStyles = {
+                    submitted: 'bg-blue-100 text-blue-700',
+                    approved: 'bg-indigo-100 text-indigo-700',
+                    ongoing: 'bg-green-100 text-green-700',
+                    grading: 'bg-amber-100 text-amber-700',
+                    finished: 'bg-gray-100 text-gray-700',
+                    rejected: 'bg-red-100 text-red-700',
+                };
+                return (
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyles[row.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {row.status}
+                    </span>
+                );
+            }
+        },
+        {
             name: 'Aksi',
+            width: '140px',
             cell: (row) => (
                 <button
-                    title="Lihat Detail"
-                    onClick={() => setModalConfig({ isOpen: true, data: row })}
-                    className="p-1 px-3 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded flex items-center space-x-2"
+                    onClick={() => navigate(`/admin/internship-groups/${row.id}`, { state: { defaultTab: 'logbook' } })}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all border border-indigo-200"
                 >
-                    <Eye size={16} /> <span>Lihat</span>
+                    <BookOpen size={14} />
+                    <span>Lihat Logbook</span>
+                    <ChevronRight size={14} />
                 </button>
-            ),
-            width: '130px'
+            )
         }
     ];
 
-    if (loading && filteredData.length === 0) {
+    if (loading && filteredGroups.length === 0) {
         return <Skeleton className="w-full h-96" />;
     }
 
@@ -89,7 +105,7 @@ const Logbook = () => {
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-bold text-gray-800">Monitoring Logbook Bimbingan</h2>
-                    <p className="text-sm text-gray-500">Pantau seluruh laporan logbook mingguan dari program Kerja Praktik.</p>
+                    <p className="text-sm text-gray-500">Pilih kelompok untuk melihat dan memvalidasi logbook harian mereka.</p>
                 </div>
                 <div className="mt-4 md:mt-0 relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -97,7 +113,7 @@ const Logbook = () => {
                     </div>
                     <input
                         type="text"
-                        placeholder="Cari mahasiswa, mitra, aktivitas..."
+                        placeholder="Cari kelompok atau mitra..."
                         className="pl-10 pr-4 py-2 w-72 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -108,24 +124,15 @@ const Logbook = () => {
             <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <DataTable
                     columns={columns}
-                    data={filteredData}
+                    data={filteredGroups}
                     pagination
                     highlightOnHover
+                    pointerOnHover
                     responsive
-                    noDataComponent={<div className="p-6 text-gray-500 text-center">Belum ada data logbook yang tersedia.</div>}
+                    onRowClicked={(row) => navigate(`/admin/internship-groups/${row.id}`, { state: { defaultTab: 'logbook' } })}
+                    noDataComponent={<div className="p-6 text-gray-500 text-center">Belum ada kelompok KP yang tersedia.</div>}
                 />
             </div>
-
-            <Modal
-                isOpen={modalConfig.isOpen}
-                onClose={() => setModalConfig({ isOpen: false, data: null })}
-                title={`Logbook - ${modalConfig.data?.internship?.leader?.name}`}
-            >
-                <ShowLogbook 
-                    logbook={modalConfig.data} 
-                    onClose={() => setModalConfig({ isOpen: false, data: null })}
-                />
-            </Modal>
         </div>
     );
 };

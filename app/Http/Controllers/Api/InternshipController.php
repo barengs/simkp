@@ -77,4 +77,33 @@ class InternshipController extends Controller
         $internships = $this->internshipService->getInternshipsForUser($request->user());
         return InternshipResource::collection($internships);
     }
+
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $internship = \App\Models\Internship::with([
+            'leader.user',
+            'period',
+            'company',
+            'theme',
+            'supervisor.user',
+            'students.user',
+            'logbooks',
+            'reports',
+            'evaluation',
+        ])->findOrFail($id);
+
+        // Authorization: admin dapat melihat semua, dosen hanya bisa melihat kelompok bimbingannya
+        if ($user->role === 'dosen') {
+            $lecturerId = $user->lecturer->id ?? null;
+            if ($internship->supervisor_id !== $lecturerId) {
+                return response()->json(['message' => 'Anda tidak memiliki akses ke kelompok ini.'], 403);
+            }
+        } elseif ($user->role !== 'admin') {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        return new InternshipResource($internship);
+    }
 }

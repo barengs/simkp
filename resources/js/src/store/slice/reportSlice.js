@@ -61,9 +61,9 @@ export const approveReport = createAsyncThunk(
 
 export const rejectReport = createAsyncThunk(
     'reports/reject',
-    async (id, { rejectWithValue }) => {
+    async ({ id, feedback }, { rejectWithValue }) => {
         try {
-            const response = await api.post(`/reports/${id}/reject`);
+            const response = await api.post(`/reports/${id}/reject`, { feedback });
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Gagal menolak laporan');

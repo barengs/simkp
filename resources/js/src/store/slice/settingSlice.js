@@ -30,7 +30,7 @@ export const fetchAllSettings = createAsyncThunk(
 // Update settings
 export const updateSettings = createAsyncThunk(
     'settings/update',
-    async (formData, { rejectWithValue }) => {
+    async (formData, { rejectWithValue, dispatch }) => {
         try {
             const response = await api.post('/settings', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -80,8 +80,11 @@ const settingSlice = createSlice({
             })
             // Update Settings
             .addCase(updateSettings.fulfilled, (state, action) => {
-                state.publicSettings = action.payload.settings;
-                // We might need to refresh allSettings if in admin page
+                // The backend returns { message, settings: { key: value, ... } }
+                // Update publicSettings so Sidebar immediately reflects new logo/name
+                if (action.payload?.settings) {
+                    state.publicSettings = action.payload.settings;
+                }
             });
     },
 });

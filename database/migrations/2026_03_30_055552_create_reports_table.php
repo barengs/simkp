@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('internship_id')->constrained()->onDelete('cascade');
             $table->string('file_url')->nullable();
-            $table->enum('type', ['draft', 'final']);
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });

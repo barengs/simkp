@@ -9,8 +9,10 @@ class Report extends Model
     protected $fillable = [
         'internship_id',
         'file_url',
-        'type', // 'draft' or 'final'
+        'title',
+        'description',
         'status', // 'pending', 'approved', 'rejected'
+        'feedback', // Alasan penolakan
     ];
 
     public function internship()

@@ -906,7 +906,7 @@ const Registration = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto py-3 px-4 sm:px-6 lg:px-8 bg-gray-50/50 min-h-screen">
+        <div className="max-w-auto mx-auto py-3 px-4 sm:px-6 lg:px-8 bg-gray-50/50 min-h-screen">
             <div className="mb-8 text-center sm:text-left">
                 <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Pendaftaran KP Online</h2>
                 <p className="mt-2 text-gray-500 text-sm">Silakan lengkapi langkah-langkah di bawah ini untuk mengajukan kerja praktek.</p>

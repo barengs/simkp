@@ -35,17 +35,7 @@ class ReportController extends Controller
     {
         $data = $request->validated();
         
-        // Validation: If uploading FINAL, must have an APPROVED DRAFT
-        if ($data['type'] === 'final') {
-            $hasApprovedDraft = Report::where('internship_id', $data['internship_id'])
-                ->where('type', 'draft')
-                ->where('status', 'approved')
-                ->exists();
-            
-            if (!$hasApprovedDraft) {
-                return response()->json(['message' => 'Laporan Final hanya dapat diunggah setelah Laporan Draft disetujui oleh Dosen Pembimbing.'], 422);
-            }
-        }
+
 
         $report = $this->reportService->createReport(
             $data, 
@@ -104,7 +94,12 @@ class ReportController extends Controller
             return response()->json(['message' => 'Anda tidak memiliki akses untuk memvalidasi laporan ini.'], 403);
         }
 
+        $request->validate([
+            'feedback' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
         $report->status = 'rejected';
+        $report->feedback = $request->input('feedback');
         $report->save();
 
         return response()->json([

@@ -1,117 +1,91 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLogbooks, approveLogbook } from '../../store/slice/logbookSlice';
+import { useNavigate } from 'react-router-dom';
+import { fetchInternshipGroups } from '../../store/slice/internshipSlice';
 import DataTable from 'react-data-table-component';
-import { Search, Eye, CheckCircle, XCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { Search, ChevronRight, Building2, Users, BookOpen } from 'lucide-react';
 import Skeleton from '../../components/Skeleton';
-import Modal from '../../components/Modal';
-import ShowLogbook from './ShowLogbook';
 
 const Logbook = () => {
     const dispatch = useDispatch();
-    const { data: logbooks, loading } = useSelector((state) => state.logbooks || state.logbook || { data: [], loading: false });
-
+    const navigate = useNavigate();
+    const { groups, loading } = useSelector((state) => state.internships || { groups: [], loading: false });
     const [searchTerm, setSearchTerm] = useState('');
-    const [modalConfig, setModalConfig] = useState({ isOpen: false, data: null });
 
     useEffect(() => {
-        dispatch(fetchLogbooks());
+        dispatch(fetchInternshipGroups());
     }, [dispatch]);
 
-    const handleApprove = async (id, currentStatus) => {
-        // Only trigger update if pending
-        if (currentStatus === 'approved') {
-            toast.info('Logbook sudah disetujui sebelumnya');
-            return;
-        }
-
-        const action = await dispatch(approveLogbook({ id, status: 'approved' }));
-        if (approveLogbook.fulfilled.match(action)) {
-            toast.success("Logbook berhasil disetujui");
-        } else {
-            toast.error(action.payload || "Gagal menyetujui logbook");
-        }
-    };
-
-    const filteredData = Array.isArray(logbooks) ? logbooks.filter(
-        (item) => 
-            item.activity?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.internship?.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : [];
+    const filteredGroups = useMemo(() => {
+        if (!Array.isArray(groups)) return [];
+        return groups.filter((group) =>
+            group.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            group.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            group.company_name_manual?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [groups, searchTerm]);
 
     const columns = [
         {
-            name: 'Tanggal',
-            selector: (row) => row.date,
+            name: 'Kelompok / Ketua',
             sortable: true,
-            width: '120px'
-        },
-        {
-            name: 'Mahasiswa (Ketua)',
-            selector: (row) => row.internship?.leader?.name || '-',
-            sortable: true,
-            width: '180px'
-        },
-        {
-            name: 'Mitra KP',
-            selector: (row) => row.internship?.company?.name || row.internship?.company_name_manual || '-',
-            sortable: true,
-            width: '150px'
-        },
-        {
-            name: 'Aktivitas',
-            selector: (row) => row.activity,
-            wrap: true,
-            cell: row => <div className="py-2 line-clamp-2">{row.activity}</div>
-        },
-        {
-            name: 'Status',
-            selector: (row) => row.status,
-            sortable: true,
-            width: '130px',
-            cell: row => (
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    row.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                    {row.status === 'approved' ? 'Disetujui' : 'Menunggu'}
-                </span>
+            selector: (row) => row.leader?.name,
+            cell: (row) => (
+                <div className="py-3">
+                    <div className="flex items-center gap-2">
+                        <Users size={16} className="text-gray-400" />
+                        <span className="font-bold text-gray-900">{row.leader?.name}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 pl-6">
+                        {row.leader?.nim} • {row.students?.length} Anggota
+                    </div>
+                </div>
             )
         },
         {
-            name: 'Aksi',
+            name: 'Mitra KP',
+            sortable: true,
             cell: (row) => (
-                <div className="flex space-x-2">
-                    <button
-                        title="Lihat Detail & Evaluasi"
-                        onClick={() => setModalConfig({ isOpen: true, data: row })}
-                        className="p-1 px-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded flex items-center space-x-1"
-                    >
-                        <Eye size={16} /> <span>Review</span>
-                    </button>
-                    {row.status !== 'approved' ? (
-                         <button
-                            title="Setujui Cepat"
-                            onClick={() => handleApprove(row.id, row.status)}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded"
-                         >
-                            <CheckCircle size={18} />
-                         </button>
-                    ) : (
-                        <button
-                            disabled
-                            className="p-1 text-gray-400"
-                        >
-                            <CheckCircle size={18} />
-                         </button>
-                    )}
+                <div className="flex items-center gap-2 py-2">
+                    <Building2 size={16} className="text-indigo-400 shrink-0" />
+                    <span className="text-sm">{row.company?.name || row.company_name_manual || '-'}</span>
                 </div>
-            ),
-            width: '180px'
+            )
+        },
+        {
+            name: 'Status KP',
+            sortable: true,
+            width: '130px',
+            cell: (row) => {
+                const statusStyles = {
+                    ongoing: 'bg-green-100 text-green-700',
+                    grading: 'bg-amber-100 text-amber-700',
+                    finished: 'bg-gray-100 text-gray-700',
+                };
+                return (
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyles[row.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {row.status}
+                    </span>
+                );
+            }
+        },
+        {
+            name: 'Aksi',
+            width: '160px',
+            cell: (row) => (
+                <button
+                    onClick={() => navigate(`/dosen/internship-groups/${row.id}`, { state: { defaultTab: 'logbook' } })}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all border border-indigo-200"
+                >
+                    <BookOpen size={14} />
+                    <span>Lihat Logbook</span>
+                    <ChevronRight size={14} />
+                </button>
+            )
         }
     ];
 
-    if (loading && filteredData.length === 0) {
+    if (loading && filteredGroups.length === 0) {
         return <Skeleton className="w-full h-96" />;
     }
 
@@ -120,7 +94,7 @@ const Logbook = () => {
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
                 <div>
                     <h2 className="text-xl font-bold text-gray-800">Review Logbook Mahasiswa Bimbingan</h2>
-                    <p className="text-sm text-gray-500">Pantau aktivitas mingguan dan validasi logbook mahasiswa.</p>
+                    <p className="text-sm text-gray-500">Pilih kelompok bimbingan Anda untuk melihat dan memvalidasi logbook harian mereka.</p>
                 </div>
                 <div className="mt-4 md:mt-0">
                     <div className="relative">
@@ -129,7 +103,7 @@ const Logbook = () => {
                         </div>
                         <input
                             type="text"
-                            placeholder="Cari aktivitas atau mahasiswa..."
+                            placeholder="Cari kelompok atau mitra..."
                             className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -141,28 +115,15 @@ const Logbook = () => {
             <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <DataTable
                     columns={columns}
-                    data={filteredData}
+                    data={filteredGroups}
                     pagination
                     highlightOnHover
+                    pointerOnHover
                     responsive
-                    noDataComponent={<div className="p-6 text-gray-500">Belum ada logbook yang di-submit oleh mahasiswa bimbingan Anda.</div>}
+                    onRowClicked={(row) => navigate(`/dosen/internship-groups/${row.id}`, { state: { defaultTab: 'logbook' } })}
+                    noDataComponent={<div className="p-6 text-gray-500">Belum ada kelompok bimbingan aktif Anda.</div>}
                 />
             </div>
-
-            <Modal
-                isOpen={modalConfig.isOpen}
-                onClose={() => setModalConfig({ isOpen: false, data: null })}
-                title={`Evaluasi Logbook - ${modalConfig.data?.internship?.leader?.name}`}
-            >
-                <ShowLogbook 
-                    logbook={modalConfig.data} 
-                    onClose={() => setModalConfig({ isOpen: false, data: null })}
-                    onApprove={() => {
-                        handleApprove(modalConfig.data.id, modalConfig.data.status);
-                        setModalConfig({ isOpen: false, data: null });
-                    }}
-                />
-            </Modal>
         </div>
     );
 };

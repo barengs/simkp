@@ -19,8 +19,6 @@ const ThemeManagement = React.lazy(() => import("./admin/Themes/ThemeManagement"
 const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerList"));
 const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
 const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
-const ValidationIndex = lazy(() => import("./admin/Internships/Validation/Index"));
-const PlottingIndex = lazy(() => import("./admin/Internships/Plotting/Index"));
 const Registration = lazy(() => import("./student/Registration"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
 const StudentLogbook = lazy(() => import("./student/Logbooks/Logbook"));
@@ -34,6 +32,7 @@ const DosenEvaluation = lazy(() => import("./dosen/Evaluations/Evaluation"));
 const AdminEvaluation = lazy(() => import("./admin/Evaluations/Evaluation"));
 const AdminInternshipGroups = lazy(() => import("./admin/Internships/InternshipList"));
 const DosenInternshipGroups = lazy(() => import("./dosen/Internships/InternshipList"));
+const InternshipGroupDetail = lazy(() => import("./pages/InternshipGroupDetail"));
 const Settings = lazy(() => import("./admin/Settings/Settings"));
 const AdminActivity = lazy(() => import("./admin/Activities/ActivityIndex"));
 const DosenActivity = lazy(() => import("./dosen/Activities/ActivityIndex"));
@@ -164,9 +163,8 @@ const App = () => {
                             <Route path="period-management" element={<PeriodManagement />} />
                             <Route path="theme-management" element={<ThemeManagement />} />
                             <Route path="master-mahasiswa" element={<StudentList />} />
-                            <Route path="registration-validation" element={<ValidationIndex />} />
-                            <Route path="lecturer-plotting" element={<PlottingIndex />} />
                             <Route path="internship-groups" element={<AdminInternshipGroups />} />
+                            <Route path="internship-groups/:internship_id" element={<InternshipGroupDetail />} />
                             <Route path="logbook" element={<AdminLogbook />} />
                             <Route path="reports" element={<AdminReport />} />
                             <Route path="evaluations" element={<AdminEvaluation />} />
@@ -190,6 +188,7 @@ const App = () => {
                         {/* Lecturer (Dosen) Routes */}
                         <Route path="dosen">
                             <Route path="internship-groups" element={<DosenInternshipGroups />} />
+                            <Route path="internship-groups/:internship_id" element={<InternshipGroupDetail />} />
                             <Route path="logbook" element={<DosenLogbook />} />
                             <Route path="reports" element={<DosenReport />} />
                             <Route path="evaluations" element={<DosenEvaluation />} />

@@ -29,25 +29,28 @@ class SettingService
         try {
             foreach ($settingsData as $key => $value) {
                 $setting = Setting::where('key', $key)->first();
-                
+                $finalValue = $value;
+                $shouldUpload = ($value instanceof \Illuminate\Http\UploadedFile);
+
                 if ($setting) {
                     $type = $setting->type;
-                    $finalValue = $value;
-
-                    // Handle File uploads
-                    if ($type === 'file' && $value instanceof \Illuminate\Http\UploadedFile) {
+                    
+                    if ($shouldUpload) {
                         $this->deleteOldFile($setting->value);
                         $finalValue = $this->uploadFile($value);
+                        $type = 'file'; // Auto-correct type if it was mismatched
                     }
                     
-                    $setting->update(['value' => $finalValue]);
+                    $setting->update([
+                        'value' => $finalValue,
+                        'type' => $type
+                    ]);
                 } else {
-                    // Create if not exists
                     $type = $this->determineType($key, $value);
-                    $finalValue = $value;
-
-                    if ($type === 'file' && $value instanceof \Illuminate\Http\UploadedFile) {
+                    
+                    if ($shouldUpload) {
                         $finalValue = $this->uploadFile($value);
+                        $type = 'file';
                     }
 
                     Setting::create([
@@ -89,10 +92,17 @@ class SettingService
      */
     private function deleteOldFile($fileUrl)
     {
-        if (!$fileUrl) return;
+        if (!$fileUrl || !is_string($fileUrl)) return;
         
-        $path = str_replace(Storage::url(''), '', $fileUrl);
-        Storage::disk('public')->delete($path);
+        $path = parse_url($fileUrl, PHP_URL_PATH);
+        if ($path) {
+            // Remove /storage prefix if it exists in the path
+            $storagePrefix = '/storage/';
+            if (str_starts_with($path, $storagePrefix)) {
+                $path = substr($path, strlen($storagePrefix));
+            }
+            Storage::disk('public')->delete($path);
+        }
     }
 
     /**

@@ -76,8 +76,6 @@ class Internship extends Model
 
     public function hasFinalReport()
     {
-        $hasFinal = $this->reports()->where('type', 'final')->exists();
-        $draftApproved = $this->reports()->where('type', 'draft')->where('status', 'approved')->exists();
-        return $hasFinal && $draftApproved;
+        return $this->reports()->where('status', 'approved')->exists();
     }
 }

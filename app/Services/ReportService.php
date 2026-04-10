@@ -64,16 +64,10 @@ class ReportService
                 $data['file_url'] = $path;
             }
 
-            // Automate approval for FINAL
-            if (isset($data['type']) && $data['type'] === 'final') {
-                $data['status'] = 'approved';
-            } else {
-                $data['status'] = 'pending';
-            }
+            $data['status'] = 'pending';
 
             $report = Report::create($data);
-            $typeText = $report->type === 'final' ? 'Laporan Akhir' : 'Draft Laporan';
-            $this->activityService->log('report_submitted', "Mahasiswa mengunggah {$typeText} baru.");
+            $this->activityService->log('report_submitted', "Mahasiswa mengunggah Laporan baru.");
             return $report;
         } catch (\Exception $e) {
             Log::error('Error creating report: ' . $e->getMessage());

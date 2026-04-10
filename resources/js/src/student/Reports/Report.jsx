@@ -25,7 +25,7 @@ const Report = () => {
     const { data: reports, loading } = useSelector((state) => state.reports || { data: [], loading: false });
     const { data: internships } = useSelector((state) => state.internships || { data: [] });
 
-    const [modalConfig, setModalConfig] = useState({ isOpen: false, type: 'draft' });
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, data: null });
 
     useEffect(() => {
@@ -50,11 +50,8 @@ const Report = () => {
     };
 
     // Find latest reports
-    const draftReport = Array.isArray(reports) ? reports.find(r => r.type === 'draft') : null;
-    const finalReport = Array.isArray(reports) ? reports.find(r => r.type === 'final') : null;
+    const latestReport = Array.isArray(reports) && reports.length > 0 ? reports[0] : null;
 
-    // Logic: Final is available only if Draft is approved
-    const isDraftApproved = draftReport?.status === 'approved';
     const hasActiveInternship = Array.isArray(internships) ? internships.length > 0 : !!internships?.id;
 
     if (loading && (!reports || reports.length === 0)) {
@@ -87,23 +84,15 @@ const Report = () => {
         }
     };
 
-    const ReportCard = ({ title, type, report, isLocked = false, description }) => {
+    const ReportCard = ({ title, report, description }) => {
         return (
-            <div className={`relative bg-white rounded-2xl border transition-all duration-300 ${
-                isLocked ? 'border-gray-200 opacity-60 grayscale' : 'border-gray-200 hover:border-indigo-300 shadow-sm hover:shadow-md'
-            }`}>
+            <div className="relative bg-white rounded-2xl border border-gray-200 hover:border-indigo-300 shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
                             <FileText size={28} />
                         </div>
                         {report && <StatusBadge status={report.status} />}
-                        {isLocked && (
-                            <div className="flex items-center space-x-1.5 px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-bold uppercase tracking-wider">
-                                <Lock size={14} />
-                                <span>Terkunci</span>
-                            </div>
-                        )}
                     </div>
 
                     <h3 className="text-lg font-bold text-gray-800 mb-1">{title}</h3>
@@ -147,7 +136,7 @@ const Report = () => {
                             
                             {(report.status === 'rejected' || report.status === 'pending') && (
                                 <button
-                                    onClick={() => setModalConfig({ isOpen: true, type })}
+                                    onClick={() => setModalConfig({ isOpen: true })}
                                     className="w-full flex items-center justify-center space-x-2 py-2.5 border-2 border-dashed border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-600 rounded-xl text-sm font-semibold transition-all"
                                 >
                                     <PlusCircle size={18} />
@@ -157,24 +146,14 @@ const Report = () => {
                         </div>
                     ) : (
                         <button
-                            onClick={() => !isLocked && setModalConfig({ isOpen: true, type })}
-                            disabled={isLocked}
-                            className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 ${
-                                isLocked 
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                            }`}
+                            onClick={() => setModalConfig({ isOpen: true })}
+                            className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 bg-indigo-600 text-white hover:bg-indigo-700`}
                         >
-                            {isLocked ? <Lock size={18} /> : <PlusCircle size={18} />}
+                            <PlusCircle size={18} />
                             <span>Unggah {title}</span>
                         </button>
                     )}
                 </div>
-                
-                {isLocked && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[1px] rounded-2xl pointer-events-none px-6 text-center">
-                    </div>
-                )}
             </div>
         );
     };
@@ -186,7 +165,7 @@ const Report = () => {
                 <div className="max-w-2xl">
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Manajemen Laporan KP</h1>
                     <p className="mt-2 text-gray-500 text-lg leading-relaxed">
-                        Pantau progres laporan kerja praktik Anda. Laporan Final akan terbuka setelah Dosen Pembimbing menyetujui versi Draft.
+                        Pantau progres laporan kerja praktik Anda. Unggah laporan dan tunggu persetujuan dari Dosen Pembimbing.
                     </p>
                 </div>
                 {!hasActiveInternship && (
@@ -207,26 +186,17 @@ const Report = () => {
                 <div>
                     <h4 className="font-bold text-indigo-900 leading-none mb-1">Ketentuan Pengunggahan:</h4>
                     <p className="text-sm text-indigo-700 leading-relaxed">
-                        Pastikan Anda berkonsultasi (Bimbingan) secara rutin mengenai <strong>Draft Laporan</strong>. Tombol <strong>Laporan Final</strong> hanya akan aktif setelah Dosen Pembimbing memberikan persetujuan (Status: <span className="font-bold">Disetujui</span>) pada Draft Anda.
+                        Pastikan Anda berkonsultasi (Bimbingan) secara rutin mengenai <strong>Laporan</strong>. Tambahkan judul dan deskripsi tentang bagian laporan yang sedang dikerjakan.
                     </p>
                 </div>
             </div>
 
-            {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Cards */}
+            <div className="max-w-3xl">
                 <ReportCard 
-                    title="1. Dokumen Draft"
-                    type="draft"
-                    report={draftReport}
-                    description="Unggah versi draf untuk diperiksa dan dikonsultasikan secara rutin dengan Dosen Pembimbing Anda di lokasi bimbingan."
-                />
-                
-                <ReportCard 
-                    title="2. Dokumen Final"
-                    type="final"
-                    report={finalReport}
-                    isLocked={!isDraftApproved}
-                    description="Laporan akhir yang sudah dipastikan siap penilaian. Versi ini menjadi syarat utama bagi Dosen untuk menginput nilai."
+                    title="Dokumen Laporan"
+                    report={latestReport}
+                    description="Unggah laporan untuk diperiksa dan dikonsultasikan secara rutin dengan Dosen Pembimbing Anda di lokasi bimbingan."
                 />
             </div>
 
@@ -234,10 +204,9 @@ const Report = () => {
             <Modal
                 isOpen={modalConfig.isOpen}
                 onClose={handleCloseModal}
-                title={`Unggah ${modalConfig.type === 'final' ? 'Laporan Final' : 'Draft Laporan'}`}
+                title="Unggah Laporan"
             >
-                <AddReport 
-                    type={modalConfig.type} 
+                <AddReport
                     onClose={() => {
                         handleCloseModal();
                         dispatch(fetchReports());
@@ -251,7 +220,7 @@ const Report = () => {
                 onClose={() => setDeleteModal({ isOpen: false, data: null })}
                 onConfirm={handleDelete}
                 title="Hapus Dokumen"
-                message={`Apakah Anda yakin ingin menghapus arsip Laporan ${deleteModal.data?.type === 'final' ? 'Final' : 'Draft'} ini?`}
+                message={`Apakah Anda yakin ingin menghapus arsip Laporan ini?`}
             />
         </div>
     );

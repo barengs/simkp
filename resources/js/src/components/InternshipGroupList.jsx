@@ -1,26 +1,178 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
 import { fetchInternshipGroups } from '../store/slice/internshipSlice';
+import {
+    fetchSubmittedInternships,
+    approveInternship,
+    rejectInternship,
+    assignSupervisor,
+} from '../store/slice/adminInternshipSlice';
 import Skeleton from '../components/Skeleton';
-import { Users, Building2, MapPin, Notebook, GraduationCap } from 'lucide-react';
+import { Users, Building2, MapPin, Notebook, GraduationCap, CheckCircle, XCircle, UserPlus, Eye } from 'lucide-react';
+import { toast } from 'react-toastify';
+import ReviewFilesModal from '../admin/Internships/Validation/ReviewFilesModal';
+import RejectModal from '../admin/Internships/Validation/RejectModal';
+import ConfirmApproveModal from '../admin/Internships/Validation/ConfirmApproveModal';
+import PlottingModal from '../admin/Internships/Plotting/PlottingModal';
 
 const InternshipListContent = ({ title, subtitle }) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { user } = useSelector((state) => state.auth);
     const { groups, loading } = useSelector((state) => state.internships || { groups: [], loading: false });
+    const { actionLoading } = useSelector((state) => state.adminInternships || { actionLoading: false });
+
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Modal States
+    const [selectedInternship, setSelectedInternship] = useState(null);
+    const [isReviewModalOpen, setReviewModalOpen] = useState(false);
+    const [isRejectModalOpen, setRejectModalOpen] = useState(false);
+    const [isApproveModalOpen, setApproveModalOpen] = useState(false);
+    const [isPlottingModalOpen, setPlottingModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(fetchInternshipGroups());
     }, [dispatch]);
 
     const filteredGroups = useMemo(() => {
-        return groups.filter((group) => 
+        return groups.filter((group) =>
             group.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             group.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             group.theme?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [groups, searchTerm]);
+
+    const handleValidasiClick = (row) => {
+        setSelectedInternship(row);
+        setReviewModalOpen(true);
+    };
+
+    const handleApproveClick = (row) => {
+        setSelectedInternship(row);
+        setApproveModalOpen(true);
+    };
+
+    const confirmApprove = async () => {
+        if (!selectedInternship) return;
+        try {
+            await dispatch(approveInternship(selectedInternship.id)).unwrap();
+            toast.success('Pendaftaran berhasil disetujui');
+            setApproveModalOpen(false);
+            setSelectedInternship(null);
+            dispatch(fetchInternshipGroups()); // refresh list
+        } catch (error) {
+            toast.error(error || 'Gagal menyetujui pendaftaran');
+        }
+    };
+
+    const handleRejectClick = (row) => {
+        setSelectedInternship(row);
+        setRejectModalOpen(true);
+    };
+
+    const submitReject = async (note) => {
+        if (!selectedInternship) return;
+        try {
+            await dispatch(rejectInternship({ id: selectedInternship.id, note })).unwrap();
+            toast.success('Pendaftaran berhasil ditolak');
+            setRejectModalOpen(false);
+            setSelectedInternship(null);
+            dispatch(fetchInternshipGroups()); // refresh list
+        } catch (error) {
+            toast.error(error || 'Gagal menolak pendaftaran');
+        }
+    };
+
+    const handlePlottingClick = (row) => {
+        setSelectedInternship(row);
+        setPlottingModalOpen(true);
+    };
+
+    const submitPlotting = async (supervisorId) => {
+        if (!selectedInternship) return;
+        try {
+            await dispatch(assignSupervisor({ id: selectedInternship.id, supervisor_id: supervisorId })).unwrap();
+            toast.success('Dosen pembimbing berhasil diplot');
+            setPlottingModalOpen(false);
+            setSelectedInternship(null);
+            dispatch(fetchInternshipGroups()); // refresh list
+        } catch (error) {
+            toast.error(error || 'Gagal menunjuk dosen pembimbing');
+        }
+    };
+
+    const role = user?.role?.toLowerCase();
+    const isAdmin = role === 'admin';
+
+    const renderActionColumn = (row) => {
+        const status = row.status;
+        const hasSupervisor = !!row.supervisor;
+
+        // Case A: Pending (submitted) — Tombol Validasi
+        if (status === 'submitted') {
+            return isAdmin ? (
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => handleValidasiClick(row)}
+                        disabled={actionLoading}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Review Berkas"
+                    >
+                        <Eye size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleApproveClick(row)}
+                        disabled={actionLoading}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        title="Setujui"
+                    >
+                        <CheckCircle size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleRejectClick(row)}
+                        disabled={actionLoading}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Tolak"
+                    >
+                        <XCircle size={18} />
+                    </button>
+                </div>
+            ) : (
+                <span className="text-xs text-gray-400 italic">Menunggu Admin</span>
+            );
+        }
+
+        // Case B: Approved, belum ada dosen — Tombol Plotting
+        if (status === 'approved' && !hasSupervisor) {
+            return isAdmin ? (
+                <button
+                    onClick={() => handlePlottingClick(row)}
+                    disabled={actionLoading}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm disabled:opacity-50"
+                >
+                    <UserPlus size={16} />
+                    <span>Plotting Dosen</span>
+                </button>
+            ) : (
+                <span className="text-xs text-gray-400 italic">Menunggu Plotting</span>
+            );
+        }
+
+        // Case C: Ongoing / Finished / Rejected (atau approved dengan dosen) — Tombol Detail
+        const detailPath = `/${role}/internship-groups/${row.id}`;
+        return (
+            <button
+                onClick={() => navigate(detailPath)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all border border-indigo-200"
+            >
+                <Eye size={16} />
+                <span>Detail</span>
+            </button>
+        );
+    };
 
     const columns = [
         {
@@ -47,7 +199,7 @@ const InternshipListContent = ({ title, subtitle }) => {
                 <div className="py-2">
                     <div className="flex items-center gap-2">
                         <Building2 size={16} className="text-indigo-500" />
-                        <span className="text-sm font-medium">{row.company?.name}</span>
+                        <span className="text-sm font-medium">{row.company?.name || row.company_name_manual}</span>
                     </div>
                     <div className="flex items-start gap-1 text-xs text-gray-500 mt-1 pl-6">
                         <MapPin size={12} className="mt-0.5" />
@@ -80,6 +232,7 @@ const InternshipListContent = ({ title, subtitle }) => {
             name: 'Status',
             sortable: true,
             selector: (row) => row.status,
+            width: '130px',
             cell: (row) => {
                 const statusStyles = {
                     submitted: 'bg-blue-100 text-blue-700',
@@ -95,6 +248,11 @@ const InternshipListContent = ({ title, subtitle }) => {
                     </span>
                 );
             }
+        },
+        {
+            name: 'Aksi',
+            cell: (row) => renderActionColumn(row),
+            width: '180px',
         }
     ];
 
@@ -158,6 +316,43 @@ const InternshipListContent = ({ title, subtitle }) => {
                     }}
                 />
             </div>
+
+            {/* Validation Modals */}
+            {isReviewModalOpen && (
+                <ReviewFilesModal
+                    isOpen={isReviewModalOpen}
+                    onClose={() => { setReviewModalOpen(false); setSelectedInternship(null); }}
+                    internship={selectedInternship}
+                />
+            )}
+            {isRejectModalOpen && (
+                <RejectModal
+                    isOpen={isRejectModalOpen}
+                    onClose={() => { setRejectModalOpen(false); setSelectedInternship(null); }}
+                    onSubmit={submitReject}
+                    isSubmitting={actionLoading}
+                />
+            )}
+            {isApproveModalOpen && (
+                <ConfirmApproveModal
+                    isOpen={isApproveModalOpen}
+                    onClose={() => { setApproveModalOpen(false); setSelectedInternship(null); }}
+                    onConfirm={confirmApprove}
+                    isLoading={actionLoading}
+                    message={`Setujui pendaftaran kelompok ${selectedInternship?.leader?.name}?`}
+                />
+            )}
+
+            {/* Plotting Modal */}
+            {isPlottingModalOpen && (
+                <PlottingModal
+                    isOpen={isPlottingModalOpen}
+                    onClose={() => { setPlottingModalOpen(false); setSelectedInternship(null); }}
+                    onSubmit={submitPlotting}
+                    isSubmitting={actionLoading}
+                    internship={selectedInternship}
+                />
+            )}
         </div>
     );
 };

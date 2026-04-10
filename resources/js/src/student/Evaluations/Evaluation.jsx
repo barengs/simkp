@@ -42,7 +42,7 @@ const Evaluation = () => {
     const colorClass = gradeConfig[currentEval.final_grade] || 'bg-gray-500 text-white ring-gray-200';
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-auto mx-auto space-y-6">
             <div className="bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-2xl shadow-lg p-8 relative overflow-hidden">
                 <div className="absolute -right-10 -top-10 opacity-10">
                     <Award size={200} />

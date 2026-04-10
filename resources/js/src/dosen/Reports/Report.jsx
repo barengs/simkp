@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchReports, approveReport, rejectReport } from '../../store/slice/reportSlice';
 import DataTable from 'react-data-table-component';
-import { Search, FileText, CheckCircle, XCircle, Clock, History, FileCheck } from 'lucide-react';
+import { Search, FileText, CheckCircle, XCircle, Clock, FileCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../components/Skeleton';
 import Modal from '../../components/Modal';
@@ -14,8 +14,8 @@ const Report = () => {
     const { data: reports, loading } = useSelector((state) => state.reports || { data: [], loading: false });
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [historyModal, setHistoryModal] = useState({ isOpen: false, group: null });
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null, reportId: null });
+    const [rejectFeedback, setRejectFeedback] = useState('');
 
     useEffect(() => {
         dispatch(fetchReports());
@@ -23,7 +23,7 @@ const Report = () => {
 
     const groupedData = useMemo(() => {
         if (!Array.isArray(reports)) return [];
-        
+
         const groups = {};
         reports.forEach(report => {
             const id = report.internship?.id;
@@ -53,7 +53,11 @@ const Report = () => {
                 toast.error(action.payload || "Gagal menyetujui laporan");
             }
         } else {
-            const action = await dispatch(rejectReport(reportId));
+            if (!rejectFeedback.trim() || rejectFeedback.trim().length < 5) {
+                toast.error('Alasan penolakan minimal 5 karakter');
+                return;
+            }
+            const action = await dispatch(rejectReport({ id: reportId, feedback: rejectFeedback }));
             if (rejectReport.fulfilled.match(action)) {
                 toast.success("Draft laporan ditolak");
             } else {
@@ -61,6 +65,7 @@ const Report = () => {
             }
         }
         setConfirmModal({ isOpen: false, type: null, reportId: null });
+        setRejectFeedback('');
     };
 
     const handleApprove = (id) => {
@@ -68,12 +73,13 @@ const Report = () => {
     };
 
     const handleReject = (id) => {
+        setRejectFeedback('');
         setConfirmModal({ isOpen: true, type: 'reject', reportId: id });
     };
 
     const filteredData = groupedData.filter(
-        (item) => 
-            item.latest?.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item) =>
+            item.latest?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.internship?.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.internship?.company?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -81,7 +87,7 @@ const Report = () => {
     const columns = [
         {
             name: 'Update Terakhir',
-            selector: (row) => row.latest?.created_at,
+            selector: (row) => row.latest?.updated_at,
             sortable: true,
             width: '180px'
         },
@@ -97,57 +103,88 @@ const Report = () => {
         },
         {
             name: 'Status Terbaru',
-            width: '150px',
+            width: '160px',
             cell: row => {
                 const latest = row.latest;
-                if (latest.status === 'approved') return <div className="flex items-center text-green-600 font-bold text-[10px] uppercase"><CheckCircle size={12} className="mr-1" /> {latest.type} Disetujui</div>;
-                if (latest.status === 'rejected') return <div className="flex items-center text-red-600 font-bold text-[10px] uppercase"><XCircle size={12} className="mr-1" /> {latest.type} Ditolak</div>;
-                return <div className="flex items-center text-amber-600 font-bold text-[10px] uppercase"><Clock size={12} className="mr-1" /> {latest.type} Pending</div>;
+                if (latest.status === 'approved') return <div className="flex items-center text-green-600 font-bold text-[10px] uppercase"><CheckCircle size={12} className="mr-1" /> Disetujui</div>;
+                if (latest.status === 'rejected') return <div className="flex items-center text-red-600 font-bold text-[10px] uppercase"><XCircle size={12} className="mr-1" /> Ditolak</div>;
+                return <div className="flex items-center text-amber-600 font-bold text-[10px] uppercase"><Clock size={12} className="mr-1" /> Pending</div>;
             }
         },
         {
             name: 'Aksi Validasi',
-            cell: row => (
-                <div className="flex items-center space-x-2">
-                    <button 
-                        onClick={() => setHistoryModal({ isOpen: true, group: row })}
-                        className="p-1.5 bg-gray-50 text-gray-600 hover:bg-gray-200 rounded-lg transition-all border border-gray-200"
-                        title="Lihat Riwayat Laporan"
-                    >
-                        <History size={16} /> 
-                    </button>
+            cell: row => {
+                const latest = row.latest;
+                const internshipId = row.internship?.id;
 
-                    {row.latest?.type === 'draft' && row.latest?.status === 'pending' && (
-                        <>
-                            <button 
-                                onClick={() => handleApprove(row.latest.id)}
-                                className="p-1.5 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all border border-green-200"
-                                title="Setujui Draft"
-                            >
-                                <CheckCircle size={16} /> 
-                            </button>
-                            <button 
-                                onClick={() => handleReject(row.latest.id)}
-                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-200"
-                                title="Tolak / Revisi"
-                            >
-                                <XCircle size={16} /> 
-                            </button>
-                        </>
-                    )}
-
-                    {row.latest?.type === 'final' && (
-                        <button 
-                            onClick={() => navigate('/dosen/evaluations', { state: { openInternshipId: row.internship?.id } })}
+                // Status APPROVED — Tampilkan tombol Input Nilai
+                if (latest?.status === 'approved') {
+                    return (
+                        <button
+                            onClick={() => navigate('/dosen/evaluations', { state: { openInternshipId: internshipId } })}
                             className="flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition-all text-xs font-bold"
                             title="Beri Penilaian Kelompok"
                         >
                             <FileCheck size={14} />
-                            <span>Nilai</span>
+                            <span>Input Nilai</span>
                         </button>
-                    )}
-                </div>
-            ),
+                    );
+                }
+
+                // Status PENDING — Tampilkan Setujui + Tolak (aktif)
+                if (latest?.status === 'pending') {
+                    return (
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => handleApprove(latest.id)}
+                                className="p-1.5 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all border border-green-200"
+                                title="Setujui"
+                            >
+                                <CheckCircle size={16} />
+                            </button>
+                            <button
+                                onClick={() => handleReject(latest.id)}
+                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all border border-red-200"
+                                title="Tolak"
+                            >
+                                <XCircle size={16} />
+                            </button>
+                        </div>
+                    );
+                }
+
+                // Status REJECTED — Tampilkan tombol disabled + tampilkan feedback
+                if (latest?.status === 'rejected') {
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    disabled
+                                    className="p-1.5 bg-gray-50 text-gray-300 rounded-lg border border-gray-200 cursor-not-allowed"
+                                    title="Menunggu re-upload mahasiswa"
+                                >
+                                    <CheckCircle size={16} />
+                                </button>
+                                <button
+                                    disabled
+                                    className="p-1.5 bg-gray-50 text-gray-300 rounded-lg border border-gray-200 cursor-not-allowed"
+                                    title="Menunggu re-upload mahasiswa"
+                                >
+                                    <XCircle size={16} />
+                                </button>
+                            </div>
+                            {/* {latest?.feedback && (
+                                <div className="flex items-center gap-1 text-[10px] text-red-500 font-semibold max-w-[140px]">
+                                    <AlertTriangle size={10} className="shrink-0" />
+                                    <span className="line-clamp-1" title={latest.feedback}>{latest.feedback}</span>
+                                </div>
+                            )} */}
+                        </div>
+                    );
+                }
+
+                return null;
+            },
             width: '200px'
         }
     ];
@@ -158,7 +195,7 @@ const Report = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-50 pb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Evaluasi Laporan Bimbingan</h2>
-                        <p className="text-sm text-gray-500 mt-1">Daftar kelompok bimbingan yang telah mengunggah laporan. Validasi draft sebelum mahasiswa upload laporan final.</p>
+                        <p className="text-sm text-gray-500 mt-1">Daftar kelompok yang telah mengunggah laporan. Validasi draft sebelum mahasiswa upload laporan final.</p>
                     </div>
                     <div className="mt-4 md:mt-0">
                         <div className="relative">
@@ -190,57 +227,18 @@ const Report = () => {
                 </div>
             </div>
 
-            <Modal
-                isOpen={historyModal.isOpen}
-                onClose={() => setHistoryModal({ isOpen: false, group: null })}
-                title={`Riwayat Laporan - ${historyModal.group?.internship?.leader?.name}`}
-            >
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                    {historyModal.group?.reports?.map((rep, idx) => (
-                        <div key={rep.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50/50 flex justify-between items-center">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest ${
-                                        rep.type === 'final' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'
-                                    }`}>
-                                        {rep.type}
-                                    </span>
-                                    <span className="text-xs text-gray-400">{rep.created_at}</span>
-                                </div>
-                                <div className={`text-xs font-bold ${
-                                    rep.status === 'approved' ? 'text-green-600' : rep.status === 'rejected' ? 'text-red-600' : 'text-amber-600'
-                                }`}>
-                                    {rep.status.toUpperCase()}
-                                </div>
-                            </div>
-                            <a 
-                                href={rep.file_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-white px-3 py-2 rounded-lg border border-indigo-100 shadow-sm transition-all"
-                            >
-                                <FileText size={14} /> Buka Laporan
-                            </a>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-6 flex justify-end">
-                    <button 
-                        onClick={() => setHistoryModal({ isOpen: false, group: null })}
-                        className="px-6 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all"
-                    >
-                        Tutup
-                    </button>
-                </div>
-            </Modal>
+            {/* Confirm Modal */}
             <Modal
                 isOpen={confirmModal.isOpen}
-                onClose={() => setConfirmModal({ isOpen: false, type: null, reportId: null })}
+                onClose={() => {
+                    setConfirmModal({ isOpen: false, type: null, reportId: null });
+                    setRejectFeedback('');
+                }}
                 title={confirmModal.type === 'approve' ? 'Konfirmasi Persetujuan' : 'Konfirmasi Penolakan'}
                 size="sm"
             >
                 <div className="py-2">
-                    <div className={`p-4 rounded-xl border mb-6 flex items-start gap-4 ${
+                    <div className={`p-4 rounded-xl border mb-4 flex items-start gap-4 ${
                         confirmModal.type === 'approve' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'
                     }`}>
                         {confirmModal.type === 'approve' ? <CheckCircle className="shrink-0 mt-0.5" size={20} /> : <XCircle className="shrink-0 mt-0.5" size={20} />}
@@ -249,23 +247,44 @@ const Report = () => {
                                 {confirmModal.type === 'approve' ? 'Setujui Laporan?' : 'Tolak / Revisi Laporan?'}
                             </p>
                             <p className="leading-relaxed opacity-80">
-                                {confirmModal.type === 'approve' 
-                                    ? 'Apakah Anda yakin ingin menyetujui draft laporan ini? Mahasiswa akan dapat melanjutkan ke tahap upload laporan FINAL.' 
-                                    : 'Apakah Anda yakin ingin menolak atau meminta revisi pada draft laporan ini?'}
+                                {confirmModal.type === 'approve'
+                                    ? 'Mahasiswa akan dapat melanjutkan ke tahap upload laporan FINAL.'
+                                    : 'Mahasiswa akan diminta untuk merevisi dan upload ulang laporan mereka.'}
                             </p>
                         </div>
                     </div>
 
+                    {/* Textarea Feedback (hanya saat reject) */}
+                    {confirmModal.type === 'reject' && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Alasan Penolakan <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                value={rejectFeedback}
+                                onChange={(e) => setRejectFeedback(e.target.value)}
+                                rows={3}
+                                placeholder="Tuliskan alasan penolakan dan saran revisi untuk mahasiswa..."
+                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent resize-none"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">{rejectFeedback.length} / 1000 karakter (minimal 5)</p>
+                        </div>
+                    )}
+
                     <div className="flex justify-end gap-3">
-                        <button 
-                            onClick={() => setConfirmModal({ isOpen: false, type: null, reportId: null })}
+                        <button
+                            onClick={() => {
+                                setConfirmModal({ isOpen: false, type: null, reportId: null });
+                                setRejectFeedback('');
+                            }}
                             className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 transition-all"
                         >
                             Batal
                         </button>
-                        <button 
+                        <button
                             onClick={handleConfirmAction}
-                            className={`px-8 py-2 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 ${
+                            disabled={confirmModal.type === 'reject' && rejectFeedback.trim().length < 5}
+                            className={`px-8 py-2 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                                 confirmModal.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                             }`}
                         >

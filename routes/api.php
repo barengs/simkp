@@ -47,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Internships Listing for Admin/Dosen
     Route::get('internships/groups', [\App\Http\Controllers\Api\InternshipController::class, 'listGroups']);
+    // Internship Group Detail (Admin/Dosen)
+    Route::get('internships/groups/{id}', [\App\Http\Controllers\Api\InternshipController::class, 'show']);
 
     // Internships (KP)
     Route::apiResource('internships', \App\Http\Controllers\Api\InternshipController::class);

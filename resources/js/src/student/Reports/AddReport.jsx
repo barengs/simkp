@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addReport } from '../../store/slice/reportSlice';
 import { toast } from 'react-toastify';
 
-const AddReport = ({ onClose, type = 'draft' }) => {
+const AddReport = ({ onClose }) => {
     const dispatch = useDispatch();
     const { loading } = useSelector(state => state.reports || { loading: false });
     const { data: internships } = useSelector((state) => state.internships || { data: [] });
@@ -13,7 +13,8 @@ const AddReport = ({ onClose, type = 'draft' }) => {
 
     const [formData, setFormData] = useState({
         internship_id: activeInternship ? activeInternship.id : '',
-        type: type,
+        title: '',
+        description: '',
         file_url: null,
     });
 
@@ -41,7 +42,8 @@ const AddReport = ({ onClose, type = 'draft' }) => {
 
         const data = new FormData();
         data.append('internship_id', formData.internship_id);
-        data.append('type', formData.type);
+        if (formData.title) data.append('title', formData.title);
+        if (formData.description) data.append('description', formData.description);
         data.append('file_url', formData.file_url);
 
         const action = await dispatch(addReport(data));
@@ -57,7 +59,7 @@ const AddReport = ({ onClose, type = 'draft' }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 mb-4 text-center">
                 <span className="text-sm font-semibold text-indigo-700 uppercase tracking-widest">
-                    Uploading {type === 'final' ? 'Laporan Final' : 'Draft Laporan'}
+                    Mengunggah Laporan
                 </span>
             </div>
             
@@ -82,6 +84,30 @@ const AddReport = ({ onClose, type = 'draft' }) => {
                         File Terpilih: {formData.file_url.name}
                     </div>
                 )}
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Judul / Topik Laporan</label>
+                <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
+                    placeholder="Masukkan judul atau topik pembahasan"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Deskripsi / Catatan Tambahan (Opsional)</label>
+                <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={3}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white"
+                    placeholder="Tambahkan catatan khusus untuk dosen pembimbing jika diperlukan"
+                />
             </div>
             
             <div className="flex justify-end gap-2 pt-4">

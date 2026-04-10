@@ -32,11 +32,19 @@ class SettingController extends Controller
      */
     public function update(SettingRequest $request)
     {
-        $this->settingService->updateSettings($request->all());
+        // Merge text inputs and file uploads explicitly.
+        // $request->all() in some contexts does NOT include UploadedFile objects,
+        // so we must merge allFiles() to ensure file inputs reach SettingService.
+        $settingsData = array_merge($request->all(), $request->allFiles());
         
+        $this->settingService->updateSettings($settingsData);
+        
+        // Fetch fresh key-value settings to update publicSettings in Redux
+        $updatedSettings = $this->settingService->getAllSettings();
+
         return response()->json([
             'message' => 'Pengaturan aplikasi berhasil diperbarui.',
-            'settings' => $this->settingService->getAllSettings()
+            'settings' => $updatedSettings
         ]);
     }
 

@@ -23,8 +23,9 @@ class ReportRequest extends FormRequest
     {
         return [
             'internship_id' => ['required', 'exists:internships,id'],
-            'type' => ['required', 'in:draft,final'],
             'file_url' => ['required', 'file', 'mimes:pdf,docx,doc', 'max:5120'], // Max 5MB
+            'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
         ];
     }
     
@@ -33,8 +34,6 @@ class ReportRequest extends FormRequest
         return [
             'internship_id.required' => 'ID KP harus diisi.',
             'internship_id.exists' => 'Data KP tidak ditemukan.',
-            'type.required' => 'Tipe laporan harus dipilih.',
-            'type.in' => 'Tipe laporan hanya boleh berisi draft atau final.',
             'file_url.required' => 'File laporan wajib diunggah.',
             'file_url.file' => 'Laporan harus berupa sebuah berkas file.',
             'file_url.mimes' => 'Format file yang diizinkan hanya PDF, DOC, atau DOCX.',
