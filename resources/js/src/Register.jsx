@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
+    const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const dispatch = useDispatch();
@@ -87,19 +88,9 @@ const Register = () => {
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
                 <div className="text-center">
                     <div className="mx-auto h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <svg
-                            className="h-10 w-10 text-indigo-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                            />
-                        </svg>
+                        {publicSettings.app_logo ? (
+                            <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
+                        ) : "S"}
                     </div>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
                         Daftar Akun

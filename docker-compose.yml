@@ -1,64 +1,149 @@
 services:
+  # ===============================
+  # 1) APP (PHP-FPM)
+  # ===============================
   app:
     build:
       context: .
-      dockerfile: docker/app/Dockerfile
-    container_name: simkp-app
+      dockerfile: Dockerfile
+      args:
+        USER: alfiansyah
+        UID: 1000
+    image: app
+    container_name: app
     restart: unless-stopped
     working_dir: /var/www
-    ports:
-      # Expose vite port for development
-      - "5177:5173"
-    command: sh -c "mkdir -p storage/framework/views storage/framework/sessions storage/framework/cache bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && chmod -R 777 storage bootstrap/cache && php-fpm"
     volumes:
-      - ./:/var/www
-      - ./docker/app/php.ini:/usr/local/etc/php/conf.d/custom.ini
-    depends_on:
-      - db
+      - .:/var/www
     networks:
-      - simkp-network
+      - app-network
 
+    # ==========================loxa===============
+    # BAGIAN YANG HARUS DIUBAH (PROJECT BARU)
+    # =========================================
+    # - Pilih salah satu: MySQL ATAU PostgreSQL
+    # - Untuk mengaktifkan "app menunggu database healthy", ubah section depends_on berikut:
+    #
+    # Default (biar docker compose config tetap valid):
+    # depends_on: []
+    
+    # === PILIH MySQL ===
+    depends_on:
+      mysql:
+        condition: service_healthy
+    
+    # === PILIH PostgreSQL ===
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+
+  # ===============================
+  # 2) WEB (NGINX)
+  # ===============================
   web:
     image: nginx:alpine
-    container_name: simkp-web
+    container_name: web
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "${APP_PORT:-8006}:80"
     volumes:
-      - ./:/var/www
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - .:/var/www
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
     depends_on:
       - app
-    networks:
-      - simkp-network
 
-  db:
+  # ==========================================================
+  # OPSI A: MySQL + phpMyAdmin
+  # ==========================================================
+  # UNCOMMENT service ini jika project pakai MySQL
+
+  # 3a) Database (MySQL)
+  mysql:
     image: mysql:8.0
-    container_name: simkp-db
+    container_name: mysql
     restart: unless-stopped
-    ports:
-      - "3306:3306"
     environment:
-      MYSQL_DATABASE: simkp
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_USER: simkp_user
-      MYSQL_PASSWORD: secret
-    volumes:
-      - db-data:/var/lib/mysql
-    networks:
-      - simkp-network
-  adminer:
-    image: adminer
-    container_name: simkp-adminer
-    restart: unless-stopped
+      MYSQL_DATABASE: ${DB_DATABASE:-app_db}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-app_password}
+      MYSQL_USER: ${DB_USERNAME:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-app_password}
     ports:
-      - "8082:8080" # Kita pakai 8082 agar tidak bentrok dengan AMT (8226) atau PPDB (8081)
+      - "${DB_MYSQL_EXTERNAL_PORT:-3309}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
     networks:
-      - simkp-network
+      - app-network
+    healthcheck:
+      # mysqladmin ping butuh password karena root diberi password
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      start_period: 10s
+
+  # 4a) phpMyAdmin (Manager khusus MySQL)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+    ports:
+      - "${PHP_MYADMIN_PORT:-8086}:80"
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+
+  # ==========================================================
+  # OPSI B: PostgreSQL + pgAdmin
+  # ==========================================================
+  # UNCOMMENT service ini jika project pakai PostgreSQL
+
+  # 3b) Database (PostgreSQL)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ${DB_DATABASE:-app_db}
+  #     POSTGRES_USER: ${DB_USERNAME:-app_user}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-app_password}
+  #   ports:
+  #     - "${DB_POSTGRES_EXTERNAL_PORT:-5435}:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  #     timeout: 5s
+  #     interval: 5s
+  #     retries: 10
+  #     start_period: 10s
+
+  # 4b) pgAdmin (Manager khusus PostgreSQL)
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+  #   ports:
+  #     - "${PGADMIN_PORT:-8084}:80"
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     - postgres
 
 networks:
-  simkp-network:
+  app-network:
     driver: bridge
 
 volumes:
-  db-data:
+  mysql-data:
+  postgres-data:
