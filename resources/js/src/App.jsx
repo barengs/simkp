@@ -20,6 +20,7 @@ const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerL
 const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
 const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
 const Registration = lazy(() => import("./student/Registration"));
+const TARegistration = lazy(() => import("./student/TARegistration"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
 const StudentLogbook = lazy(() => import("./student/Logbooks/Logbook"));
 const DosenLogbook = lazy(() => import("./dosen/Logbooks/Logbook"));
@@ -183,6 +184,7 @@ const App = () => {
                             <Route path="reports" element={<StudentReport />} />
                             <Route path="evaluations" element={<StudentEvaluation />} />
                             <Route path="activities" element={<StudentActivity />} />
+                            <Route path="ta-registration" element={<TARegistration />} />
                         </Route>
 
                         {/* Lecturer (Dosen) Routes */}

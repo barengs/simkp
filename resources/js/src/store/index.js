@@ -12,6 +12,7 @@ import reportReducer from './slice/reportSlice';
 import evaluationReducer from './slice/evaluationSlice';
 import settingReducer from './slice/settingSlice';
 import activityReducer from './slice/activitySlice';
+import tugasAkhirReducer from './slice/tugasAkhirSlice';
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -27,6 +28,7 @@ const appReducer = combineReducers({
   evaluations: evaluationReducer,
   settings: settingReducer,
   activities: activityReducer,
+  tugasAkhir: tugasAkhirReducer,
 });
 
 const rootReducer = (state, action) => {

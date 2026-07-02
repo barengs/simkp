@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LogbookController;
 use App\Http\Controllers\Api\EvaluationController;
+use App\Http\Controllers\Api\TugasAkhirController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,7 +21,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 | Protected Routes (auth:sanctum)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
@@ -83,6 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Settings (Admin)
     Route::get('settings', [\App\Http\Controllers\Api\SettingController::class, 'index']);
     Route::post('settings', [\App\Http\Controllers\Api\SettingController::class, 'update']);
+
+    // Tugas Akhir (TA)
+    Route::get('student/eligibility-ta', [TugasAkhirController::class, 'eligibility']);
+    Route::post('student/register-ta', [TugasAkhirController::class, 'register']);
+    Route::get('student/my-ta', [TugasAkhirController::class, 'myTA']);
 });
 
 // Settings Public (for Branding/Logo/Name)

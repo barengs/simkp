@@ -57,15 +57,18 @@ const MenuItem = ({
                     }
                 }}
                 title={isCollapsed ? item.name : ""}
-                className={`
-                    ${isActive || isParentActive
-                        ? level === 0 ? "bg-indigo-100 text-indigo-600" : "bg-indigo-50 text-indigo-600"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } group w-full flex items-center px-3 py-2 text-sm font-medium transition-colors duration-200
-                    ${isCollapsed ? "justify-center" : ""} 
-                    ${level > 0 ? "pl-11" : ""}
-                    rounded-md
-                `}
+                // Kode Baru
+className={`
+    ${isActive || isParentActive
+        ? level === 0 
+            ? "bg-emerald-800/80 text-yellow-300 font-semibold border-l-4 border-yellow-400 pl-2 pr-0" 
+            : "bg-emerald-900/60 text-yellow-300/95 font-semibold border-l-4 border-yellow-500/80 pl-10 pr-0"
+        : level === 0
+            ? "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-2 pr-0"
+            : "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-10 pr-0"
+    } group w-full flex items-center py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98] active:bg-emerald-700/50
+    ${isCollapsed ? "justify-center !border-l-0 !px-0" : ""} 
+`}
             >
                 <span className={`${isCollapsed ? "" : "mr-3"} shrink-0`}>
                     {item.icon}
@@ -113,9 +116,9 @@ const MenuItem = ({
 
             {/* Tooltip/Dropdown untuk Desktop (Collapsed) */}
             {hasChildren && isCollapsed && (
-                <div className="hidden group-hover:block absolute left-full top-0 w-48 bg-white shadow-xl rounded-r-md border border-gray-200 z-50 ml-2">
+                <div className="hidden group-hover:block absolute left-full top-0 w-48 bg-[#062c1e] shadow-2xl rounded-r-md border border-emerald-900 z-50 ml-2">
                     <div className="py-2">
-                        <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 mb-1">
+                        <div className="px-4 py-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest border-b border-emerald-900/60 mb-1">
                             {item.name}
                         </div>
                         {item.children.map((child) => (
@@ -125,8 +128,8 @@ const MenuItem = ({
                                     navigate(child.path);
                                     setSidebarOpen(false);
                                 }}
-                                className={`block w-full text-left px-4 py-2 text-sm ${isActiveLink(child.path) ? "bg-indigo-50 text-indigo-600 font-medium" : "text-gray-700 hover:bg-gray-50"
-                                    }`}
+                                className={`block w-full text-left py-2 text-sm transition-all duration-150 active:scale-[0.98] border-l-4 ${isActiveLink(child.path) ? "bg-emerald-800/80 text-yellow-300 font-medium border-yellow-400 pl-3 pr-4" : "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-transparent pl-3 pr-4"
+                                    } rounded-r-md`}
                             >
                                 {child.name}
                             </button>
@@ -189,6 +192,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                     { name: "Logbook", path: "/student/logbook", icon: <Book size={18} /> },
                     { name: "Laporan", path: "/student/reports", icon: <FileText size={18} /> },
                     { name: "Penilaian Akhir", path: "/student/evaluations", icon: <CheckSquare size={18} /> },
+                    { name: "Pendaftaran TA", path: "/student/ta-registration", icon: <FileEdit size={18} /> },
                 ];
             case "dosen":
                 return [
@@ -218,7 +222,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSidebarOpen(false)}
-                            className="fixed inset-0 bg-gray-600/75 backdrop-blur-sm"
+                            className="fixed inset-0 bg-emerald-950/40 backdrop-blur-sm"
                         />
                         {/* Sidebar Panel Slide In */}
                         <motion.div
@@ -226,16 +230,16 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl"
+                            className="relative flex-1 flex flex-col max-w-xs w-full bg-[#062c1e] shadow-xl"
                         >
                             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto px-4">
                                 <div className="flex items-center gap-3 mb-6 px-2">
-                                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 italic font-bold text-indigo-600">
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-emerald-900/50 border border-emerald-800/80 italic font-bold text-emerald-400">
                                         {publicSettings.app_logo ? (
                                             <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
                                         ) : "S"}
                                     </div>
-                                    <h1 className="text-xl font-bold text-indigo-600 truncate">{publicSettings.app_name || "SIMKP"}</h1>
+                                    <h1 className="text-xl font-bold text-white truncate">{publicSettings.app_name || "SIMKP"}</h1>
                                 </div>
                                 <nav className="space-y-1">
                                     {navigation.map((item) => (
@@ -249,11 +253,11 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             </div>
 
                             {/* Mobile Logout Footer */}
-                            <div className="shrink-0 border-t border-gray-100 p-4 bg-gray-50">
+                            <div className="shrink-0 border-t border-emerald-900 p-4 bg-[#041e15]">
                                 <div className="flex items-center justify-between">
                                     <div className="min-w-0 flex-1 mr-2">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wider">{user?.role}</p>
+                                        <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+                                        <p className="text-xs text-emerald-400 uppercase tracking-wider">{user?.role}</p>
                                     </div>
                                     <button
                                         onClick={() => {
@@ -261,10 +265,10 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                                             onLogout();
                                         }}
                                         disabled={logoutLoading}
-                                        className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                                        className="p-2 rounded-lg text-red-400 hover:bg-red-950/40 transition-colors disabled:opacity-50"
                                     >
                                         {logoutLoading ? (
-                                            <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
                                         ) : (
                                             <LogOut size={20} />
                                         )}
@@ -277,16 +281,16 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
             </AnimatePresence>
 
             {/* Desktop Sidebar */}
-            <div className={`hidden md:flex ${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300 z-30 shadow-sm`}>
-                <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
+            <div className={`hidden md:flex ${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300 z-30 shadow-lg`}>
+                <div className="flex-1 flex flex-col min-h-0 border-r border-emerald-900 bg-[#062c1e]">
                     <div className={`flex-1 flex flex-col pt-5 pb-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                         <div className={`flex items-center shrink-0 px-5 mb-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 border border-gray-100 italic font-bold text-indigo-600">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-emerald-900/50 border border-emerald-800/80 italic font-bold text-emerald-400">
                                 {publicSettings.app_logo ? (
                                     <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
                                 ) : "S"}
                             </div>
-                            {!isCollapsed && <span className="ml-3 text-lg font-bold text-gray-900 truncate">{publicSettings.app_name || "SIMKP"}</span>}
+                            {!isCollapsed && <span className="ml-3 text-lg font-extrabold text-white tracking-wide truncate">{publicSettings.app_name || "SIMKP"}</span>}
                         </div>
                         <nav className="flex-1 px-3 space-y-1">
                             {navigation.map((item) => (
@@ -299,22 +303,22 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                         </nav>
                     </div>
 
-                    <div className="shrink-0 border-t border-gray-100 p-4">
+                    <div className="shrink-0 border-t border-emerald-900 p-4 bg-[#041e15]">
                         <div className={`flex items-center ${isCollapsed ? "flex-col space-y-4" : "justify-between"}`}>
                             {!isCollapsed && (
                                 <div className="min-w-0 flex-1 mr-2">
-                                    <p className="text-xs font-semibold text-gray-900 truncate">{user?.name}</p>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-tighter">{user?.role}</p>
+                                    <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+                                    <p className="text-[10px] text-emerald-400 uppercase tracking-tighter">{user?.role}</p>
                                 </div>
                             )}
                             <button
                                 onClick={onLogout}
                                 disabled={logoutLoading}
-                                className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-2 rounded-lg text-emerald-400/70 hover:text-red-400 hover:bg-red-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Logout"
                             >
                                 {logoutLoading ? (
-                                    <div className="w-[18px] h-[18px] border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-[18px] h-[18px] border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <LogOut size={18} />
                                 )}

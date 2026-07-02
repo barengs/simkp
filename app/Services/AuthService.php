@@ -22,7 +22,7 @@ class AuthService
             'role' => 'mahasiswa',
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = auth('api')->login($user);
 
         Log::info('User registered', ['user_id' => $user->id, 'email' => $user->email]);
 
@@ -37,15 +37,15 @@ class AuthService
      */
     public function login(array $credentials): array
     {
-        $user = User::where('email', $credentials['email'])->first();
+        $token = auth('api')->attempt($credentials);
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        if (!$token) {
             throw ValidationException::withMessages([
                 'email' => ['Email atau Password salah'],
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = auth('api')->user();
 
         Log::info('User logged in', ['user_id' => $user->id]);
 
@@ -60,7 +60,7 @@ class AuthService
      */
     public function logout(User $user): void
     {
-        $user->currentAccessToken()->delete();
+        auth('api')->logout();
         Log::info('User logged out', ['user_id' => $user->id]);
     }
 
