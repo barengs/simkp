@@ -52,4 +52,24 @@ class TugasAkhir extends Model
     {
         return $this->belongsTo(User::class, 'pembimbing_2_id');
     }
+
+    public function bimbingan()
+    {
+        return $this->hasMany(Bimbingan::class, 'tugas_akhir_id');
+    }
+
+    public function jadwalUjian()
+    {
+        return $this->hasMany(JadwalUjian::class, 'tugas_akhir_id');
+    }
+
+    public function dokumenPersyaratan()
+    {
+        return $this->hasMany(DokumenPersyaratan::class, 'tugas_akhir_id');
+    }
+
+    public function repository()
+    {
+        return $this->hasOne(Repository::class, 'tugas_akhir_id');
+    }
 }

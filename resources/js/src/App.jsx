@@ -1,4 +1,3 @@
-
 import React, { useEffect, lazy, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCurrentUser } from "./store/slice/authSlice";
@@ -6,6 +5,7 @@ import { fetchPublicSettings } from "./store/slice/settingSlice";
 import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PermissionGate from "./components/PermissionGate";
 
 // Lazy load components
 const Login = lazy(() => import("./Login"));
@@ -21,6 +21,9 @@ const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
 const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
 const Registration = lazy(() => import("./student/Registration"));
 const TARegistration = lazy(() => import("./student/TARegistration"));
+const TABimbingan = lazy(() => import("./student/TABimbingan"));
+const TASidang = lazy(() => import("./student/TASidang"));
+const TAFinal = lazy(() => import("./student/TAFinal"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
 const StudentLogbook = lazy(() => import("./student/Logbooks/Logbook"));
 const DosenLogbook = lazy(() => import("./dosen/Logbooks/Logbook"));
@@ -38,6 +41,9 @@ const Settings = lazy(() => import("./admin/Settings/Settings"));
 const AdminActivity = lazy(() => import("./admin/Activities/ActivityIndex"));
 const DosenActivity = lazy(() => import("./dosen/Activities/ActivityIndex"));
 const StudentActivity = lazy(() => import("./student/Activities/ActivityIndex"));
+const KoordinatorTA = lazy(() => import("./admin/KoordinatorTA"));
+const RoleManagement = lazy(() => import("./admin/RoleManagement"));
+const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 
 
 
@@ -93,10 +99,10 @@ const GuestRoute = ({ children }) => {
  */
 const DashboardSwitcher = () => {
     const { user } = useSelector((state) => state.auth);
-    const role = user?.role?.toLowerCase();
+    const roles = user?.roles || [];
 
-    if (role === "admin") return <AdminDashboard />;
-    if (role === "dosen") return <DosenDashboard />;
+    if (roles.includes("admin")) return <AdminDashboard />;
+    if (roles.includes("dosen_pembimbing") || roles.includes("dosen_penguji")) return <DosenDashboard />;
     return <StudentDashboard />;
 };
 
@@ -158,43 +164,56 @@ const App = () => {
                     >
                         {/* Universal */}
                         <Route index element={<DashboardSwitcher />} />
+                        <Route
+                            path="profile"
+                            element={
+                                <PermissionGate permission="manage profile">
+                                    <ProfileSettings />
+                                </PermissionGate>
+                            }
+                        />
 
                         {/* Admin Routes */}
                         <Route path="admin">
-                            <Route path="period-management" element={<PeriodManagement />} />
-                            <Route path="theme-management" element={<ThemeManagement />} />
-                            <Route path="master-mahasiswa" element={<StudentList />} />
-                            <Route path="internship-groups" element={<AdminInternshipGroups />} />
-                            <Route path="internship-groups/:internship_id" element={<InternshipGroupDetail />} />
-                            <Route path="logbook" element={<AdminLogbook />} />
-                            <Route path="reports" element={<AdminReport />} />
-                            <Route path="evaluations" element={<AdminEvaluation />} />
-                            <Route path="settings" element={<Settings />} />
-                            <Route path="activities" element={<AdminActivity />} />
+                            <Route path="period-management" element={<PermissionGate permission="manage periods"><PeriodManagement /></PermissionGate>} />
+                            <Route path="theme-management" element={<PermissionGate permission="manage themes"><ThemeManagement /></PermissionGate>} />
+                            <Route path="master-mahasiswa" element={<PermissionGate permission="manage master data"><StudentList /></PermissionGate>} />
+                            <Route path="role-management" element={<PermissionGate permission="manage roles"><RoleManagement /></PermissionGate>} />
+                            <Route path="internship-groups" element={<PermissionGate permission="view internships"><AdminInternshipGroups /></PermissionGate>} />
+                            <Route path="internship-groups/:internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
+                            <Route path="logbook" element={<PermissionGate permission="view internships"><AdminLogbook /></PermissionGate>} />
+                            <Route path="reports" element={<PermissionGate permission="view internships"><AdminReport /></PermissionGate>} />
+                            <Route path="evaluations" element={<PermissionGate permission="view internships"><AdminEvaluation /></PermissionGate>} />
+                            <Route path="settings" element={<PermissionGate permission="manage settings"><Settings /></PermissionGate>} />
+                            <Route path="activities" element={<PermissionGate permission="manage settings"><AdminActivity /></PermissionGate>} />
+                            <Route path="koordinator-ta" element={<PermissionGate permission="manage ta"><KoordinatorTA /></PermissionGate>} />
                             <Route path="master">
-                                <Route path="mitra" element={<CompanyList />} />
-                                <Route path="dosen" element={<LecturerList />} />
+                                <Route path="mitra" element={<PermissionGate permission="manage master data"><CompanyList /></PermissionGate>} />
+                                <Route path="dosen" element={<PermissionGate permission="manage master data"><LecturerList /></PermissionGate>} />
                             </Route>
                         </Route>
 
                         {/* Student Routes */}
                         <Route path="student">
-                            <Route path="registration" element={<Registration />} />
-                            <Route path="logbook" element={<StudentLogbook />} />
-                            <Route path="reports" element={<StudentReport />} />
-                            <Route path="evaluations" element={<StudentEvaluation />} />
-                            <Route path="activities" element={<StudentActivity />} />
-                            <Route path="ta-registration" element={<TARegistration />} />
+                            <Route path="registration" element={<PermissionGate permission="student registration"><Registration /></PermissionGate>} />
+                            <Route path="logbook" element={<PermissionGate permission="student logbook"><StudentLogbook /></PermissionGate>} />
+                            <Route path="reports" element={<PermissionGate permission="student report"><StudentReport /></PermissionGate>} />
+                            <Route path="evaluations" element={<PermissionGate permission="student evaluation"><StudentEvaluation /></PermissionGate>} />
+                            <Route path="activities" element={<PermissionGate permission="student logbook"><StudentActivity /></PermissionGate>} />
+                            <Route path="ta-registration" element={<PermissionGate permission="student ta"><TARegistration /></PermissionGate>} />
+                            <Route path="ta-bimbingan" element={<PermissionGate permission="student ta"><TABimbingan /></PermissionGate>} />
+                            <Route path="ta-sidang" element={<PermissionGate permission="student ta"><TASidang /></PermissionGate>} />
+                            <Route path="ta-final" element={<PermissionGate permission="student ta"><TAFinal /></PermissionGate>} />
                         </Route>
 
                         {/* Lecturer (Dosen) Routes */}
                         <Route path="dosen">
-                            <Route path="internship-groups" element={<DosenInternshipGroups />} />
-                            <Route path="internship-groups/:internship_id" element={<InternshipGroupDetail />} />
-                            <Route path="logbook" element={<DosenLogbook />} />
-                            <Route path="reports" element={<DosenReport />} />
-                            <Route path="evaluations" element={<DosenEvaluation />} />
-                            <Route path="activities" element={<DosenActivity />} />
+                            <Route path="internship-groups" element={<PermissionGate permission="view internships"><DosenInternshipGroups /></PermissionGate>} />
+                            <Route path="internship-groups/:internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
+                            <Route path="logbook" element={<PermissionGate permission="validate logbook"><DosenLogbook /></PermissionGate>} />
+                            <Route path="reports" element={<PermissionGate permission="validate report"><DosenReport /></PermissionGate>} />
+                            <Route path="evaluations" element={<PermissionGate permission="score internships"><DosenEvaluation /></PermissionGate>} />
+                            <Route path="activities" element={<PermissionGate permission="view internships"><DosenActivity /></PermissionGate>} />
                         </Route>
                     </Route>
 

@@ -142,6 +142,94 @@ class TugasAkhirService
     }
 
     /**
+     * [Koordinator/Admin] Get all TA submissions, optionally filtered by status.
+     */
+    public function getAllSubmissions(?string $status = null): \Illuminate\Support\Collection
+    {
+        $query = TugasAkhir::with([
+            'user.profileUser',
+            'internship.company',
+            'internship.period',
+            'pembimbing1',
+            'pembimbing2',
+        ])->latest();
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * [Koordinator/Admin] Approve a TA submission.
+     * Changes status from 'pengajuan' → 'bimbingan'.
+     */
+    public function approveTA(int $taId, array $data): TugasAkhir
+    {
+        $ta = TugasAkhir::findOrFail($taId);
+
+        if ($ta->status !== 'pengajuan') {
+            throw new \Exception('Hanya pengajuan dengan status "Menunggu Persetujuan" yang dapat disetujui.');
+        }
+
+        $ta->update([
+            'status'          => 'bimbingan',
+            'judul_disetujui' => $data['judul_disetujui'] ?? $ta->judul_diajukan,
+            'rejection_note'  => null,
+        ]);
+
+        Log::info('TA approved', ['ta_id' => $taId, 'judul' => $ta->judul_disetujui]);
+
+        return $ta->fresh(['user.profileUser', 'internship.company', 'pembimbing1', 'pembimbing2']);
+    }
+
+    /**
+     * [Koordinator/Admin] Reject a TA submission.
+     * Changes status from 'pengajuan' → 'ditolak'.
+     */
+    public function rejectTA(int $taId, string $rejectionNote): TugasAkhir
+    {
+        $ta = TugasAkhir::findOrFail($taId);
+
+        if ($ta->status !== 'pengajuan') {
+            throw new \Exception('Hanya pengajuan dengan status "Menunggu Persetujuan" yang dapat ditolak.');
+        }
+
+        $ta->update([
+            'status'         => 'ditolak',
+            'rejection_note' => $rejectionNote,
+        ]);
+
+        Log::info('TA rejected', ['ta_id' => $taId, 'note' => $rejectionNote]);
+
+        return $ta->fresh(['user.profileUser', 'internship.company']);
+    }
+
+    /**
+     * [Koordinator/Admin] Assign pembimbing 1 & 2 to an approved TA.
+     */
+    public function assignPembimbing(int $taId, array $data): TugasAkhir
+    {
+        $ta = TugasAkhir::findOrFail($taId);
+
+        $updateData = [];
+        if (!empty($data['pembimbing_1_id'])) {
+            $updateData['pembimbing_1_id'] = $data['pembimbing_1_id'];
+        }
+        if (array_key_exists('pembimbing_2_id', $data)) {
+            $updateData['pembimbing_2_id'] = $data['pembimbing_2_id'] ?: null;
+        }
+
+        $ta->update($updateData);
+
+        Log::info('TA pembimbing assigned', ['ta_id' => $taId, 'data' => $updateData]);
+
+        return $ta->fresh(['user.profileUser', 'internship.company', 'pembimbing1', 'pembimbing2']);
+    }
+
+
+    /**
      * Get student's active TA record.
      */
     public function getMyTA(int $userId): ?TugasAkhir

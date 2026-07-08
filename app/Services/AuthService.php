@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Student;
+use App\Models\Lecturer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -71,6 +72,10 @@ class AuthService
     {
         $userData = $user->toArray();
         $userData['is_profile_complete'] = $this->checkProfileComplete($user);
+        $userData['roles'] = $user->getRoleNames()->toArray();
+        $userData['permissions'] = $user->getAllPermissions()->pluck('name')->toArray();
+        $userData['avatar_url'] = $user->avatar ? asset('storage/' . $user->avatar) : null;
+        $userData['phone'] = $user->phone ?? ($user->student?->phone ?? $user->lecturer?->phone);
 
         if ($user->role === 'mahasiswa') {
             $userData['redirect_url'] = $userData['is_profile_complete'] ? '/' : '/student/profile';
@@ -79,6 +84,7 @@ class AuthService
             $userData['redirect_url'] = '/';
         } elseif ($user->role === 'dosen') {
             $userData['redirect_url'] = '/';
+            $userData['lecturer'] = Lecturer::where('user_id', $user->id)->first();
         }
 
         return $userData;

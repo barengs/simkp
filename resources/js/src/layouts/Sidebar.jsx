@@ -15,7 +15,10 @@ import {
     Book,
     Users,
     LogOut,
-    ChevronRight
+    ChevronRight,
+    GraduationCap,
+    Shield,
+    User
 } from "lucide-react";
 
 // --- Sub-Komponen untuk Menu Item ---
@@ -58,15 +61,15 @@ const MenuItem = ({
                 }}
                 title={isCollapsed ? item.name : ""}
                 // Kode Baru
-className={`
+                className={`
     ${isActive || isParentActive
-        ? level === 0 
-            ? "bg-emerald-800/80 text-yellow-300 font-semibold border-l-4 border-yellow-400 pl-2 pr-0" 
-            : "bg-emerald-900/60 text-yellow-300/95 font-semibold border-l-4 border-yellow-500/80 pl-10 pr-0"
-        : level === 0
-            ? "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-2 pr-0"
-            : "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-10 pr-0"
-    } group w-full flex items-center py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98] active:bg-emerald-700/50
+                        ? level === 0
+                            ? "bg-emerald-800/80 text-yellow-300 font-semibold border-l-4 border-yellow-400 pl-2 pr-0"
+                            : "bg-emerald-900/60 text-yellow-300/95 font-semibold border-l-4 border-yellow-500/80 pl-10 pr-0"
+                        : level === 0
+                            ? "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-2 pr-0"
+                            : "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-10 pr-0"
+                    } group w-full flex items-center py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98] active:bg-emerald-700/50
     ${isCollapsed ? "justify-center !border-l-0 !px-0" : ""} 
 `}
             >
@@ -162,51 +165,131 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
     };
 
     const navigation = useMemo(() => {
-        const role = (user?.role || "admin").toLowerCase();
-        switch (role) {
-            case "admin":
-                return [
-                    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
-                    { name: "Periode", path: "/admin/period-management", icon: <Calendar size={18} /> },
-                    { name: "Tema", path: "/admin/theme-management", icon: <Palette size={18} /> },
-                    {
-                        name: "Master Data",
-                        id: "master-data",
-                        icon: <Database size={18} />,
-                        children: [
-                            { name: "Dosen", path: "/admin/master/dosen" },
-                            { name: "Mahasiswa", path: "/admin/master-mahasiswa" },
-                            { name: "Mitra", path: "/admin/master/mitra" },
-                        ],
-                    },
-                    { name: "Kelompok KP", path: "/admin/internship-groups", icon: <Users size={18} /> },
-                    { name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> },
-                    { name: "Laporan", path: "/admin/reports", icon: <FileText size={18} /> },
-                    { name: "Rekap Penilaian", path: "/admin/evaluations", icon: <CheckSquare size={18} /> },
-                    { name: "Pengaturan", path: "/admin/settings", icon: <Settings size={18} /> },
-                ];
-            case "mahasiswa":
-                return [
-                    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
-                    { name: "Pendaftaran", path: "/student/registration", icon: <FileEdit size={18} /> },
-                    { name: "Logbook", path: "/student/logbook", icon: <Book size={18} /> },
-                    { name: "Laporan", path: "/student/reports", icon: <FileText size={18} /> },
-                    { name: "Penilaian Akhir", path: "/student/evaluations", icon: <CheckSquare size={18} /> },
-                    { name: "Pendaftaran TA", path: "/student/ta-registration", icon: <FileEdit size={18} /> },
-                ];
-            case "dosen":
-                return [
-                    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> },
-                    { name: "Daftar Kelompok", path: "/dosen/internship-groups", icon: <Users size={18} /> },
-                    { name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> },
-                    { name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> },
-                    { name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> },
-                    { name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> },
-                ];
-            default:
-                return [{ name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> }];
+        const permissions = user?.permissions || [];
+        const items = [];
+
+        // Dashboard is accessible to all
+        items.push({ name: "Dashboard", path: "/", icon: <LayoutDashboard size={18} /> });
+
+        // Admin Management Group
+        if (permissions.includes("manage periods")) {
+            items.push({ name: "Periode", path: "/admin/period-management", icon: <Calendar size={18} /> });
         }
-    }, [user?.role]);
+        if (permissions.includes("manage themes")) {
+            items.push({ name: "Tema", path: "/admin/theme-management", icon: <Palette size={18} /> });
+        }
+        if (permissions.includes("manage master data")) {
+            items.push({
+                name: "Master Data",
+                id: "master-data",
+                icon: <Database size={18} />,
+                children: [
+                    { name: "Dosen", path: "/admin/master/dosen" },
+                    { name: "Mahasiswa", path: "/admin/master-mahasiswa" },
+                    { name: "Mitra", path: "/admin/master/mitra" },
+                ],
+            });
+        }
+        if (permissions.includes("manage roles")) {
+            items.push({ name: "Manajemen Peran", path: "/admin/role-management", icon: <Shield size={18} /> });
+        }
+        if (permissions.includes("manage profile")) {
+            items.push({ name: "Pengaturan Profil", path: "/profile", icon: <User size={18} /> });
+        }
+
+        // Kerja Praktek (KP) group
+        let hasKPHeader = false;
+        const pushKPHeader = () => {
+            if (!hasKPHeader) {
+                items.push({ name: "Kerja Praktek (KP)", isHeader: true });
+                hasKPHeader = true;
+            }
+        };
+
+        // Student KP Menu Items
+        if (permissions.includes("student registration")) {
+            pushKPHeader();
+            items.push({ name: "Pendaftaran KP", path: "/student/registration", icon: <FileEdit size={18} /> });
+        }
+        if (permissions.includes("student logbook")) {
+            pushKPHeader();
+            items.push({ name: "Logbook KP", path: "/student/logbook", icon: <Book size={18} /> });
+        }
+        if (permissions.includes("student report")) {
+            pushKPHeader();
+            items.push({ name: "Laporan KP", path: "/student/reports", icon: <FileText size={18} /> });
+        }
+        if (permissions.includes("student evaluation")) {
+            pushKPHeader();
+            items.push({ name: "Penilaian KP", path: "/student/evaluations", icon: <CheckSquare size={18} /> });
+        }
+
+        // Lecturer / Admin KP Menu Items
+        if (permissions.includes("manage internships")) {
+            pushKPHeader();
+            items.push({ name: "Kelompok KP", path: "/admin/internship-groups", icon: <Users size={18} /> });
+        } else if (permissions.includes("view internships") && (user?.roles || []).includes("dosen_pembimbing")) {
+            pushKPHeader();
+            items.push({ name: "Daftar Kelompok", path: "/dosen/internship-groups", icon: <Users size={18} /> });
+        }
+
+        if (permissions.includes("view internships") && permissions.includes("manage internships")) {
+            // Admin monitoring roles
+            pushKPHeader();
+            items.push({ name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> });
+            items.push({ name: "Laporan KP", path: "/admin/reports", icon: <FileText size={18} /> });
+            items.push({ name: "Rekap Penilaian", path: "/admin/evaluations", icon: <CheckSquare size={18} /> });
+        } else {
+            // Dosen roles
+            if (permissions.includes("validate logbook")) {
+                pushKPHeader();
+                items.push({ name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> });
+            }
+            if (permissions.includes("validate report")) {
+                pushKPHeader();
+                items.push({ name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> });
+            }
+            if (permissions.includes("score internships")) {
+                pushKPHeader();
+                items.push({ name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> });
+            }
+        }
+
+        // Dosen guidance is also accessed through bimbingan
+        if (permissions.includes("view internships") && !permissions.includes("manage internships")) {
+            pushKPHeader();
+            items.push({ name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> });
+        }
+
+        // Tugas Akhir (TA) group
+        let hasTAHeader = false;
+        const pushTAHeader = () => {
+            if (!hasTAHeader) {
+                items.push({ name: "Tugas Akhir (TA)", isHeader: true });
+                hasTAHeader = true;
+            }
+        };
+
+        if (permissions.includes("manage ta")) {
+            pushTAHeader();
+            items.push({ name: "Manajemen TA", path: "/admin/koordinator-ta", icon: <GraduationCap size={18} /> });
+        }
+
+        if (permissions.includes("student ta")) {
+            pushTAHeader();
+            items.push({ name: "Pendaftaran TA", path: "/student/ta-registration", icon: <FileEdit size={18} /> });
+            items.push({ name: "Bimbingan TA", path: "/student/ta-bimbingan", icon: <Book size={18} /> });
+            items.push({ name: "Jadwal & Sidang", path: "/student/ta-sidang", icon: <Calendar size={18} /> });
+            items.push({ name: "Finalisasi TA", path: "/student/ta-final", icon: <GraduationCap size={18} /> });
+        }
+
+        // Settings / Misc
+        if (permissions.includes("manage settings")) {
+            items.push({ name: "Pengaturan", path: "/admin/settings", icon: <Settings size={18} /> });
+        }
+
+        return items;
+    }, [user]);
 
     const sidebarWidth = isCollapsed ? "md:w-20" : "md:w-64";
 
@@ -234,7 +317,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                         >
                             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto px-4">
                                 <div className="flex items-center gap-3 mb-6 px-2">
-                                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-emerald-900/50 border border-emerald-800/80 italic font-bold text-emerald-400">
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center font-bold text-emerald-400">
                                         {publicSettings.app_logo ? (
                                             <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
                                         ) : "S"}
@@ -243,11 +326,17 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                                 </div>
                                 <nav className="space-y-1">
                                     {navigation.map((item) => (
-                                        <MenuItem
-                                            key={item.id || item.path}
-                                            item={item}
-                                            {...{ isCollapsed: false, expandedMenus, toggleMenu, navigate, setSidebarOpen, isActiveLink, setExpandedMenus }}
-                                        />
+                                        item.isHeader ? (
+                                            <div key={item.name} className="px-3 py-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-4 mb-1">
+                                                {item.name}
+                                            </div>
+                                        ) : (
+                                            <MenuItem
+                                                key={item.id || item.path}
+                                                item={item}
+                                                {...{ isCollapsed: false, expandedMenus, toggleMenu, navigate, setSidebarOpen, isActiveLink, setExpandedMenus }}
+                                            />
+                                        )
                                     ))}
                                 </nav>
                             </div>
@@ -255,9 +344,27 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             {/* Mobile Logout Footer */}
                             <div className="shrink-0 border-t border-emerald-900 p-4 bg-[#041e15]">
                                 <div className="flex items-center justify-between">
-                                    <div className="min-w-0 flex-1 mr-2">
-                                        <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-                                        <p className="text-xs text-emerald-400 uppercase tracking-wider">{user?.role}</p>
+                                    <div
+                                        className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                                        onClick={() => {
+                                            setSidebarOpen(false);
+                                            navigate("/profile");
+                                        }}
+                                        title="Lihat Profil Saya"
+                                    >
+                                        <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border border-emerald-800/40">
+                                            {user?.avatar_url ? (
+                                                <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-indigo-650 font-bold">
+                                                    {(user?.name || "U").charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1 mr-2 ml-2.5">
+                                            <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+                                            <p className="text-xs text-emerald-400 uppercase tracking-wider font-semibold">{user?.role}</p>
+                                        </div>
                                     </div>
                                     <button
                                         onClick={() => {
@@ -282,10 +389,10 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
 
             {/* Desktop Sidebar */}
             <div className={`hidden md:flex ${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300 z-30 shadow-lg`}>
-                <div className="flex-1 flex flex-col min-h-0 border-r border-emerald-900 bg-[#062c1e]">
+                <div className="flex-1 flex flex-col min-h-0 border-r border-emerald-900 bg-emerald-900">
                     <div className={`flex-1 flex flex-col pt-5 pb-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                         <div className={`flex items-center shrink-0 px-5 mb-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-emerald-900/50 border border-emerald-800/80 italic font-bold text-emerald-400">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center font-bold text-emerald-400">
                                 {publicSettings.app_logo ? (
                                     <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
                                 ) : "S"}
@@ -294,35 +401,65 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                         </div>
                         <nav className="flex-1 px-3 space-y-1">
                             {navigation.map((item) => (
-                                <MenuItem
-                                    key={item.id || item.path}
-                                    item={item}
-                                    {...{ isCollapsed, expandedMenus, toggleMenu, navigate, setSidebarOpen, isActiveLink, setExpandedMenus }}
-                                />
+                                item.isHeader ? (
+                                    !isCollapsed ? (
+                                        <div key={item.name} className="px-3 py-2 text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-4 mb-1">
+                                            {item.name}
+                                        </div>
+                                    ) : (
+                                        <div key={item.name} className="border-t border-emerald-900/60 my-4" />
+                                    )
+                                ) : (
+                                    <MenuItem
+                                        key={item.id || item.path}
+                                        item={item}
+                                        {...{ isCollapsed, expandedMenus, toggleMenu, navigate, setSidebarOpen, isActiveLink, setExpandedMenus }}
+                                    />
+                                )
                             ))}
                         </nav>
                     </div>
 
-                    <div className="shrink-0 border-t border-emerald-900 p-4 bg-[#041e15]">
+                    <div className="shrink-0 border-t border-t-yellow-400 p-4 bg-emerald-950">
                         <div className={`flex items-center ${isCollapsed ? "flex-col space-y-4" : "justify-between"}`}>
-                            {!isCollapsed && (
-                                <div className="min-w-0 flex-1 mr-2">
-                                    <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
-                                    <p className="text-[10px] text-emerald-400 uppercase tracking-tighter">{user?.role}</p>
-                                </div>
-                            )}
-                            <button
-                                onClick={onLogout}
-                                disabled={logoutLoading}
-                                className="p-2 rounded-lg text-emerald-400/70 hover:text-red-400 hover:bg-red-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Logout"
+                            {/* Clickable Profile Card */}
+                            <div
+                                className={`flex items-center flex-1 min-w-0 cursor-pointer ${isCollapsed ? "justify-center" : ""}`}
+                                onClick={() => navigate("/profile")}
+                                title="Lihat Profil Saya"
                             >
-                                {logoutLoading ? (
-                                    <div className="w-[18px] h-[18px] border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <LogOut size={18} />
+                                <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border border-emerald-800/40">
+                                    {user?.avatar_url ? (
+                                        <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-indigo-650 font-bold">
+                                            {(user?.name || "U").charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                {!isCollapsed && (
+                                    <div className="min-w-0 flex-1 mr-2 ml-2.5">
+                                        <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+                                        <p className="text-[10px] text-emerald-400 uppercase tracking-tighter font-semibold">{user?.role}</p>
+                                    </div>
                                 )}
-                            </button>
+                            </div>
+
+                            {/* Logout Action */}
+                            {!isCollapsed && (
+                                <button
+                                    onClick={onLogout}
+                                    disabled={logoutLoading}
+                                    className="p-2 rounded-lg text-emerald-400/70 hover:text-red-400 hover:bg-red-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Logout"
+                                >
+                                    {logoutLoading ? (
+                                        <div className="w-[18px] h-[18px] border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <LogOut size={18} />
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

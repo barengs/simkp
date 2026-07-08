@@ -87,6 +87,29 @@ export const fetchCurrentUser = createAsyncThunk(
     }
 );
 
+// Separate thunk for profile updates - doesn't trigger initial loading screen
+export const refreshCurrentUser = createAsyncThunk(
+    "auth/refreshUser",
+    async (_, { rejectWithValue }) => {
+        const token = sessionStorage.getItem("AUTH_TOKEN");
+        if (!token) {
+            return rejectWithValue(null);
+        }
+        try {
+            const response = await api.get("/auth/user");
+            if (response.status === 200) {
+                const userData = response.data;
+                sessionStorage.setItem("USER_DATA", JSON.stringify(userData));
+                return userData;
+            }
+        } catch (error) {
+            sessionStorage.removeItem("AUTH_TOKEN");
+            sessionStorage.removeItem("USER_DATA");
+            return rejectWithValue(null);
+        }
+    }
+);
+
 export const completeProfile = createAsyncThunk(
     "auth/completeProfile",
     async (profileData, { rejectWithValue }) => {
@@ -197,6 +220,16 @@ const authSlice = createSlice({
                 state.initialLoading = false;
                 state.user = null;
                 state.isAuthenticated = false;
+            })
+            .addCase(refreshCurrentUser.pending, (state) => {
+                state.loading = true; // Use general loading for refresh
+            })
+            .addCase(refreshCurrentUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload;
+            })
+            .addCase(refreshCurrentUser.rejected, (state) => {
+                state.loading = false;
             });
 
         // ── Complete Profile ──

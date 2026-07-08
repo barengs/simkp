@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LogbookController;
 use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\TugasAkhirController;
+use App\Http\Controllers\Api\StudentBimbinganController;
+use App\Http\Controllers\Api\StudentSidangController;
+use App\Http\Controllers\Api\StudentRepositoryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -89,7 +92,42 @@ Route::middleware('auth:api')->group(function () {
     Route::get('student/eligibility-ta', [TugasAkhirController::class, 'eligibility']);
     Route::post('student/register-ta', [TugasAkhirController::class, 'register']);
     Route::get('student/my-ta', [TugasAkhirController::class, 'myTA']);
+
+    // Student TA Modules
+    Route::apiResource('student/bimbingan-ta', StudentBimbinganController::class)->only(['index', 'store', 'destroy']);
+    Route::get('student/sidang-ta', [StudentSidangController::class, 'index']);
+    Route::post('student/sidang-ta/upload-requirement', [StudentSidangController::class, 'uploadRequirement']);
+    Route::post('student/sidang-ta/submit-revision/{nilaiUjianId}', [StudentSidangController::class, 'submitRevision']);
+    Route::get('student/repository-ta', [StudentRepositoryController::class, 'show']);
+    Route::post('student/repository-ta', [StudentRepositoryController::class, 'store']);
+
+    // Koordinator / Admin — Manajemen Pengajuan TA
+    Route::prefix('koordinator/ta')->group(function () {
+        Route::get('/', [TugasAkhirController::class, 'index']);
+        Route::post('{id}/approve', [TugasAkhirController::class, 'approve']);
+        Route::post('{id}/reject', [TugasAkhirController::class, 'reject']);
+        Route::post('{id}/assign-pembimbing', [TugasAkhirController::class, 'assignPembimbing']);
+    });
+
+    // Spatie RBAC Role-Based Access Control routes
+    Route::prefix('admin')->group(function () {
+        Route::get('roles', [\App\Http\Controllers\Api\RolePermissionController::class, 'index']);
+        Route::post('roles', [\App\Http\Controllers\Api\RolePermissionController::class, 'store']);
+        Route::put('roles/{id}', [\App\Http\Controllers\Api\RolePermissionController::class, 'update']);
+        Route::delete('roles/{id}', [\App\Http\Controllers\Api\RolePermissionController::class, 'destroy']);
+        Route::get('permissions', [\App\Http\Controllers\Api\RolePermissionController::class, 'permissions']);
+        Route::get('users-list', [\App\Http\Controllers\Api\RolePermissionController::class, 'users']);
+        Route::post('users-list/{id}/roles', [\App\Http\Controllers\Api\RolePermissionController::class, 'assignUserRoles']);
+    });
+
+    // Profile Management routes
+    Route::prefix('profile')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+        Route::post('password', [\App\Http\Controllers\Api\ProfileController::class, 'changePassword']);
+        Route::post('avatar', [\App\Http\Controllers\Api\ProfileController::class, 'uploadAvatar']);
+    });
 });
 
 // Settings Public (for Branding/Logo/Name)
 Route::get('settings/public', [\App\Http\Controllers\Api\SettingController::class, 'getKeyValue']);
+
