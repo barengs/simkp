@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchReports } from '../../store/slice/reportSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { Search, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react';
 import Skeleton from '../../components/Skeleton';
 
@@ -47,6 +48,7 @@ const Report = () => {
     );
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Update Terakhir',
             selector: (row) => row.latest?.updated_at,
@@ -95,39 +97,42 @@ const Report = () => {
     ];
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-50 pb-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Monitoring Laporan Akhir</h2>
-                    <p className="text-sm text-gray-500 mt-1">Pantau seluruh pengumpulan laporan dari mahasiswa. Klik Detail untuk melihat riwayat lengkap laporan tiap kelompok.</p>
-                </div>
-                <div className="mt-4 md:mt-0">
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Cari mahasiswa atau mitra..."
-                            className="pl-10 pr-4 py-2 w-72 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+        <div className="space-y-6">
+            <div className="border-b border-gray-200 pb-5">
+                <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Monitoring Laporan Akhir</h2>
+                <p className="text-sm text-gray-500 mt-1">Pantau seluruh pengumpulan laporan dari mahasiswa. Klik Detail untuk melihat riwayat lengkap laporan tiap kelompok.</p>
+            </div>
+
+            <div className="flex justify-between items-center">
+                <div className="w-1/3">
+                    <input
+                        type="text"
+                        placeholder="Cari mahasiswa atau mitra..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
                 </div>
             </div>
 
-            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    pagination
-                    highlightOnHover
-                    responsive
-                    progressPending={loading}
-                    progressComponent={<Skeleton className="h-96" />}
-                    noDataComponent={<div className="p-8 text-gray-500 text-center italic bg-gray-50/50">Belum ada aktivitas laporan dari kelompok mahasiswa.</div>}
-                />
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                    <DataTable
+                        columns={columns}
+                        data={filteredData}
+                        pagination
+                        highlightOnHover
+                        responsive
+                        progressPending={loading}
+                        progressComponent={<Skeleton />}
+                        noDataComponent={
+                            <div className="p-10 text-center text-gray-500 font-medium">
+                                Belum ada aktivitas laporan dari kelompok mahasiswa.
+                            </div>
+                        }
+                        customStyles={tableCustomStyles}
+                    />
+                </div>
             </div>
         </div>
     );

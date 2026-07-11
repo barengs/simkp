@@ -1,19 +1,23 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import DataTable from "react-data-table-component";
 import { fetchAllActivities } from "../../store/slice/activitySlice";
 import Skeleton from "../../components/Skeleton";
 import { Activity, Clock, User, FileText } from "lucide-react";
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 
 const ActivityIndex = () => {
     const dispatch = useDispatch();
     const { allActivities, loading, pagination } = useSelector((state) => state.activities);
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 10;
 
     useEffect(() => {
         dispatch(fetchAllActivities());
     }, [dispatch]);
 
     const columns = [
+        makeNumberColumn(currentPage, rowsPerPage),
         {
             name: "Waktu",
             selector: (row) => row.human_date,
@@ -58,65 +62,13 @@ const ActivityIndex = () => {
         }
     ];
 
-    const customStyles = {
-        table: {
-            style: {
-                backgroundColor: 'transparent',
-            },
-        },
-        header: {
-            style: {
-                display: 'none',
-            },
-        },
-        headRow: {
-            style: {
-                backgroundColor: '#F9FAFB',
-                borderRadius: '12px',
-                border: 'none',
-                marginBottom: '10px',
-                boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-            },
-        },
-        headCells: {
-            style: {
-                fontSize: '12px',
-                fontWeight: '800',
-                textTransform: 'uppercase',
-                color: '#6B7280',
-                letterSpacing: '0.05em',
-            },
-        },
-        rows: {
-            style: {
-                backgroundColor: '#FFFFFF',
-                borderRadius: '16px',
-                border: '1px solid #F3F4F6',
-                marginBottom: '12px',
-                transition: 'all 0.2s',
-                '&:hover': {
-                    backgroundColor: '#F9FAFB',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    cursor: 'default',
-                },
-            },
-        },
-        cells: {
-            style: {
-                paddingLeft: '20px',
-                paddingRight: '20px',
-            },
-        },
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                         <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
-                             <Activity size={24} />
+                            <Activity size={24} />
                         </div>
                         Log Aktivitas
                     </h2>
@@ -135,14 +87,17 @@ const ActivityIndex = () => {
                     pagination
                     paginationServer
                     paginationTotalRows={pagination?.total}
-                    onChangePage={(page) => dispatch(fetchAllActivities({ page }))}
+                    onChangePage={(page) => {
+                        setCurrentPage(page);
+                        dispatch(fetchAllActivities({ page }));
+                    }}
                     noDataComponent={
                         <div className="py-20 text-center text-gray-400 flex flex-col items-center gap-3 font-medium">
                             <Activity size={48} className="opacity-10" />
                             Belum ada riwayat aktivitas.
                         </div>
                     }
-                    customStyles={customStyles}
+                    customStyles={tableCustomStyles}
                 />
             </div>
         </div>

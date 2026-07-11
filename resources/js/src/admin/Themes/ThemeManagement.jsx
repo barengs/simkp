@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { CirclePlus, Edit2, Trash2, Search, Palette, Calendar, CheckCircle, XCircle } from "lucide-react";
 import { fetchThemes, deleteTheme } from "../../store/slice/themeSlice";
 import Skeleton from "../../components/Skeleton";
@@ -59,6 +60,7 @@ const ThemeManagement = () => {
     );
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: "Nama Tema",
             selector: (row) => row.name,
@@ -161,6 +163,7 @@ const ThemeManagement = () => {
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Manajemen Tema
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Mengelola daftar tema Internship yang tersedia untuk setiap periode.</p>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -192,14 +195,14 @@ const ThemeManagement = () => {
                             pagination
                             highlightOnHover
                             responsive
+                            customStyles={tableCustomStyles}
                             progressPending={loading}
                             progressComponent={<Skeleton />}
                             noDataComponent={
-                                <div className="p-10 text-center text-gray-500">
+                                <div className="p-10 text-center text-gray-500 font-medium">
                                     Tidak ada data tema ditemukan.
                                 </div>
                             }
-                            customStyles={customStyles}
                         />
                     </div>
                 </div>

@@ -64,10 +64,10 @@ const MenuItem = ({
                 className={`
     ${isActive || isParentActive
                         ? level === 0
-                            ? "bg-emerald-800/80 text-yellow-300 font-semibold border-l-4 border-yellow-400 pl-2 pr-0"
+                            ? "bg-emerald-800/80 text-yellow-300 font-semibold border-l-4 border-yellow-400 pl-4 pr-2"
                             : "bg-emerald-900/60 text-yellow-300/95 font-semibold border-l-4 border-yellow-500/80 pl-10 pr-0"
                         : level === 0
-                            ? "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-2 pr-0"
+                            ? "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-4 pr-2"
                             : "text-emerald-100/70 hover:bg-emerald-900/40 hover:text-emerald-50 border-l-4 border-transparent pl-10 pr-0"
                     } group w-full flex items-center py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98] active:bg-emerald-700/50
     ${isCollapsed ? "justify-center !border-l-0 !px-0" : ""} 
@@ -190,12 +190,6 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                 ],
             });
         }
-        if (permissions.includes("manage roles")) {
-            items.push({ name: "Manajemen Peran", path: "/admin/role-management", icon: <Shield size={18} /> });
-        }
-        if (permissions.includes("manage profile")) {
-            items.push({ name: "Pengaturan Profil", path: "/profile", icon: <User size={18} /> });
-        }
 
         // Kerja Praktek (KP) group
         let hasKPHeader = false;
@@ -283,9 +277,18 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
             items.push({ name: "Finalisasi TA", path: "/student/ta-final", icon: <GraduationCap size={18} /> });
         }
 
-        // Settings / Misc
+        // Pengaturan - Kategori khusus di paling bawah
+        if (permissions.includes("manage profile") || permissions.includes("manage roles") || permissions.includes("manage settings")) {
+            items.push({ name: "Pengaturan", isHeader: true });
+        }
+        if (permissions.includes("manage profile")) {
+            items.push({ name: "Pengaturan Profil", path: "/profile", icon: <User size={18} /> });
+        }
+        if (permissions.includes("manage roles")) {
+            items.push({ name: "Manajemen Peran", path: "/admin/role-management", icon: <Shield size={18} /> });
+        }
         if (permissions.includes("manage settings")) {
-            items.push({ name: "Pengaturan", path: "/admin/settings", icon: <Settings size={18} /> });
+            items.push({ name: "Pengaturan Sistem", path: "/admin/settings", icon: <Settings size={18} /> });
         }
 
         return items;
@@ -390,16 +393,16 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
             {/* Desktop Sidebar */}
             <div className={`hidden md:flex ${sidebarWidth} md:flex-col md:fixed md:inset-y-0 transition-all duration-300 z-30 shadow-lg`}>
                 <div className="flex-1 flex flex-col min-h-0 border-r border-emerald-900 bg-emerald-900">
-                    <div className={`flex-1 flex flex-col pt-5 pb-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
-                        <div className={`flex items-center shrink-0 px-5 mb-6 ${isCollapsed ? "justify-center px-0" : ""}`}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center font-bold text-emerald-400">
-                                {publicSettings.app_logo ? (
-                                    <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
-                                ) : "S"}
-                            </div>
-                            {!isCollapsed && <span className="ml-3 text-lg font-extrabold text-white tracking-wide truncate">{publicSettings.app_name || "SIMKP"}</span>}
+                    <div className={`flex items-center shrink-0 px-5 pt-5 mb-4 ${isCollapsed ? "justify-center px-0" : ""}`}>
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center font-bold text-emerald-400">
+                            {publicSettings.app_logo ? (
+                                <img src={publicSettings.app_logo} alt="Logo" className="w-full h-full object-contain" />
+                            ) : "S"}
                         </div>
-                        <nav className="flex-1 px-3 space-y-1">
+                        {!isCollapsed && <span className="ml-3 text-lg font-extrabold text-white tracking-wide truncate">{publicSettings.app_name || "SIMKP"}</span>}
+                    </div>
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                        <nav className="h-full min-h-0 overflow-y-auto px-1 space-y-1 pb-4">
                             {navigation.map((item) => (
                                 item.isHeader ? (
                                     !isCollapsed ? (

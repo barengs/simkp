@@ -457,8 +457,7 @@ const KoordinatorTA = () => {
                     </div>
                 </div>
 
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:p-6">
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg"><div className="px-4 py-5 sm:p-6">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-4">
                                 <Loader2 className="animate-spin text-indigo-600" size={32} />

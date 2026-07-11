@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import {
     fetchPeriods,
     deletePeriod,
@@ -12,7 +13,8 @@ import {
     Trash2,
     CheckCircle,
     Circle,
-    CirclePlus
+    CirclePlus,
+    Clock
 } from "lucide-react";
 import Skeleton from "../../components/Skeleton";
 import ConfirmDeleteModal from "../../components/ConfirmDeleteModal";
@@ -84,6 +86,7 @@ const PeriodManagement = () => {
     }, [periods, searchTerm]);
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: "Tahun Akademik",
             selector: (row) => row.academic_year,
@@ -143,9 +146,9 @@ const PeriodManagement = () => {
                 };
                 const config = statusConfig[row.status] || statusConfig['inactive'];
                 const Icon = config.icon;
-                
+
                 return (
-                    <button 
+                    <button
                         onClick={() => handleToggleActive(row)}
                         title={row.is_active ? "Klik untuk nonaktifkan" : "Klik untuk aktifkan"}
                         className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${config.class}`}
@@ -184,11 +187,11 @@ const PeriodManagement = () => {
     return (
         <>
             <div className="space-y-6">
-                {/* Header disamakan dengan StudentList */}
                 <div className="border-b border-gray-200 pb-5">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Manajemen Periode
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Mengelola rentang waktu dan tema untuk setiap semester akademik.</p>
                 </div>
 
                 {/* Toolbar disamakan dengan StudentList */}
@@ -224,7 +227,7 @@ const PeriodManagement = () => {
                             paginationRowsPerPageOptions={[10, 25, 50, 100]}
                             highlightOnHover
                             pointerOnHover
-                            responsive 
+                            responsive
                             progressPending={loading}
                             progressComponent={<Skeleton />}
                             noDataComponent={
@@ -232,6 +235,7 @@ const PeriodManagement = () => {
                                     Belum ada data periode.
                                 </div>
                             }
+                            customStyles={tableCustomStyles}
                         />
                     </div>
                 </div>

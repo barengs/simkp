@@ -3,6 +3,7 @@ import DataTable from "react-data-table-component";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStudents, deleteStudent } from "../../../store/slice/studentSlice";
 import Skeleton from "../../../components/Skeleton";
+import { tableCustomStyles, makeNumberColumn } from "../../../components/tableStyles";
 import { toast } from "react-toastify";
 import { Pencil, Trash2, CirclePlus } from "lucide-react";
 
@@ -61,6 +62,7 @@ const StudentList = () => {
     };
 
     const columns = [
+        makeNumberColumn(1, 10),
         { name: "NIM", selector: (row) => row.nim, sortable: true },
         { name: "Nama", selector: (row) => row.name, sortable: true },
         { name: "Email", selector: (row) => row.email, sortable: true },
@@ -105,6 +107,7 @@ const StudentList = () => {
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Data Mahasiswa
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Menampilkan data mahasiswa yang terdaftar pada program Internship.</p>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -145,6 +148,7 @@ const StudentList = () => {
                             responsive
                             progressPending={loading}
                             progressComponent={<Skeleton />}
+                            customStyles={tableCustomStyles}
                         />
                     </div>
                 </div>

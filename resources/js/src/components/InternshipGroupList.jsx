@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "./tableStyles";
 import { fetchInternshipGroups } from '../store/slice/internshipSlice';
 import {
     fetchSubmittedInternships,
@@ -175,6 +176,7 @@ const InternshipListContent = ({ title, subtitle }) => {
     };
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Kelompok / Ketua',
             sortable: true,
@@ -266,55 +268,38 @@ const InternshipListContent = ({ title, subtitle }) => {
             </div>
 
             <div className="flex justify-between items-center">
-                <div className="w-full max-w-sm relative">
+                <div className="w-1/3">
                     <input
                         type="text"
                         placeholder="Cari kelompok, perusahaan, atau tema..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
-                    <Users className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 </div>
                 <div className="text-sm text-gray-500">
                     Total: <span className="font-bold text-gray-900">{filteredGroups.length}</span> Kelompok
                 </div>
             </div>
 
-            <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
-                <DataTable
-                    columns={columns}
-                    data={filteredGroups}
-                    pagination
-                    highlightOnHover
-                    responsive
-                    progressPending={loading}
-                    progressComponent={<Skeleton className="h-96" />}
-                    noDataComponent={
-                        <div className="py-12 text-center text-gray-400 italic">
-                            Tidak ada data kelompok ditemukan.
-                        </div>
-                    }
-                    customStyles={{
-                        header: { style: { display: 'none' } },
-                        headRow: {
-                            style: {
-                                backgroundColor: '#f9fafb',
-                                borderBottomWidth: '1px',
-                                borderBottomColor: '#f3f4f6',
-                            }
-                        },
-                        headCells: {
-                            style: {
-                                color: '#4b5563',
-                                fontSize: '0.75rem',
-                                fontWeight: '700',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                            }
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                    <DataTable
+                        columns={columns}
+                        data={filteredGroups}
+                        pagination
+                        highlightOnHover
+                        responsive
+                        progressPending={loading}
+                        progressComponent={<Skeleton className="h-96" />}
+                        noDataComponent={
+                            <div className="p-10 text-center text-gray-500 font-medium">
+                                Tidak ada data kelompok ditemukan.
+                            </div>
                         }
-                    }}
-                />
+                        customStyles={tableCustomStyles}
+                    />
+                </div>
             </div>
 
             {/* Validation Modals */}

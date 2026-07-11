@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchApprovedInternships, assignSupervisor } from '../../../store/slice/adminInternshipSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../../components/Skeleton';
@@ -139,8 +140,7 @@ const PlottingIndex = () => {
                     </div>
                 </div>
 
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:p-6">
+                <div className="bg-white shadow overflow-hidden sm:rounded-lg"><div className="px-4 py-5 sm:p-6">
                         <DataTable
                             columns={columns}
                             data={filteredData}
@@ -152,29 +152,7 @@ const PlottingIndex = () => {
                             responsive
                             progressPending={loadingApproved}
                             progressComponent={<Skeleton />}
-                            customStyles={{
-                                headRow: {
-                                    style: {
-                                        backgroundColor: '#f8fafc',
-                                        borderBottomWidth: '1px',
-                                        borderBottomColor: '#f1f5f9',
-                                    },
-                                },
-                                headCells: {
-                                    style: {
-                                        fontWeight: '700',
-                                        color: '#475569',
-                                        textTransform: 'uppercase',
-                                        fontSize: '12px',
-                                        letterSpacing: '0.05em',
-                                    },
-                                },
-                                cells: {
-                                    style: {
-                                        fontSize: '14px',
-                                    },
-                                },
-                            }}
+                            customStyles={tableCustomStyles}
                             noDataComponent={
                                 <div className="p-8 text-center text-gray-500">
                                     Tidak ada kelompok yang perlu diplot dosen pembimbing saat ini.

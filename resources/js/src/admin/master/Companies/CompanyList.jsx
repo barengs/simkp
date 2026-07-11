@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
+import { tableCustomStyles, makeNumberColumn } from "../../../components/tableStyles";
 import { CirclePlus, Edit2, Trash2, Search, Building2, User, Phone, MapPin, CheckCircle, XCircle } from "lucide-react";
 import { fetchCompanies, deleteCompany, toggleCompanyVerified } from "../../../store/slice/companySlice";
 import Skeleton from "../../../components/Skeleton";
@@ -65,6 +66,7 @@ const CompanyList = () => {
     );
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: "Nama Mitra",
             selector: (row) => row.name,
@@ -172,6 +174,7 @@ const CompanyList = () => {
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Master Mitra (Instansi)
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Daftar instansi atau perusahaan mitra yang bekerja sama untuk program Internship.</p>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -206,11 +209,11 @@ const CompanyList = () => {
                             progressPending={loading}
                             progressComponent={<Skeleton />}
                             noDataComponent={
-                                <div className="p-10 text-center text-gray-500">
+                                <div className="p-10 text-center text-gray-500 font-medium">
                                     Tidak ada data mitra ditemukan untuk periode ini.
                                 </div>
                             }
-                            customStyles={customStyles}
+                            customStyles={tableCustomStyles}
                         />
                     </div>
                 </div>

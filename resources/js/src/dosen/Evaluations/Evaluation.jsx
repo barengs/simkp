@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { fetchEvaluations, saveEvaluation } from '../../store/slice/evaluationSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { Search, Edit, FileText, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../components/Skeleton';
@@ -74,13 +75,14 @@ const Evaluation = () => {
     };
 
     const filteredData = Array.isArray(internships) ? internships.filter(
-        (item) => 
+        (item) =>
             item.leader?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.company_name_manual?.toLowerCase().includes(searchTerm.toLowerCase())
     ) : [];
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Ketua Kelompok',
             selector: (row) => row.leader?.name || '-',
@@ -103,9 +105,8 @@ const Evaluation = () => {
             sortable: true,
             width: '120px',
             cell: row => (
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    row.evaluation ? 'bg-green-100 text-green-800 font-bold text-sm' : 'bg-gray-100 text-gray-500'
-                }`}>
+                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${row.evaluation ? 'bg-green-100 text-green-800 font-bold text-sm' : 'bg-gray-100 text-gray-500'
+                    }`}>
                     {row.evaluation ? row.evaluation.final_grade : 'Belum'}
                 </span>
             )
@@ -116,13 +117,12 @@ const Evaluation = () => {
                 <button
                     onClick={() => row.has_final_report && openModal(row)}
                     disabled={!row.has_final_report}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-all ${
-                        !row.has_final_report 
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
-                            : row.evaluation 
-                                ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100' 
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm transition-all ${!row.has_final_report
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                            : row.evaluation
+                                ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
-                    }`}
+                        }`}
                     title={!row.has_final_report ? "Laporan belum Final" : ""}
                 >
                     {row.evaluation ? <><Edit size={16} /> <span>Edit Nilai</span></> : <><FileText size={16} /> <span>Input Nilai</span></>}
@@ -211,7 +211,7 @@ const Evaluation = () => {
                             <input
                                 type="number" step="0.01" min="0" max="100" required
                                 value={formData.score_field}
-                                onChange={(e) => setFormData({...formData, score_field: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, score_field: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                 placeholder="0 - 100"
                             />
@@ -221,7 +221,7 @@ const Evaluation = () => {
                             <input
                                 type="number" step="0.01" min="0" max="100" required
                                 value={formData.score_report}
-                                onChange={(e) => setFormData({...formData, score_report: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, score_report: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                 placeholder="0 - 100"
                             />
@@ -231,7 +231,7 @@ const Evaluation = () => {
                             <input
                                 type="number" step="0.01" min="0" max="100" required
                                 value={formData.score_seminar}
-                                onChange={(e) => setFormData({...formData, score_seminar: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, score_seminar: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                 placeholder="0 - 100"
                             />

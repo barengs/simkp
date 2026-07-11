@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchReports, approveReport, rejectReport } from '../../store/slice/reportSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { Search, FileText, CheckCircle, XCircle, Clock, FileCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../components/Skeleton';
@@ -85,6 +86,7 @@ const Report = () => {
     );
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Update Terakhir',
             selector: (row) => row.latest?.updated_at,
@@ -221,7 +223,8 @@ const Report = () => {
                         highlightOnHover
                         responsive
                         progressPending={loading}
-                        progressComponent={<Skeleton className="h-96" />}
+                        progressComponent={<Skeleton className="h-96"
+                            customStyles={tableCustomStyles} />}
                         noDataComponent={<div className="p-8 text-gray-500 text-center italic bg-gray-50/50">Tidak ada pengajuan laporan baru dari kelompok bimbingan Anda.</div>}
                     />
                 </div>
@@ -238,9 +241,8 @@ const Report = () => {
                 size="sm"
             >
                 <div className="py-2">
-                    <div className={`p-4 rounded-xl border mb-4 flex items-start gap-4 ${
-                        confirmModal.type === 'approve' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'
-                    }`}>
+                    <div className={`p-4 rounded-xl border mb-4 flex items-start gap-4 ${confirmModal.type === 'approve' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-red-50 border-red-100 text-red-800'
+                        }`}>
                         {confirmModal.type === 'approve' ? <CheckCircle className="shrink-0 mt-0.5" size={20} /> : <XCircle className="shrink-0 mt-0.5" size={20} />}
                         <div className="text-sm">
                             <p className="font-bold mb-1">
@@ -284,9 +286,8 @@ const Report = () => {
                         <button
                             onClick={handleConfirmAction}
                             disabled={confirmModal.type === 'reject' && rejectFeedback.trim().length < 5}
-                            className={`px-8 py-2 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-                                confirmModal.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-                            }`}
+                            className={`px-8 py-2 text-white text-sm font-bold rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${confirmModal.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                                }`}
                         >
                             {confirmModal.type === 'approve' ? 'Ya, Setujui' : 'Ya, Tolak'}
                         </button>

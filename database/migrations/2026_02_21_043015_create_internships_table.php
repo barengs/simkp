@@ -27,6 +27,8 @@ return new class extends Migration {
             $table->string('krs_url')->nullable();
             $table->string('ktp_url')->nullable();
             $table->string('surat_rekomendasi_url')->nullable();
+            $table->date('started_at')->nullable();
+            $table->date('ended_at')->nullable();
             $table->timestamps();
         });
     }

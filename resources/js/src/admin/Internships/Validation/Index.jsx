@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'; // Tambahkan useMem
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSubmittedInternships, approveInternship, rejectInternship } from '../../../store/slice/adminInternshipSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { CheckCircle, XCircle, Eye, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../../components/Skeleton';
@@ -11,12 +12,12 @@ import ConfirmApproveModal from './ConfirmApproveModal';
 
 const ValidationIndex = () => {
     const dispatch = useDispatch();
-    
+
     // Pastikan default value array agar tidak error .filter atau .length
-    const { 
-        submitted = [], 
-        loadingSubmitted, 
-        actionLoading 
+    const {
+        submitted = [],
+        loadingSubmitted,
+        actionLoading
     } = useSelector(state => state.adminInternships || {});
 
     const [isReviewModalOpen, setReviewModalOpen] = useState(false);
@@ -160,21 +161,21 @@ const ValidationIndex = () => {
     // }
 
     return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-6">
             <div className="border-b border-gray-200 pb-5">
-                <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                     Validasi Pendaftaran
                 </h2>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="w-full md:w-1/3">
+            <div className="flex justify-between items-center">
+                <div className="w-1/3">
                     <input
                         type="text"
                         placeholder="Cari ketua, NIM, atau mitra..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-md border border-amber-100 text-amber-700">
@@ -183,21 +184,24 @@ const ValidationIndex = () => {
                 </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-                <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    pagination
-                    highlightOnHover
-                    responsive
-                    progressPending={loadingSubmitted}
-                    progressComponent={<Skeleton />}
-                    noDataComponent={
-                        <div className="p-10 text-center text-gray-500">
-                            Tidak ada pendaftaran yang perlu divalidasi.
-                        </div>
-                    }
-                />
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                    <DataTable
+                        columns={columns}
+                        data={filteredData}
+                        pagination
+                        highlightOnHover
+                        responsive
+                        progressPending={loadingSubmitted}
+                        progressComponent={<Skeleton />}
+                        noDataComponent={
+                            <div className="p-10 text-center text-gray-500 font-medium">
+                                Tidak ada pendaftaran yang perlu divalidasi.
+                            </div>
+                        }
+                        customStyles={tableCustomStyles}
+                    />
+                </div>
             </div>
 
             {/* Modals */}

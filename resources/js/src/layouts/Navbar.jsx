@@ -48,10 +48,17 @@ const Navbar = ({
                             <p className="text-sm font-bold text-gray-900 leading-none">{user?.name || "User"}</p>
                             <p className="text-[10px] font-medium text-gray-400 uppercase mt-1 tracking-wider">{user?.role || "Guest"}</p>
                         </div>
-                        <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span className="text-indigo-600 font-medium">
+                        <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border border-emerald-800/40">
+                            {user?.avatar_url ? (
+                                        <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-indigo-650 font-bold">
+                                            {(user?.name || "U").charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                            {/* <span className="text-indigo-600 font-medium">
                                 {(user?.name || "U").charAt(0).toUpperCase()}
-                            </span>
+                            </span> */}
                         </div>
                     </div>
                 </div>

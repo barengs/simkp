@@ -4,6 +4,7 @@ import DataTable from "react-data-table-component";
 import { CirclePlus, Edit2, Trash2, Search, Users, Key, Mail, Phone, Award } from "lucide-react";
 import { fetchLecturers, deleteLecturer, resetLecturerPassword } from "../../../store/slice/lecturerSlice";
 import Skeleton from "../../../components/Skeleton";
+import { tableCustomStyles, makeNumberColumn } from "../../../components/tableStyles";
 import AddLecturer from "./AddLecturer";
 import EditLecturer from "./EditLecturer";
 import ConfirmDeleteModal from "../../../components/ConfirmDeleteModal";
@@ -86,6 +87,7 @@ const LecturerList = () => {
     );
 
     const columns = [
+        makeNumberColumn(1, 999),
         {
             name: "Dosen",
             selector: (row) => row.name,
@@ -148,31 +150,6 @@ const LecturerList = () => {
         },
     ];
 
-    const customStyles = {
-        headRow: {
-            style: {
-                backgroundColor: '#f9fafb',
-                borderTopStyle: 'solid',
-                borderTopWidth: '1px',
-                borderTopColor: '#e5e7eb',
-            },
-        },
-        headCells: {
-            style: {
-                textTransform: 'uppercase',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                color: '#6b7280',
-                letterSpacing: '0.05em',
-            },
-        },
-        cells: {
-            style: {
-                fontSize: '0.875rem',
-            },
-        },
-    };
-
     return (
         <>
             <div className="space-y-6">
@@ -180,6 +157,7 @@ const LecturerList = () => {
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
                         Master Dosen
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Mengelola data dosen pembimbing untuk program Internship.</p>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -218,7 +196,7 @@ const LecturerList = () => {
                                     Tidak ada data dosen yang ditemukan untuk periode ini.
                                 </div>
                             }
-                            customStyles={customStyles}
+                            customStyles={tableCustomStyles}
                         />
                     </div>
                 </div>

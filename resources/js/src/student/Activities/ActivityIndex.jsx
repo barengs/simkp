@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import DataTable from "react-data-table-component";
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { fetchAllActivities } from "../../store/slice/activitySlice";
 import { SkeletonList } from "../../components/Skeleton";
 import { Activity, Clock, FileText, ChevronRight } from "lucide-react";
@@ -14,6 +15,7 @@ const ActivityIndex = () => {
     }, [dispatch]);
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: "Waktu",
             selector: (row) => row.human_date,
@@ -83,7 +85,7 @@ const ActivityIndex = () => {
             <div className="text-center md:text-left space-y-2">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                     <div className="bg-indigo-600 p-2.5 rounded-2xl text-white shadow-xl shadow-indigo-200">
-                         <Activity size={28} />
+                        <Activity size={28} />
                     </div>
                     Aktivitas Saya
                 </h2>

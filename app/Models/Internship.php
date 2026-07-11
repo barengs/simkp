@@ -22,6 +22,8 @@ class Internship extends Model
         'krs_url',
         'ktp_url',
         'surat_rekomendasi_url',
+        'started_at',
+        'ended_at',
     ];
 
     public function leader()

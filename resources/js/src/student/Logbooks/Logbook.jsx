@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchLogbooks, deleteLogbook } from '../../store/slice/logbookSlice';
 import { fetchMyInternship } from '../../store/slice/internshipSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { PlusCircle, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Skeleton from '../../components/Skeleton';
@@ -33,7 +34,7 @@ const Logbook = () => {
 
     const handleDelete = async () => {
         if (!deleteModal.data) return;
-        
+
         const action = await dispatch(deleteLogbook(deleteModal.data.id));
         if (deleteLogbook.fulfilled.match(action)) {
             toast.success("Logbook berhasil dihapus");
@@ -51,6 +52,7 @@ const Logbook = () => {
     const hasActiveInternship = Array.isArray(internships) ? internships.length > 0 : !!internships?.id;
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Tanggal',
             selector: (row) => row.date,
@@ -70,9 +72,8 @@ const Logbook = () => {
             sortable: true,
             width: '150px',
             cell: row => (
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    row.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${row.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
                     {row.status === 'approved' ? 'Disetujui' : 'Menunggu'}
                 </span>
             )
@@ -169,7 +170,7 @@ const Logbook = () => {
                 onClose={handleCloseModal}
                 title={
                     modalConfig.type === 'add' ? 'Tambah Logbook Baru' :
-                    modalConfig.type === 'edit' ? 'Edit Logbook' : 'Detail Logbook'
+                        modalConfig.type === 'edit' ? 'Edit Logbook' : 'Detail Logbook'
                 }
             >
                 {modalConfig.type === 'add' && <AddLogbook onClose={handleCloseModal} />}

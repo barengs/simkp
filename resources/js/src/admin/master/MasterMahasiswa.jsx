@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import DataTable from "react-data-table-component";
+import { tableCustomStyles, makeNumberColumn } from "../../../components/tableStyles";
 
 const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
@@ -42,6 +43,7 @@ const MasterMahasiswa = () => {
     };
 
     const columns = [
+        makeNumberColumn(1, 999),
         { name: "NIM", selector: (row) => row.nim, sortable: true },
         { name: "Nama", selector: (row) => row.name, sortable: true },
         { name: "Email", selector: (row) => row.email, sortable: true },
@@ -52,11 +54,10 @@ const MasterMahasiswa = () => {
             sortable: true,
             cell: (row) => (
                 <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        row.status === "Aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                    }`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Aktif"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                 >
                     {row.status}
                 </span>
@@ -132,6 +133,7 @@ const MasterMahasiswa = () => {
                             highlightOnHover
                             pointerOnHover
                             responsive
+                            customStyles={tableCustomStyles}
                         />
                     </div>
                 </div>

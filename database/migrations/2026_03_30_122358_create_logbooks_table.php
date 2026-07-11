@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('internship_id')->constrained()->cascadeOnDelete();
             $table->date('date');
+            $table->string('attachment')->nullable();
             $table->text('activity');
             $table->string('evidence_photo')->nullable();
             $table->enum('status', ['pending', 'approved'])->default('pending');

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchInternshipGroups } from '../../store/slice/internshipSlice';
 import DataTable from 'react-data-table-component';
+import { tableCustomStyles, makeNumberColumn } from "../../components/tableStyles";
 import { Search, ChevronRight, Building2, Users, BookOpen } from 'lucide-react';
 import Skeleton from '../../components/Skeleton';
 
@@ -26,6 +27,7 @@ const Logbook = () => {
     }, [groups, searchTerm]);
 
     const columns = [
+        makeNumberColumn(1, 10),
         {
             name: 'Kelompok / Ketua',
             sortable: true,
