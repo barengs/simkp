@@ -33,6 +33,9 @@ class RoleSeeder extends Seeder
             'student evaluation',
             'student ta',
             'manage profile',
+            'view logbook monitoring',
+            'view kp reports',
+            'view evaluation recap',
         ];
 
         foreach ($permissions as $permissionName) {
@@ -61,18 +64,30 @@ class RoleSeeder extends Seeder
             'student report',
             'student evaluation',
             'student ta',
+            'manage profile',
         ];
         
-        $lecturerPermissions = [
+        $lecturerPembimbingPermissions = [
             'view internships',
             'validate logbook',
             'validate report',
             'score internships',
+            'manage profile',
+        ];
+
+        $lecturerPengujiPermissions = [
+            'view internships',
+            'score internships',
+            'manage profile',
         ];
 
         $koordinatorPerms = [
             'manage ta',
             'view internships',
+            'view logbook monitoring',
+            'view kp reports',
+            'view evaluation recap',
+            'manage profile',
         ];
 
         // Assign to api guard (primary)
@@ -88,12 +103,12 @@ class RoleSeeder extends Seeder
 
         $pembimbingRoleApi = Role::where(['name' => 'dosen_pembimbing', 'guard_name' => 'api'])->first();
         if ($pembimbingRoleApi) {
-            $pembimbingRoleApi->syncPermissions(Permission::where('guard_name', 'api')->whereIn('name', $lecturerPermissions)->get());
+            $pembimbingRoleApi->syncPermissions(Permission::where('guard_name', 'api')->whereIn('name', $lecturerPembimbingPermissions)->get());
         }
 
         $pengujiRoleApi = Role::where(['name' => 'dosen_penguji', 'guard_name' => 'api'])->first();
         if ($pengujiRoleApi) {
-            $pengujiRoleApi->syncPermissions(Permission::where('guard_name', 'api')->whereIn('name', $lecturerPermissions)->get());
+            $pengujiRoleApi->syncPermissions(Permission::where('guard_name', 'api')->whereIn('name', $lecturerPengujiPermissions)->get());
         }
 
         $koordinatorRoleApi = Role::where(['name' => 'koordinator_ta', 'guard_name' => 'api'])->first();
@@ -114,12 +129,12 @@ class RoleSeeder extends Seeder
 
         $pembimbingRoleWeb = Role::where(['name' => 'dosen_pembimbing', 'guard_name' => 'web'])->first();
         if ($pembimbingRoleWeb) {
-            $pembimbingRoleWeb->syncPermissions(Permission::where('guard_name', 'web')->whereIn('name', $lecturerPermissions)->get());
+            $pembimbingRoleWeb->syncPermissions(Permission::where('guard_name', 'web')->whereIn('name', $lecturerPembimbingPermissions)->get());
         }
 
         $pengujiRoleWeb = Role::where(['name' => 'dosen_penguji', 'guard_name' => 'web'])->first();
         if ($pengujiRoleWeb) {
-            $pengujiRoleWeb->syncPermissions(Permission::where('guard_name', 'web')->whereIn('name', $lecturerPermissions)->get());
+            $pengujiRoleWeb->syncPermissions(Permission::where('guard_name', 'web')->whereIn('name', $lecturerPengujiPermissions)->get());
         }
 
         $koordinatorRoleWeb = Role::where(['name' => 'koordinator_ta', 'guard_name' => 'web'])->first();
@@ -130,16 +145,30 @@ class RoleSeeder extends Seeder
         // 4. Map existing users to their corresponding roles based on their current role column
         $users = User::all();
         foreach ($users as $user) {
-            $roleName = strtolower($user->role);
-            if (in_array($roleName, ['mahasiswa', 'dosen', 'admin'])) {
-                // If it's dosen, map to dosen_pembimbing and dosen_penguji by default
-                if ($roleName === 'dosen') {
-                    $user->assignRole('dosen_pembimbing');
-                    $user->assignRole('dosen_penguji');
-                } else {
-                    $user->assignRole($roleName);
-                }
+            $userRole = strtolower($user->role); // This is the value from the 'role' enum column
+            $spatieRolesToAssign = [];
+
+            if ($userRole === 'admin') {
+                $spatieRolesToAssign[] = 'admin';
+            } elseif ($userRole === 'mahasiswa') {
+                $spatieRolesToAssign[] = 'mahasiswa';
+            } elseif ($userRole === 'dosen') {
+                // For legacy 'dosen', assign both pembimbing and penguji for broader access
+                $spatieRolesToAssign[] = 'dosen_pembimbing';
+                $spatieRolesToAssign[] = 'dosen_penguji';
+            } elseif ($userRole === 'dosen_pembimbing') {
+                $spatieRolesToAssign[] = 'dosen_pembimbing';
+            } elseif ($userRole === 'dosen_penguji') {
+                $spatieRolesToAssign[] = 'dosen_penguji';
+            } elseif ($userRole === 'koordinator_ta') {
+                $spatieRolesToAssign[] = 'koordinator_ta';
             }
+
+            if (!empty($spatieRolesToAssign)) {
+                $user->assignRole($spatieRolesToAssign);
+            }
+            // Ensure the primary role is synced after Spatie roles are assigned
+            $user->syncPrimaryRoleFromSpatie();
         }
     }
 }

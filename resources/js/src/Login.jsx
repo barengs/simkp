@@ -102,7 +102,7 @@ const Login = () => {
                         ) : "S"}
                     </div>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                        SIMKP Login
+                        Login
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
                         Sistem Informasi Kerja Praktek

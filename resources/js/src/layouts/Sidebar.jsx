@@ -146,6 +146,8 @@ const MenuItem = ({
 
 // --- Komponen Utama Sidebar ---
 const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) => {
+    // Debug: Log user object to see its structure and permissions
+    console.log("Sidebar: User object:", user);
     const { loading: logoutLoading } = useSelector((state) => state.auth);
     const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
     const [expandedMenus, setExpandedMenus] = useState({});
@@ -166,6 +168,8 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
 
     const navigation = useMemo(() => {
         const permissions = user?.permissions || [];
+        // Debug: Log the generated permissions array
+        console.log("Sidebar: Permissions array:", permissions);
         const items = [];
 
         // Dashboard is accessible to all
@@ -222,35 +226,47 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
         if (permissions.includes("manage internships")) {
             pushKPHeader();
             items.push({ name: "Kelompok KP", path: "/admin/internship-groups", icon: <Users size={18} /> });
-        } else if (permissions.includes("view internships") && (user?.roles || []).includes("dosen_pembimbing")) {
+        }
+        
+        
+        // Dosen's view of their own groups
+        if (permissions.includes("view internships") && (user?.roles || []).includes("dosen_pembimbing")) {
             pushKPHeader();
             items.push({ name: "Daftar Kelompok", path: "/dosen/internship-groups", icon: <Users size={18} /> });
         }
-
-        if (permissions.includes("view internships") && permissions.includes("manage internships")) {
-            // Admin monitoring roles
+        
+        // Monitoring permissions (can be held by admin, koordinator, or dosen)
+        let hasMonitoringPerms = permissions.includes("view logbook monitoring") || permissions.includes("view kp reports") || permissions.includes("view evaluation recap");
+        if (hasMonitoringPerms) {
             pushKPHeader();
-            items.push({ name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> });
-            items.push({ name: "Laporan KP", path: "/admin/reports", icon: <FileText size={18} /> });
-            items.push({ name: "Rekap Penilaian", path: "/admin/evaluations", icon: <CheckSquare size={18} /> });
-        } else {
-            // Dosen roles
-            if (permissions.includes("validate logbook")) {
-                pushKPHeader();
-                items.push({ name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> });
+            // Admin monitoring roles
+            if (permissions.includes("view logbook monitoring")) {
+                items.push({ name: "Monitoring Logbook", path: "/admin/logbook", icon: <Book size={18} /> });
             }
-            if (permissions.includes("validate report")) {
-                pushKPHeader();
-                items.push({ name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> });
+            if (permissions.includes("view kp reports")) {
+                items.push({ name: "Laporan KP", path: "/admin/reports", icon: <FileText size={18} /> });
             }
-            if (permissions.includes("score internships")) {
-                pushKPHeader();
-                items.push({ name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> });
+            if (permissions.includes("view evaluation recap")) {
+                items.push({ name: "Rekap Penilaian", path: "/admin/evaluations", icon: <CheckSquare size={18} /> });
             }
         }
-
+        
+        // Dosen validation roles
+        if (permissions.includes("validate logbook")) {
+            pushKPHeader();
+            items.push({ name: "Validasi Logbook", path: "/dosen/logbook", icon: <CheckSquare size={18} /> });
+        }
+        if (permissions.includes("validate report")) {
+            pushKPHeader();
+            items.push({ name: "Validasi Laporan", path: "/dosen/reports", icon: <FileText size={18} /> });
+        }
+        if (permissions.includes("score internships")) {
+            pushKPHeader();
+            items.push({ name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> });
+        }
+        
         // Dosen guidance is also accessed through bimbingan
-        if (permissions.includes("view internships") && !permissions.includes("manage internships")) {
+        if (permissions.includes("view internships") && !(permissions.includes("manage internships"))) {
             pushKPHeader();
             items.push({ name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> });
         }

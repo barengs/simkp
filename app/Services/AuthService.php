@@ -77,12 +77,12 @@ class AuthService
         $userData['avatar_url'] = $user->avatar ? asset('storage/' . $user->avatar) : null;
         $userData['phone'] = $user->phone ?? ($user->student?->phone ?? $user->lecturer?->phone);
 
-        if ($user->role === 'mahasiswa') {
+        if ($user->role === 'mahasiswa' || $user->isStudent()) {
             $userData['redirect_url'] = $userData['is_profile_complete'] ? '/' : '/student/profile';
             $userData['student'] = Student::where('user_id', $user->id)->first();
-        } elseif ($user->role === 'admin') {
+        } elseif ($user->isAdmin()) {
             $userData['redirect_url'] = '/';
-        } elseif ($user->role === 'dosen') {
+        } elseif ($user->isLecturerRole()) {
             $userData['redirect_url'] = '/';
             $userData['lecturer'] = Lecturer::where('user_id', $user->id)->first();
         }

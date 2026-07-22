@@ -97,17 +97,91 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(TugasAkhir::class);
     }
 
+    /** Legacy + Spatie role names treated as lecturer-side accounts. */
+    public const LECTURER_ROLES = [
+        'dosen',
+        'dosen_pembimbing',
+        'dosen_penguji',
+        'koordinator_ta',
+    ];
+
+    public const PRIMARY_ROLE_PRIORITY = [
+        'admin',
+        'koordinator_ta',
+        'dosen_pembimbing',
+        'dosen_penguji',
+        'mahasiswa',
+    ];
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin'
+            || $this->hasRole('admin');
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'mahasiswa'
+            || $this->hasRole('mahasiswa');
+    }
+
+    public function isLecturerRole(): bool
+    {
+        if (in_array($this->role, self::LECTURER_ROLES, true)) {
+            return true;
+        }
+
+        return $this->hasAnyRole(self::LECTURER_ROLES);
+    }
+
     /**
-     * Auto-sync Spatie permissions when role is set or updated.
+     * Pick a single legacy users.role value from a list of Spatie role names.
+     */
+    public static function resolvePrimaryRole(array $roleNames): ?string
+    {
+        $normalized = array_map(static fn ($r) => strtolower((string) $r), $roleNames);
+
+        // Map legacy "dosen" if still present
+        $normalized = array_map(static function ($r) {
+            return $r === 'dosen' ? 'dosen_pembimbing' : $r;
+        }, $normalized);
+
+        foreach (self::PRIMARY_ROLE_PRIORITY as $candidate) {
+            if (in_array($candidate, $normalized, true)) {
+                return $candidate;
+            }
+        }
+
+        return $normalized[0] ?? null;
+    }
+
+    public function syncPrimaryRoleFromSpatie(): void
+    {
+        $primary = self::resolvePrimaryRole($this->getRoleNames()->toArray());
+        if ($primary && $this->role !== $primary) {
+            $this->role = $primary;
+            $this->saveQuietly();
+        }
+    }
+
+    /**
+     * Auto-sync Spatie roles when legacy role column is set or updated.
      */
     protected static function booted()
     {
-        static::saved(function ($user) {
-            if ($user->role) {
-                // Map local roles to Spatie roles
-                $roleName = strtolower($user->role);
-                // Ensure role exists in Spatie database before assigning
-                if (\Spatie\Permission\Models\Role::where('name', $roleName)->exists()) {
+        static::saved(function (User $user) {
+            if (!$user->role) {
+                return;
+            }
+
+            $roleName = strtolower($user->role);
+            if ($roleName === 'dosen') {
+                $roleName = 'dosen_pembimbing';
+            }
+
+            if (\Spatie\Permission\Models\Role::where('name', $roleName)->where('guard_name', 'api')->exists()) {
+                // Avoid stacking unrelated roles when only legacy column changes
+                if (!$user->hasRole($roleName)) {
                     $user->assignRole($roleName);
                 }
             }

@@ -8,6 +8,33 @@ import {
 import api from "../api";
 import { toast } from "react-toastify";
 
+const permissionDisplayMap = {
+    "manage periods": "Periode",
+    "manage themes": "Tema",
+    "manage master data": "Master Data",
+    "manage internships": "Kelompok KP",
+    "view internships": "Daftar Kelompok / Bimbingan",
+    "view logbook monitoring": "Monitoring Logbook",
+    "view kp reports": "Laporan KP",
+    "view evaluation recap": "Rekap Penilaian",
+    "validate logbook": "Validasi Logbook",
+    "validate report": "Validasi Laporan",
+    "score internships": "Penilaian Kelompok",
+    "manage ta": "Manajemen TA",
+    "manage settings": "Pengaturan Sistem",
+    "manage roles": "Manajemen Peran",
+    "student registration": "Pendaftaran KP",
+    "student logbook": "Logbook KP",
+    "student report": "Laporan KP",
+    "student evaluation": "Penilaian KP",
+    "student ta": "Pendaftaran TA & Bimbingan TA",
+    "manage profile": "Pengaturan Profil",
+};
+
+const getPermissionDisplayName = (name) => {
+    return permissionDisplayMap[name] || name.replace(/_/g, " ");
+};
+
 const RoleManagement = () => {
     const [activeTab, setActiveTab] = useState("roles"); // roles | users
     const [roles, setRoles] = useState([]);
@@ -211,8 +238,8 @@ const RoleManagement = () => {
                 <button
                     onClick={() => setActiveTab("roles")}
                     className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${activeTab === "roles"
-                            ? "border-indigo-600 text-indigo-600"
-                            : "border-transparent text-gray-400 hover:text-gray-600"
+                        ? "border-indigo-600 text-indigo-600"
+                        : "border-transparent text-gray-400 hover:text-gray-600"
                         }`}
                 >
                     <Shield size={16} /> Daftar Peran & Hak Akses
@@ -220,8 +247,8 @@ const RoleManagement = () => {
                 <button
                     onClick={() => setActiveTab("users")}
                     className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${activeTab === "users"
-                            ? "border-indigo-600 text-indigo-600"
-                            : "border-transparent text-gray-400 hover:text-gray-600"
+                        ? "border-indigo-600 text-indigo-600"
+                        : "border-transparent text-gray-400 hover:text-gray-600"
                         }`}
                 >
                     <Users size={16} /> Akses Pengguna
@@ -284,7 +311,7 @@ const RoleManagement = () => {
                                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                                     {role.permissions.map((p) => (
                                                         <span key={p.id} className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full px-2 py-0.5 font-medium">
-                                                            {p.name.replace("_", " ")}
+                                                            {getPermissionDisplayName(p.name)}
                                                         </span>
                                                     ))}
                                                 </div>
@@ -481,7 +508,7 @@ const RoleManagement = () => {
                                                             <Square size={18} className="text-gray-300 shrink-0" />
                                                         )}
                                                         <div>
-                                                            <p className="text-xs font-semibold text-gray-800 uppercase tracking-wider">{perm.name.replace("_", " ")}</p>
+                                                            <p className="text-xs font-semibold text-gray-800 uppercase tracking-wider">{getPermissionDisplayName(perm.name)}</p>
                                                             <p className="text-[10px] text-gray-400 leading-snug">Hak akses untuk guard: {perm.guard_name}</p>
                                                         </div>
                                                     </button>
@@ -553,8 +580,8 @@ const RoleManagement = () => {
                                                     type="button"
                                                     onClick={() => toggleUserRole(role.name)}
                                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition text-left active:scale-[0.99] ${isSelected
-                                                            ? "bg-indigo-50 border-indigo-500 text-indigo-700 font-semibold"
-                                                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                                                        ? "bg-indigo-50 border-indigo-500 text-indigo-700 font-semibold"
+                                                        : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
                                                         }`}
                                                 >
                                                     {isSelected ? (

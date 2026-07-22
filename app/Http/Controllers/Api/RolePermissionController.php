@@ -242,9 +242,12 @@ class RolePermissionController extends Controller
             // Sync user roles using Spatie
             $user->syncRoles($request->roles);
 
-            // Sync legacy role column with first role
-            $user->role = $request->roles[0] ?? null;
-            $user->saveQuietly();
+            // Sync legacy role column using priority (admin > koordinator > pembimbing > penguji > mhs)
+            $primary = User::resolvePrimaryRole($request->roles);
+            if ($primary) {
+                $user->role = $primary;
+                $user->saveQuietly();
+            }
 
             DB::commit();
 

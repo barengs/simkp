@@ -90,7 +90,7 @@ const Logbook = () => {
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all border border-indigo-200"
                 >
                     <BookOpen size={14} />
-                    <span>Lihat Logbook</span>
+                    <span>Lihat</span>
                     <ChevronRight size={14} />
                 </button>
             )

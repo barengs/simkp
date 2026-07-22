@@ -24,7 +24,7 @@ class LecturerService
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make('dosen123'),
-                'role' => 'dosen',
+                'role' => 'dosen_pembimbing',
             ]);
 
             // Create lecturer record

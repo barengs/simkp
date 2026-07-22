@@ -181,9 +181,9 @@ const App = () => {
                             <Route path="role-management" element={<PermissionGate permission="manage roles"><RoleManagement /></PermissionGate>} />
                             <Route path="internship-groups" element={<PermissionGate permission="view internships"><AdminInternshipGroups /></PermissionGate>} />
                             <Route path="internship-groups/:internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
-                            <Route path="logbook" element={<PermissionGate permission="view internships"><AdminLogbook /></PermissionGate>} />
-                            <Route path="reports" element={<PermissionGate permission="view internships"><AdminReport /></PermissionGate>} />
-                            <Route path="evaluations" element={<PermissionGate permission="view internships"><AdminEvaluation /></PermissionGate>} />
+                            <Route path="logbook" element={<PermissionGate permission="view logbook monitoring"><AdminLogbook /></PermissionGate>} />
+                            <Route path="reports" element={<PermissionGate permission="view kp reports"><AdminReport /></PermissionGate>} />
+                            <Route path="evaluations" element={<PermissionGate permission="view evaluation recap"><AdminEvaluation /></PermissionGate>} />
                             <Route path="settings" element={<PermissionGate permission="manage settings"><Settings /></PermissionGate>} />
                             <Route path="activities" element={<PermissionGate permission="manage settings"><AdminActivity /></PermissionGate>} />
                             <Route path="koordinator-ta" element={<PermissionGate permission="manage ta"><KoordinatorTA /></PermissionGate>} />

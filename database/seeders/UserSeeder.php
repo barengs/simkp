@@ -63,33 +63,75 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // 4. Create Lecturers (15)
+        // 4. Create Lecturers (15) - 1 Koordinator TA, 7 Dosen Pembimbing, 7 Dosen Penguji
         $dosenData = [];
-        for ($i = 0; $i < 15; $i++) {
-            $name = $faker->name;
-            $email = 'dosen' . ($i + 1) . '@uim.ac.id';
-            
-            $user = User::updateOrCreate(['email' => $email], [
-                'name' => $name, 
-                'password' => Hash::make('dosen123'), 
-                'role' => 'dosen'
+
+        // Koordinator TA
+        $koordinatorTaUser = User::updateOrCreate([
+            'email' => 'koordinator.ta@uim.ac.id'
+        ], [
+            'name' => 'Koordinator TA',
+            'password' => Hash::make('dosen123'),
+            'role' => 'koordinator_ta',
+        ]);
+
+        $koordinatorLecturer = Lecturer::updateOrCreate([
+            'nip' => '19800101000'
+        ], [
+            'user_id' => $koordinatorTaUser->id,
+            'phone' => $faker->phoneNumber,
+            'period_id' => $period->id,
+        ]);
+        $dosenData[] = $koordinatorLecturer;
+
+        // Dosen Pembimbing (7)
+        for ($i = 0; $i < 7; $i++) {
+            $name = 'Dosen Pembimbing ' . ($i + 1);
+            $email = 'dosen.pembimbing' . ($i + 1) . '@uim.ac.id';
+            $user = User::updateOrCreate([
+                'email' => $email
+            ], [
+                'name' => $name,
+                'password' => Hash::make('dosen123'),
+                'role' => 'dosen_pembimbing',
             ]);
-            
-            // GUNAKAN updateOrCreate DI SINI
-            $dosenData[] = Lecturer::updateOrCreate(
-                ['nip' => '19800101' . str_pad($i + 1, 3, '0')], // Cek berdasarkan NIP
-                [
-                    'user_id' => $user->id,
-                    'phone' => $faker->phoneNumber,
-                    'period_id' => $period->id,
-                ]
-            );
+
+            $lecturer = Lecturer::updateOrCreate([
+                'nip' => '19800101' . str_pad($i + 1, 3, '0')
+            ], [
+                'user_id' => $user->id,
+                'phone' => $faker->phoneNumber,
+                'period_id' => $period->id,
+            ]);
+            $dosenData[] = $lecturer;
+        }
+
+        // Dosen Penguji (7)
+        for ($i = 0; $i < 7; $i++) {
+            $name = 'Dosen Penguji ' . ($i + 1);
+            $email = 'dosen.penguji' . ($i + 1) . '@uim.ac.id';
+            $user = User::updateOrCreate([
+                'email' => $email
+            ], [
+                'name' => $name,
+                'password' => Hash::make('dosen123'),
+                'role' => 'dosen_penguji',
+            ]);
+
+            $lecturer = Lecturer::updateOrCreate([
+                'nip' => '19800201' . str_pad($i + 1, 3, '0')
+            ], [
+                'user_id' => $user->id,
+                'phone' => $faker->phoneNumber,
+                'period_id' => $period->id,
+            ]);
+            $dosenData[] = $lecturer;
         }
 
         // 5. Create Students (50)
         $mahasiswaData = [];
         $majors = ['Sistem Informasi', 'Teknik Informatika', 'Sistem Komputer'];
-        
+
         for ($i = 0; $i < 50; $i++) {
             $nim = '2023' . str_pad($i + 1, 3, '0');
             $user = User::updateOrCreate(

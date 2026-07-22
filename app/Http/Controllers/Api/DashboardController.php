@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $role = $user->role;
         $stats = [];
 
-        if ($role === 'admin') {
+        if ($user->isAdmin()) {
             // --- Admin Stats (Global) ---
             $stats = [
                 'widget1' => ['label' => 'Total Mahasiswa KP', 'value' => Student::whereHas('period', fn($q) => $q->where('is_active', true))->count(), 'icon' => 'users'],
@@ -40,7 +40,7 @@ class DashboardController extends Controller
                 'widget3' => ['label' => 'Menunggu Validasi', 'value' => Internship::where('period_id', $periodId)->where('status', 'submitted')->count(), 'icon' => 'clock'],
                 'widget4' => ['label' => 'Selesai KP', 'value' => Internship::where('period_id', $periodId)->where('status', 'finished')->count(), 'icon' => 'graduation-cap'],
             ];
-        } elseif ($role === 'dosen') {
+        } elseif ($user->isLecturerRole()) {
             // --- Dosen Stats (Supervised) ---
             $lecturer = $user->lecturer;
             $lecturerId = $lecturer?->id;
@@ -51,7 +51,7 @@ class DashboardController extends Controller
                 'widget3' => ['label' => 'Logbook Mahasiswa', 'value' => $lecturerId ? \App\Models\Logbook::whereHas('internship', fn($q) => $q->where('period_id', $periodId)->where('supervisor_id', $lecturerId))->count() : 0, 'icon' => 'book-open'],
                 'widget4' => ['label' => 'Total Mahasiswa', 'value' => $lecturerId ? \App\Models\InternshipMember::whereHas('internship', fn($q) => $q->where('period_id', $periodId)->where('supervisor_id', $lecturerId))->count() : 0, 'icon' => 'graduation-cap'],
             ];
-        } elseif ($role === 'mahasiswa') {
+        } elseif ($user->isStudent()) {
             // --- Student Stats (Personal/Group) ---
             $student = $user->student;
             $internship = $student ? $student->internships()->with('evaluation')->latest()->first() : null;
@@ -74,7 +74,7 @@ class DashboardController extends Controller
 
         // --- Chart Data (Role-Specific) ---
         $chartData = [];
-        if ($role === 'admin') {
+        if ($user->isAdmin()) {
             $chartData = [
                 ['name' => 'Menunggu', 'value' => Internship::where('period_id', $periodId)->where('status', 'submitted')->count()],
                 ['name' => 'Disetujui', 'value' => Internship::where('period_id', $periodId)->where('status', 'approved')->count()],
@@ -82,7 +82,7 @@ class DashboardController extends Controller
                 ['name' => 'Selesai', 'value' => Internship::where('period_id', $periodId)->where('status', 'finished')->count()],
                 ['name' => 'Ditolak', 'value' => Internship::where('period_id', $periodId)->where('status', 'rejected')->count()],
             ];
-        } elseif ($role === 'dosen') {
+        } elseif ($user->isLecturerRole()) {
             $lecturerId = $user->lecturer?->id;
             $chartData = [
                 ['name' => 'Menunggu', 'value' => Internship::where('period_id', $periodId)->where('supervisor_id', $lecturerId)->where('status', 'submitted')->count()],
@@ -91,8 +91,8 @@ class DashboardController extends Controller
                 ['name' => 'Selesai', 'value' => Internship::where('period_id', $periodId)->where('supervisor_id', $lecturerId)->where('status', 'finished')->count()],
                 ['name' => 'Ditolak', 'value' => Internship::where('period_id', $periodId)->where('supervisor_id', $lecturerId)->where('status', 'rejected')->count()],
             ];
-        } elseif ($role === 'mahasiswa') {
-            $internshipId = $internship?->id;
+        } elseif ($user->isStudent()) {
+            $internshipId = $internship?->id ?? null;
             $chartData = [
                 ['name' => 'Logbook Pending', 'value' => $internshipId ? \App\Models\Logbook::where('internship_id', $internshipId)->where('status', 'pending')->count() : 0],
                 ['name' => 'Logbook Approved', 'value' => $internshipId ? \App\Models\Logbook::where('internship_id', $internshipId)->where('status', 'approved')->count() : 0],
