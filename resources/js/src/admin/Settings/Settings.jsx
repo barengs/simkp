@@ -49,6 +49,17 @@ const Settings = () => {
 
     const handleFileChange = (key, file) => {
         if (!file) return;
+
+        // Client-side validation: Logo (2MB), Favicon (1MB)
+        const isFavicon = key === 'app_favicon';
+        const maxSize = isFavicon ? 1 * 1024 * 1024 : 2 * 1024 * 1024;
+        const sizeLabel = isFavicon ? '1MB' : '2MB';
+
+        if (file.size > maxSize) {
+            toast.error(`Ukuran file ${key.replace(/_/g, ' ')} terlalu besar. Maksimal ${sizeLabel}.`);
+            return;
+        }
+
         // Revoke any existing blob for this key before creating new one
         if (previewUrls[key]) URL.revokeObjectURL(previewUrls[key]);
         const blobUrl = URL.createObjectURL(file);
@@ -85,8 +96,12 @@ const Settings = () => {
                 const errorMessage = action.payload?.message || action.payload || 'Gagal memperbarui pengaturan';
                 toast.error(errorMessage);
             }
-        } catch {
-            toast.error('Terjadi kesalahan sistem');
+        } catch (error) {
+            if (error.response?.status === 413) {
+                toast.error('Ukuran permintaan terlalu besar. Silakan unggah file yang lebih kecil atau satu per satu.');
+            } else {
+                toast.error('Terjadi kesalahan sistem');
+            }
         } finally {
             setIsSaving(false);
         }

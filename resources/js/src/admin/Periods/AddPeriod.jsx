@@ -130,7 +130,6 @@ const AddPeriod = ({ show, onClose }) => {
                             value={formData.announcement_date}
                             onChange={handleChange}
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm"
-                            required
                         />
                         <p className="mt-1 text-[10px] text-gray-400 italic">* Tanggal di mana status KP otomatis berubah menjadi 'Selesai'.</p>
                     </div>

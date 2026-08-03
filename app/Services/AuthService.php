@@ -74,17 +74,22 @@ class AuthService
         $userData['is_profile_complete'] = $this->checkProfileComplete($user);
         $userData['roles'] = $user->getRoleNames()->toArray();
         $userData['permissions'] = $user->getAllPermissions()->pluck('name')->toArray();
+        
+        // Debug: Log the loaded permissions to verify they are not empty
+        Log::info('AuthService: Loaded permissions for user ' . $user->id . ': ' . json_encode($userData['permissions']));
         $userData['avatar_url'] = $user->avatar ? asset('storage/' . $user->avatar) : null;
         $userData['phone'] = $user->phone ?? ($user->student?->phone ?? $user->lecturer?->phone);
 
         if ($user->role === 'mahasiswa' || $user->isStudent()) {
             $userData['redirect_url'] = $userData['is_profile_complete'] ? '/' : '/student/profile';
             $userData['student'] = Student::where('user_id', $user->id)->first();
+            Log::info('AuthService: Loaded student profile for user ' . $user->id . ': ' . json_encode($userData['student']));
         } elseif ($user->isAdmin()) {
             $userData['redirect_url'] = '/';
         } elseif ($user->isLecturerRole()) {
             $userData['redirect_url'] = '/';
             $userData['lecturer'] = Lecturer::where('user_id', $user->id)->first();
+            Log::info('AuthService: Loaded lecturer profile for user ' . $user->id . ': ' . json_encode($userData['lecturer']));
         }
 
         return $userData;

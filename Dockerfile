@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     libzip-dev \
     && docker-php-ext-install pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && echo 'upload_max_filesize = 10M' >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo 'post_max_size = 10M' >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo 'memory_limit = 128M' >> /usr/local/etc/php/conf.d/uploads.ini \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Ambil Composer dari image resmi

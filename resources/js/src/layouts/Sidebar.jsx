@@ -147,7 +147,7 @@ const MenuItem = ({
 // --- Komponen Utama Sidebar ---
 const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) => {
     // Debug: Log user object to see its structure and permissions
-    console.log("Sidebar: User object:", user);
+    // console.log("Sidebar: User object:", user);
     const { loading: logoutLoading } = useSelector((state) => state.auth);
     const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
     const [expandedMenus, setExpandedMenus] = useState({});
@@ -168,8 +168,8 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
 
     const navigation = useMemo(() => {
         const permissions = user?.permissions || [];
-        // Debug: Log the generated permissions array
-        console.log("Sidebar: Permissions array:", permissions);
+        // // Debug: Log the generated permissions array
+        // console.log("Sidebar: Permissions array:", permissions);
         const items = [];
 
         // Dashboard is accessible to all
@@ -264,12 +264,6 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
             pushKPHeader();
             items.push({ name: "Penilaian Kelompok", path: "/dosen/evaluations", icon: <CheckSquare size={18} /> });
         }
-        
-        // Dosen guidance is also accessed through bimbingan
-        if (permissions.includes("view internships") && !(permissions.includes("manage internships"))) {
-            pushKPHeader();
-            items.push({ name: "Bimbingan", path: "/dosen/guidance", icon: <Users size={18} /> });
-        }
 
         // Tugas Akhir (TA) group
         let hasTAHeader = false;
@@ -334,7 +328,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
                             className="relative flex-1 flex flex-col max-w-xs w-full bg-[#062c1e] shadow-xl"
                         >
-                            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto px-4">
+                            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto px-4 sidebar-scrollbar">
                                 <div className="flex items-center gap-3 mb-6 px-2">
                                     <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center font-bold text-emerald-400">
                                         {publicSettings.app_logo ? (
@@ -418,7 +412,7 @@ const Sidebar = ({ user, onLogout, sidebarOpen, setSidebarOpen, isCollapsed }) =
                         {!isCollapsed && <span className="ml-3 text-lg font-extrabold text-white tracking-wide truncate">{publicSettings.app_name || "SIMKP"}</span>}
                     </div>
                     <div className="flex-1 min-h-0 overflow-hidden">
-                        <nav className="h-full min-h-0 overflow-y-auto px-1 space-y-1 pb-4">
+                        <nav className="h-full min-h-0 overflow-y-auto px-1 space-y-1 pb-4 sidebar-scrollbar">
                             {navigation.map((item) => (
                                 item.isHeader ? (
                                     !isCollapsed ? (

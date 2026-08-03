@@ -14,6 +14,9 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
+        // Clear Spatie Permission cache to avoid stale cache issues
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         // 1. Create permissions if they do not exist
         $permissions = [
             'manage periods',
