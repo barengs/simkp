@@ -3,13 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use App\Models\Evaluation;
-use App\Models\Internship;
-use App\Models\InternshipMember;
-use App\Models\Logbook;
 use App\Models\Lecturer;
 use App\Models\Period;
-use App\Models\Report;
 use App\Models\Student;
 use App\Models\Theme;
 use App\Models\User;
@@ -23,7 +18,9 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create('id_ID');
 
-        // 1. Create Admin
+        // ============================================================
+        // 1. ADMIN
+        // ============================================================
         User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [
@@ -33,7 +30,9 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 2. Create Active Period
+        // ============================================================
+        // 2. PERIODE AKTIF (referensi master data)
+        // ============================================================
         $period = Period::firstOrCreate(
             ['academic_year' => '2025/2026'],
             [
@@ -44,29 +43,32 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 3. Create Companies
+        // ============================================================
+        // 3. MASTER DATA MITRA (PERUSAHAAN)
+        // ============================================================
         $companyNames = [
-            'PT Telkom Indonesia', 'PT Bank Mandiri', 'PT GoTo Gojek Tokopedia', 
-            'PT Astra International', 'PT Bukalapak', 'PT Indofood', 
+            'PT Telkom Indonesia', 'PT Bank Mandiri', 'PT GoTo Gojek Tokopedia',
+            'PT Astra International', 'PT Bukalapak', 'PT Indofood',
             'PT Pertamina', 'PT PLN', 'PT Kimia Farma', 'PT Semen Indonesia'
         ];
-        
-        $companyData = [];
+
         foreach ($companyNames as $name) {
-            $companyData[] = Company::create([
-                'period_id' => $period->id,
-                'name' => $name,
-                'address' => $faker->address,
-                'contact_person' => $faker->name,
-                'phone' => $faker->phoneNumber,
-                'is_verified' => true,
-            ]);
+            Company::updateOrCreate(
+                ['name' => $name, 'period_id' => $period->id],
+                [
+                    'address' => $faker->address,
+                    'contact_person' => $faker->name,
+                    'phone' => $faker->phoneNumber,
+                    'is_verified' => true,
+                ]
+            );
         }
 
-        // 4. Create Lecturers (15) - 1 Koordinator TA, 7 Dosen Pembimbing, 7 Dosen Penguji
-        $dosenData = [];
+        // ============================================================
+        // 4. AKUN DOSEN (Koordinator TA, Pembimbing, Penguji)
+        // ============================================================
 
-        // Koordinator TA
+        // 4a. Koordinator TA
         $koordinatorTaUser = User::updateOrCreate([
             'email' => 'koordinator.ta@uim.ac.id'
         ], [
@@ -75,65 +77,59 @@ class UserSeeder extends Seeder
             'role' => 'koordinator_ta',
         ]);
 
-        $koordinatorLecturer = Lecturer::updateOrCreate([
+        Lecturer::updateOrCreate([
             'nip' => '19800101000'
         ], [
             'user_id' => $koordinatorTaUser->id,
             'phone' => $faker->phoneNumber,
             'period_id' => $period->id,
         ]);
-        $dosenData[] = $koordinatorLecturer;
 
-        // Dosen Pembimbing (7)
-        for ($i = 0; $i < 7; $i++) {
-            $name = 'Dosen Pembimbing ' . ($i + 1);
-            $email = 'dosen.pembimbing' . ($i + 1) . '@uim.ac.id';
+        // 4b. Dosen Pembimbing (7)
+        for ($i = 1; $i <= 7; $i++) {
             $user = User::updateOrCreate([
-                'email' => $email
+                'email' => "dosen.pembimbing{$i}@uim.ac.id"
             ], [
-                'name' => $name,
+                'name' => "Dosen Pembimbing {$i}",
                 'password' => Hash::make('dosen123'),
                 'role' => 'dosen_pembimbing',
             ]);
 
-            $lecturer = Lecturer::updateOrCreate([
-                'nip' => '19800101' . str_pad($i + 1, 3, '0')
+            Lecturer::updateOrCreate([
+                'nip' => '19800101' . str_pad($i, 3, '0')
             ], [
                 'user_id' => $user->id,
                 'phone' => $faker->phoneNumber,
                 'period_id' => $period->id,
             ]);
-            $dosenData[] = $lecturer;
         }
 
-        // Dosen Penguji (7)
-        for ($i = 0; $i < 7; $i++) {
-            $name = 'Dosen Penguji ' . ($i + 1);
-            $email = 'dosen.penguji' . ($i + 1) . '@uim.ac.id';
+        // 4c. Dosen Penguji (7)
+        for ($i = 1; $i <= 7; $i++) {
             $user = User::updateOrCreate([
-                'email' => $email
+                'email' => "dosen.penguji{$i}@uim.ac.id"
             ], [
-                'name' => $name,
+                'name' => "Dosen Penguji {$i}",
                 'password' => Hash::make('dosen123'),
                 'role' => 'dosen_penguji',
             ]);
 
-            $lecturer = Lecturer::updateOrCreate([
-                'nip' => '19800201' . str_pad($i + 1, 3, '0')
+            Lecturer::updateOrCreate([
+                'nip' => '19800201' . str_pad($i, 3, '0')
             ], [
                 'user_id' => $user->id,
                 'phone' => $faker->phoneNumber,
                 'period_id' => $period->id,
             ]);
-            $dosenData[] = $lecturer;
         }
 
-        // 5. Create Students (50)
-        $mahasiswaData = [];
+        // ============================================================
+        // 5. AKUN MAHASISWA (50) — HANYA AKUN, TANPA KELOMPOK KP
+        // ============================================================
         $majors = ['Sistem Informasi', 'Teknik Informatika', 'Sistem Komputer'];
 
-        for ($i = 0; $i < 50; $i++) {
-            $nim = '2023' . str_pad($i + 1, 3, '0');
+        for ($i = 1; $i <= 50; $i++) {
+            $nim = '2023' . str_pad($i, 3, '0');
             $user = User::updateOrCreate(
                 ['email' => 'mhs' . $nim . '@student.unikom.ac.id'],
                 [
@@ -142,8 +138,8 @@ class UserSeeder extends Seeder
                     'role' => 'mahasiswa',
                 ]
             );
-            
-            $mahasiswaData[] = Student::updateOrCreate(['nim' => $nim], [
+
+            Student::updateOrCreate(['nim' => $nim], [
                 'user_id' => $user->id,
                 'major' => $majors[array_rand($majors)],
                 'batch_year' => '2023',
@@ -152,51 +148,23 @@ class UserSeeder extends Seeder
             ]);
         }
 
-        // 6. Create Themes (20)
-        $themeData = [];
+        // ============================================================
+        // 6. MASTER DATA TEMA (20)
+        // ============================================================
         $prefixes = ['Pengembangan Web', 'Data Science', 'Network Security', 'Mobile App', 'AI Research'];
-        for ($i = 0; $i < 20; $i++) {
-            $themeData[] = Theme::create([
-                'period_id' => $period->id, 
-                'name' => $prefixes[array_rand($prefixes)] . ' ' . ($i + 1), 
-                'year' => '2025', 
-                'is_active' => true
-            ]);
+        for ($i = 1; $i <= 20; $i++) {
+            Theme::updateOrCreate(
+                ['name' => $prefixes[array_rand($prefixes)] . ' ' . $i, 'period_id' => $period->id],
+                [
+                    'year' => '2025',
+                    'is_active' => true
+                ]
+            );
         }
 
-        // 7. Create Internships (15)
-        $statuses = ['ongoing', 'finished', 'grading'];
-        foreach (range(1, 15) as $i) {
-            $internship = Internship::create([
-                'leader_id' => $mahasiswaData[array_rand($mahasiswaData)]->id,
-                'supervisor_id' => $dosenData[array_rand($dosenData)]->id,
-                'theme_id' => $themeData[array_rand($themeData)]->id,
-                'company_id' => $companyData[array_rand($companyData)]->id,
-                'period_id' => $period->id,
-                'status' => $statuses[array_rand($statuses)],
-                'started_at' => now()->subMonths(2),
-                'ended_at' => now()->addMonths(1),
-            ]);
-
-            // Add Logbooks
-            Logbook::create([
-                'internship_id' => $internship->id,
-                'date' => now()->subDays(rand(1, 30))->format('Y-m-d'),
-                'activity' => 'Melaporkan progres kegiatan di ' . $internship->theme->name,
-                'status' => 'approved',
-                'attachment' => null,
-            ]);
-
-            // Add Reports
-            Report::create([
-                'internship_id' => $internship->id,
-                'file_url' => 'laporan_' . $internship->id . '.pdf',
-                'title' => 'Laporan Akhir ' . $internship->theme->name,
-                'description' => 'Laporan lengkap kegiatan KP di perusahaan mitra.',
-                'status' => 'approved',
-            ]);
-        }
-
-        $this->command->info('✅ Seeding selesai! Data terlihat profesional.');
+        // ============================================================
+        // SELESAI — TIDAK MEMBUAT INTERNSHIP / LOGBOOK / REPORT APA PUN
+        // ============================================================
+        $this->command->info('✅ Seeding selesai! Hanya akun & master data (tanpa kelompok KP).');
     }
 }

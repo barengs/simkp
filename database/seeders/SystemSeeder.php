@@ -2,12 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-use App\Models\Internship;
-use App\Models\InternshipMember;
-use App\Models\Logbook;
 use App\Models\Period;
 use App\Models\Student;
 use App\Models\Lecturer;
@@ -16,6 +12,10 @@ class SystemSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Seeder ini HANYA memastikan periode aktif tersedia dan
+     * menyelaraskan mahasiswa/dosen ke periode tersebut.
+     * TIDAK membuat kelompok KP / logbook / laporan apa pun.
      */
     public function run(): void
     {
@@ -36,13 +36,13 @@ class SystemSeeder extends Seeder
         Student::withoutGlobalScopes()->update(['period_id' => $period->id]);
         Lecturer::withoutGlobalScopes()->update(['period_id' => $period->id]);
 
-        // 3. Ensure Theme and Company exist
-        $theme = \App\Models\Theme::firstOrCreate(
+        // 3. Pastikan minimal ada 1 tema & 1 mitra (master data pendukung)
+        \App\Models\Theme::firstOrCreate(
             ['name' => 'Pengembangan Sistem Informasi', 'period_id' => $period->id],
             ['year' => $period->academic_year, 'is_active' => true]
         );
 
-        $company = \App\Models\Company::firstOrCreate(
+        \App\Models\Company::firstOrCreate(
             ['name' => 'PT Digital Solusi Utama', 'period_id' => $period->id],
             [
                 'address' => 'Jl. Merdeka No. 123, Jakarta',
@@ -52,61 +52,6 @@ class SystemSeeder extends Seeder
             ]
         );
 
-        // 4. Create Internship Group for Mahasiswa 1
-        $student1 = Student::find(1);
-        $student2 = Student::find(2);
-        $lecturer = Lecturer::find(1);
-
-        if ($student1 && $lecturer) {
-            $internship = Internship::firstOrCreate(
-                ['leader_id' => $student1->id, 'period_id' => $period->id],
-                [
-                    'company_id' => $company->id,
-                    'theme_id' => $theme->id,
-                    'status' => 'approved',
-                    'supervisor_id' => $lecturer->id,
-                ]
-            );
-
-            // 4. Create Internship Members
-            InternshipMember::firstOrCreate([
-                'internship_id' => $internship->id,
-                'student_id' => $student1->id,
-            ]);
-
-            if ($student2) {
-                InternshipMember::firstOrCreate([
-                    'internship_id' => $internship->id,
-                    'student_id' => $student2->id,
-                ]);
-            }
-
-            // 5. Create Logbook
-            try {
-                Logbook::firstOrCreate(
-                    ['internship_id' => $internship->id, 'date' => now()->subDays(1)->format('Y-m-d')],
-                    [
-                        'activity' => 'Melakukan observasi lapangan di PT Digital Solusi Utama.',
-                        'status' => 'approved',
-                    ]
-                );
-            } catch (\Exception $e) {
-                // Ignore duplicate
-            }
-
-            // 6. Log Activity
-            $activityDesc = "Mahasiswa {$student1->user->name} mendaftarkan kelompok KP baru.";
-            try {
-                \App\Models\Activity::firstOrCreate(
-                    ['user_id' => $student1->user->id, 'description' => $activityDesc],
-                    [
-                        'period_id' => $period->id,
-                        'type' => 'registration_submitted',
-                    ]
-                );
-            } catch (\Exception $e) {
-                // Ignore duplicate
-            }
-        }
+        $this->command->info('✅ SystemSeeder: master data siap, tanpa kelompok KP untuk mahasiswa.');
     }
 }

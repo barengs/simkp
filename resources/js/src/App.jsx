@@ -11,73 +11,60 @@ import PermissionGate from "./components/PermissionGate";
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
 const MainLayout = lazy(() => import("./layouts/MainLayout"));
-const AdminDashboard = lazy(() => import("./admin/Dashboard"));
-const DosenDashboard = lazy(() => import("./dosen/Dashboard"));
-const StudentDashboard = lazy(() => import("./student/Dashboard"));
+const DashboardSwitcher = lazy(() => import("./components/DashboardSwitcher"));
+
+// Feature-based components (reusable, permission-driven)
+const InternshipGroupList = lazy(() => import("./components/InternshipGroupList"));
+const LogbookMonitoring = lazy(() => import("./components/LogbookMonitoring"));
+const ReportMonitoring = lazy(() => import("./components/ReportMonitoring"));
+const EvaluationMonitoring = lazy(() => import("./components/EvaluationMonitoring"));
+const InternshipGroupDetail = lazy(() => import("./pages/InternshipGroupDetail"));
+
+// Admin specific
 const PeriodManagement = lazy(() => import("./admin/Periods/PeriodManagement"));
-const ThemeManagement = React.lazy(() => import("./admin/Themes/ThemeManagement"));
-const LecturerList = React.lazy(() => import("./admin/master/Lecturers/LecturerList"));
+const ThemeManagement = lazy(() => import("./admin/Themes/ThemeManagement"));
 const StudentList = lazy(() => import("./admin/master/Students/StudentList"));
-const CompanyList = React.lazy(() => import("./admin/master/Companies/CompanyList"));
+const CompanyList = lazy(() => import("./admin/master/Companies/CompanyList"));
+const LecturerList = lazy(() => import("./admin/master/Lecturers/LecturerList"));
+const RoleManagement = lazy(() => import("./admin/RoleManagement"));
+const Settings = lazy(() => import("./admin/Settings/Settings"));
+const KoordinatorTA = lazy(() => import("./admin/KoordinatorTA"));
+const AdminActivity = lazy(() => import("./admin/Activities/ActivityIndex"));
+
+// Student specific
 const Registration = lazy(() => import("./student/Registration"));
 const TARegistration = lazy(() => import("./student/TARegistration"));
 const TABimbingan = lazy(() => import("./student/TABimbingan"));
 const TASidang = lazy(() => import("./student/TASidang"));
 const TAFinal = lazy(() => import("./student/TAFinal"));
 const StudentProfile = lazy(() => import("./student/StudentProfile"));
-const StudentLogbook = lazy(() => import("./student/Logbooks/Logbook"));
-const DosenLogbook = lazy(() => import("./dosen/Logbooks/Logbook"));
-const AdminLogbook = lazy(() => import("./admin/Logbooks/Logbook"));
+const StudentLogbook = lazy(() => import("./student/Logbook"));
 const StudentReport = lazy(() => import("./student/Reports/Report"));
-const DosenReport = lazy(() => import("./dosen/Reports/Report"));
-const AdminReport = lazy(() => import("./admin/Reports/Report"));
 const StudentEvaluation = lazy(() => import("./student/Evaluations/Evaluation"));
-const DosenEvaluation = lazy(() => import("./dosen/Evaluations/Evaluation"));
-const AdminEvaluation = lazy(() => import("./admin/Evaluations/Evaluation"));
-const AdminInternshipGroups = lazy(() => import("./admin/Internships/InternshipList"));
-const DosenInternshipGroups = lazy(() => import("./dosen/Internships/InternshipList"));
-const InternshipGroupDetail = lazy(() => import("./pages/InternshipGroupDetail"));
-const Settings = lazy(() => import("./admin/Settings/Settings"));
-const AdminActivity = lazy(() => import("./admin/Activities/ActivityIndex"));
-const DosenActivity = lazy(() => import("./dosen/Activities/ActivityIndex"));
 const StudentActivity = lazy(() => import("./student/Activities/ActivityIndex"));
-const KoordinatorTA = lazy(() => import("./admin/KoordinatorTA"));
-const RoleManagement = lazy(() => import("./admin/RoleManagement"));
-const ProfileSettings = lazy(() => import("./pages/ProfileSettings"));
 
-
+// Dosen specific
+const DosenActivity = lazy(() => import("./dosen/Activities/ActivityIndex"));
+const LogbookValidation = lazy(() => import("./dosen/LogbookValidation"));
 
 /**
  * ProtectedRoute - Requires authentication.
- * Redirects to /login if not authenticated.
  */
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated } = useSelector((state) => state.auth);
-
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
-
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
     return children;
 };
 
 /**
  * ProfileGuard - For mahasiswa, checks if profile is complete.
- * If not, redirects to /student/profile.
- * Allows access to /student/profile itself.
  */
 const ProfileGuard = ({ children }) => {
     const { user } = useSelector((state) => state.auth);
     const location = useLocation();
-
-    if (
-        user?.role === "mahasiswa" &&
-        !user?.is_profile_complete &&
-        location.pathname !== "/student/profile"
-    ) {
+    if (user?.role === "mahasiswa" && !user?.is_profile_complete && location.pathname !== "/student/profile") {
         return <Navigate to="/student/profile" replace />;
     }
-
     return children;
 };
 
@@ -86,24 +73,8 @@ const ProfileGuard = ({ children }) => {
  */
 const GuestRoute = ({ children }) => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
-
-    if (isAuthenticated && user) {
-        return <Navigate to={user.redirect_url || "/"} replace />;
-    }
-
+    if (isAuthenticated && user) return <Navigate to={user.redirect_url || "/"} replace />;
     return children;
-};
-
-/**
- * DashboardSwitcher - Renders the dashboard based on user role.
- */
-const DashboardSwitcher = () => {
-    const { user } = useSelector((state) => state.auth);
-    const roles = user?.roles || [];
-
-    if (roles.includes("admin")) return <AdminDashboard />;
-    if (roles.includes("dosen_pembimbing") || roles.includes("dosen_penguji")) return <DosenDashboard />;
-    return <StudentDashboard />;
 };
 
 const App = () => {
@@ -111,86 +82,58 @@ const App = () => {
     const { initialLoading } = useSelector((state) => state.auth);
     const { publicSettings } = useSelector((state) => state.settings || { publicSettings: {} });
 
-    // On mount, try to restore session
     useEffect(() => {
         dispatch(fetchCurrentUser());
         dispatch(fetchPublicSettings());
     }, [dispatch]);
 
-    // Dynamic Branding (Title & Favicon)
     useEffect(() => {
-        if (publicSettings.app_name) {
-            document.title = publicSettings.app_name;
-        }
-        if (publicSettings.app_favicon) {
-            let favicon = document.getElementById("favicon");
-            if (!favicon) {
-                favicon = document.createElement("link");
-                favicon.id = "favicon";
-                favicon.rel = "icon";
-                document.head.appendChild(favicon);
-            }
-            favicon.href = publicSettings.app_favicon;
-        }
+        if (publicSettings.app_name) document.title = publicSettings.app_name;
     }, [publicSettings]);
 
-    // Show nothing while checking session
     if (initialLoading) return null;
 
     return (
         <>
             <Suspense fallback={null}>
                 <Routes>
-                    {/* Guest Routes: Only accessible when logged out */}
+                    {/* Guest Routes */}
                     <Route element={<GuestRoute><Outlet /></GuestRoute>}>
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                     </Route>
 
-                    {/* Profile Completion: Protected but lacks ProfileGuard */}
+                    {/* Profile Completion */}
                     <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
                         <Route path="/student/profile" element={<StudentProfile />} />
                     </Route>
 
-                    {/* Protected Application Shell: Layout + Guarded */}
-                    <Route
-                        element={
-                            <ProtectedRoute>
-                                <ProfileGuard>
-                                    <MainLayout />
-                                </ProfileGuard>
-                            </ProtectedRoute>
-                        }
-                    >
-                        {/* Universal */}
+                    {/* Protected Application Shell */}
+                    <Route element={<ProtectedRoute><ProfileGuard><MainLayout /></ProfileGuard></ProtectedRoute>}>
+                        {/* Dashboard */}
                         <Route index element={<DashboardSwitcher />} />
-                        <Route
-                            path="profile"
-                            element={
-                                <PermissionGate permission="manage profile">
-                                    <ProfileSettings />
-                                </PermissionGate>
-                            }
-                        />
+
+                        {/* Universal Features (permission-based) */}
+                        <Route path="internship-groups">
+                            <Route index element={<PermissionGate permission="view internships"><InternshipGroupList /></PermissionGate>} />
+                            <Route path=":internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
+                        </Route>
+                        <Route path="logbook-monitoring" element={<PermissionGate permission="view logbook monitoring"><LogbookMonitoring /></PermissionGate>} />
+                        <Route path="report-monitoring" element={<PermissionGate permission="view kp reports"><ReportMonitoring /></PermissionGate>} />
+                        <Route path="evaluation-recap" element={<PermissionGate permission="view evaluation recap"><EvaluationMonitoring /></PermissionGate>} />
+                        <Route path="logbook-validation" element={<PermissionGate permission="validate logbook"><LogbookValidation /></PermissionGate>} />
 
                         {/* Admin Routes */}
                         <Route path="admin">
                             <Route path="period-management" element={<PermissionGate permission="manage periods"><PeriodManagement /></PermissionGate>} />
                             <Route path="theme-management" element={<PermissionGate permission="manage themes"><ThemeManagement /></PermissionGate>} />
                             <Route path="master-mahasiswa" element={<PermissionGate permission="manage master data"><StudentList /></PermissionGate>} />
+                            <Route path="master/mitra" element={<PermissionGate permission="manage master data"><CompanyList /></PermissionGate>} />
+                            <Route path="master/dosen" element={<PermissionGate permission="manage master data"><LecturerList /></PermissionGate>} />
                             <Route path="role-management" element={<PermissionGate permission="manage roles"><RoleManagement /></PermissionGate>} />
-                            <Route path="internship-groups" element={<PermissionGate permission="view internships"><AdminInternshipGroups /></PermissionGate>} />
-                            <Route path="internship-groups/:internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
-                            <Route path="logbook" element={<PermissionGate permission="view logbook monitoring"><AdminLogbook /></PermissionGate>} />
-                            <Route path="reports" element={<PermissionGate permission="view kp reports"><AdminReport /></PermissionGate>} />
-                            <Route path="evaluations" element={<PermissionGate permission="view evaluation recap"><AdminEvaluation /></PermissionGate>} />
                             <Route path="settings" element={<PermissionGate permission="manage settings"><Settings /></PermissionGate>} />
-                            <Route path="activities" element={<PermissionGate permission="manage settings"><AdminActivity /></PermissionGate>} />
+                            <Route path="activities" element={<AdminActivity />} />
                             <Route path="koordinator-ta" element={<PermissionGate permission="manage ta"><KoordinatorTA /></PermissionGate>} />
-                            <Route path="master">
-                                <Route path="mitra" element={<PermissionGate permission="manage master data"><CompanyList /></PermissionGate>} />
-                                <Route path="dosen" element={<PermissionGate permission="manage master data"><LecturerList /></PermissionGate>} />
-                            </Route>
                         </Route>
 
                         {/* Student Routes */}
@@ -199,22 +142,25 @@ const App = () => {
                             <Route path="logbook" element={<PermissionGate permission="student logbook"><StudentLogbook /></PermissionGate>} />
                             <Route path="reports" element={<PermissionGate permission="student report"><StudentReport /></PermissionGate>} />
                             <Route path="evaluations" element={<PermissionGate permission="student evaluation"><StudentEvaluation /></PermissionGate>} />
-                            <Route path="activities" element={<PermissionGate permission="student logbook"><StudentActivity /></PermissionGate>} />
                             <Route path="ta-registration" element={<PermissionGate permission="student ta"><TARegistration /></PermissionGate>} />
                             <Route path="ta-bimbingan" element={<PermissionGate permission="student ta"><TABimbingan /></PermissionGate>} />
                             <Route path="ta-sidang" element={<PermissionGate permission="student ta"><TASidang /></PermissionGate>} />
                             <Route path="ta-final" element={<PermissionGate permission="student ta"><TAFinal /></PermissionGate>} />
+                            <Route path="activities" element={<PermissionGate permission="student logbook"><StudentActivity /></PermissionGate>} />
                         </Route>
 
-                        {/* Lecturer (Dosen) Routes */}
+                        {/* Dosen Routes */}
                         <Route path="dosen">
-                            <Route path="internship-groups" element={<PermissionGate permission="view internships"><DosenInternshipGroups /></PermissionGate>} />
-                            <Route path="internship-groups/:internship_id" element={<PermissionGate permission="view internships"><InternshipGroupDetail /></PermissionGate>} />
-                            <Route path="logbook" element={<PermissionGate permission="validate logbook"><DosenLogbook /></PermissionGate>} />
-                            <Route path="reports" element={<PermissionGate permission="validate report"><DosenReport /></PermissionGate>} />
-                            <Route path="evaluations" element={<PermissionGate permission="score internships"><DosenEvaluation /></PermissionGate>} />
-                            <Route path="activities" element={<PermissionGate permission="view internships"><DosenActivity /></PermissionGate>} />
+                            <Route path="activities" element={<DosenActivity />} />
                         </Route>
+
+                        {/* Legacy Redirects (zero-downtime migration) */}
+                        <Route path="admin/internship-groups" element={<Navigate to="/internship-groups" replace />} />
+                        <Route path="admin/logbook" element={<Navigate to="/logbook-monitoring" replace />} />
+                        <Route path="admin/reports" element={<Navigate to="/report-monitoring" replace />} />
+                        <Route path="admin/evaluations" element={<Navigate to="/evaluation-recap" replace />} />
+                        <Route path="dosen/internship-groups" element={<Navigate to="/internship-groups" replace />} />
+                        <Route path="dosen/logbook" element={<Navigate to="/logbook-validation" replace />} />
                     </Route>
 
                     {/* Catch all */}

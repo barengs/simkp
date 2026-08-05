@@ -8,6 +8,7 @@ use App\Http\Resources\EvaluationResource;
 use App\Models\Evaluation;
 use App\Services\EvaluationService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class EvaluationController extends Controller
 {
@@ -18,62 +19,84 @@ class EvaluationController extends Controller
         $this->evaluationService = $evaluationService;
     }
 
-    public function index(Request $request)
+    /**
+     * Display a listing of the evaluations.
+     * Authorization handled by EvaluationPolicy::viewAny.
+     */
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-        
-        if ($user->role === 'mahasiswa') {
-            $studentId = $user->student->id ?? 0;
-            $evaluations = $this->evaluationService->getEvaluationsByStudent($studentId);
-            return EvaluationResource::collection($evaluations);
-        } elseif ($user->role === 'dosen') {
-            $internships = $this->evaluationService->getInternshipsBySupervisor($user->lecturer->id ?? 0);
-            return \App\Http\Resources\InternshipResource::collection($internships);
-        } else {
-            $internships = $this->evaluationService->getAllInternshipsWithEvaluations();
-            return \App\Http\Resources\InternshipResource::collection($internships);
-        }
+        $this->authorize('viewAny', Evaluation::class);
+
+        $evaluations = $this->evaluationService->getAllEvaluations();
+
+        return EvaluationResource::collection($evaluations);
     }
 
-    public function store(EvaluationRequest $request)
+    /**
+     * Store a newly created evaluation.
+     * Authorization handled by EvaluationPolicy::createOrUpdate.
+     */
+    public function store(EvaluationRequest $request): JsonResponse
     {
+        $this->authorize('createOrUpdate', Evaluation::class);
+
         $internship = \App\Models\Internship::findOrFail($request->internship_id);
         if (!$internship->hasFinalReport()) {
-            return response()->json(['message' => 'Penilaian tidak dapat dilakukan karena laporan belum berstatus FINAL.'], 422);
+            return response()->json([
+                'message' => 'Penilaian tidak dapat dilakukan karena laporan belum berstatus FINAL.',
+            ], 422);
         }
 
         $evaluation = $this->evaluationService->processEvaluation($request->validated());
 
         return response()->json([
             'message' => 'Penilaian KP berhasil disimpan.',
-            'data' => new EvaluationResource($evaluation->load(['internship.company', 'internship.leader.user']))
+            'data' => new EvaluationResource($evaluation->load(['internship.company', 'internship.leader.user'])),
         ], 201);
     }
 
-    public function show(Evaluation $evaluation)
+    /**
+     * Display the specified evaluation.
+     * Authorization handled by EvaluationPolicy::view.
+     */
+    public function show(Evaluation $evaluation): JsonResponse
     {
+        $this->authorize('view', $evaluation);
+
         $evaluation->load(['internship.company', 'internship.leader.user']);
+
         return new EvaluationResource($evaluation);
     }
 
-    public function update(EvaluationRequest $request, Evaluation $evaluation)
+    /**
+     * Update the specified evaluation.
+     * Authorization handled by EvaluationPolicy::createOrUpdate.
+     */
+    public function update(EvaluationRequest $request, Evaluation $evaluation): JsonResponse
     {
-        // Actually our processEvaluation uses updateOrCreate with internship_id, 
-        // but we can also handle standard PUT requests properly here.
+        $this->authorize('createOrUpdate', $evaluation);
+
         $eval = $this->evaluationService->processEvaluation(array_merge(
-            $request->validated(), 
+            $request->validated(),
             ['internship_id' => $evaluation->internship_id]
         ));
 
         return response()->json([
             'message' => 'Penilaian KP berhasil diperbarui.',
-            'data' => new EvaluationResource($eval->load(['internship.company', 'internship.leader.user']))
+            'data' => new EvaluationResource($eval->load(['internship.company', 'internship.leader.user'])),
         ], 200);
     }
 
-    public function destroy(Evaluation $evaluation)
+    /**
+     * Remove the specified evaluation.
+     * Authorization handled by EvaluationPolicy::delete.
+     */
+    public function destroy(Evaluation $evaluation): JsonResponse
     {
+        $this->authorize('delete', $evaluation);
+
         $this->evaluationService->deleteEvaluation($evaluation);
+
         return response()->json(['message' => 'Data penilaian berhasil dihapus.']);
     }
 }

@@ -3,107 +3,203 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\InternshipRequest;
-use App\Http\Resources\InternshipResource;
-use App\Services\InternshipService;
+use App\Models\Internship;
+use App\Models\InternshipMember;
+use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 
 class InternshipController extends Controller
 {
-    protected $internshipService;
-
-    public function __construct(InternshipService $internshipService)
+    public function __construct()
     {
-        $this->internshipService = $internshipService;
+
+
     }
 
-    public function index()
-    {
-        $user = Auth::user();
-        $student = \App\Models\Student::where('user_id', $user->id)->first();
-        Log::info("InternshipController index hit by user ID: " . $user->id);
-
-        if (!$student) {
-            Log::warning("User ID " . $user->id . " has no student record in DB.");
-            return response()->json(['message' => 'Akun tidak terhubung dengan data mahasiswa.'], 403);
-        }
-        $studentId = $student->id;
-
-        $internship = $this->internshipService->getStudentInternship($studentId);
-
-        if (!$internship) {
-            return response()->json(['message' => 'No internship found'], 404);
-        }
-
-        return new InternshipResource($internship);
-    }
-
-    public function store(InternshipRequest $request)
-    {
-        try {
-            $user = Auth::user();
-            $student = \App\Models\Student::where('user_id', $user->id)->first();
-            if (!$student) {
-                return response()->json(['message' => 'Akun tidak terhubung dengan data mahasiswa.'], 403);
-            }
-            $studentId = $student->id;
-
-            // Re-check if student already has an internship
-            $existing = $this->internshipService->getStudentInternship($studentId);
-            if ($existing) {
-                if ($existing->status === 'rejected') {
-                    // Delete old rejected internship members and itself to allow a fresh re-registration
-                    $existing->members()->delete();
-                    $existing->delete();
-                } else {
-                    return response()->json(['message' => "Mahasiswa {$student->name} sudah terdaftar di kelompok lain."], 422);
-                }
-            }
-
-            $internship = $this->internshipService->register($request->validated(), $studentId);
-
-            return (new InternshipResource($internship->load(['leader', 'period', 'company', 'theme', 'supervisor', 'students'])))
-                ->additional(['message' => 'Pendaftaran KP berhasil dikirim!']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function listGroups(Request $request)
-    {
-        $internships = $this->internshipService->getInternshipsForUser($request->user());
-        return InternshipResource::collection($internships);
-    }
-
-    public function show(Request $request, $id)
+    /**
+     * Display a listing of the internships.
+     */
+    public function index(Request $request): JsonResponse
     {
         $user = $request->user();
+        
+        $query = Internship::with(['leader', 'supervisor', 'company', 'theme', 'period']);
 
-        $internship = \App\Models\Internship::with([
-            'leader.user',
-            'period',
-            'company',
-            'theme',
-            'supervisor.user',
-            'students.user',
-            'logbooks',
-            'reports',
-            'evaluation',
-        ])->findOrFail($id);
-
-        // Authorization: admin dapat melihat semua, dosen hanya bisa melihat kelompok bimbingannya
-        if ($user->role === 'dosen') {
-            $lecturerId = $user->lecturer->id ?? null;
-            if ($internship->supervisor_id !== $lecturerId) {
-                return response()->json(['message' => 'Anda tidak memiliki akses ke kelompok ini.'], 403);
+        if ($user->hasRole('admin')) {
+            // Admin: semua data
+        } elseif ($user->hasRole('koordinator_ta')) {
+            // Koordinator TA: semua data
+        } elseif ($user->hasPermissionTo('student logbook')) {
+            // Mahasiswa: hanya kelompoknya sendiri
+            $student = Student::where('user_id', $user->id)->first();
+            if ($student) {
+                $query->where(function ($q) use ($student) {
+                    $q->where('leader_id', $student->id)
+                      ->orWhereHas('members', function ($q2) use ($student) {
+                          $q2->where('student_id', $student->id);
+                      });
+                });
             }
-        } elseif ($user->role !== 'admin') {
-            return response()->json(['message' => 'Akses ditolak.'], 403);
+        } elseif ($user->hasRole('dosen_pembimbing') || $user->hasRole('dosen_penguji')) {
+            // Dosen: hanya yang dia bimbing/penguji
+            $lecturer = $user->lecturer;
+            if ($lecturer) {
+                $query->where('supervisor_id', $lecturer->id);
+            }
         }
 
-        return new InternshipResource($internship);
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate(15),
+        ]);
+    }
+
+    /**
+     * List internship groups (for monitoring pages).
+     */
+    public function listGroups(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $query = Internship::with(['leader', 'supervisor', 'company', 'theme', 'period']);
+
+        if (!$user->hasRole('admin') && !$user->hasRole('koordinator_ta')) {
+            if ($user->hasPermissionTo('student logbook')) {
+                $student = Student::where('user_id', $user->id)->first();
+                if ($student) {
+                    $query->where(function ($q) use ($student) {
+                        $q->where('leader_id', $student->id)
+                          ->orWhereHas('members', function ($q2) use ($student) {
+                              $q2->where('student_id', $student->id);
+                          });
+                    });
+                }
+            } elseif ($user->hasRole('dosen_pembimbing') || $user->hasRole('dosen_penguji')) {
+                $lecturer = $user->lecturer;
+                if ($lecturer) {
+                    $query->where('supervisor_id', $lecturer->id);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->get(),
+        ]);
+    }
+
+    /**
+     * Store a newly created internship.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $this->authorize('create', Internship::class);
+
+        $validator = Validator::make($request->all(), [
+            'leader_id' => 'required|exists:students,id',
+            'supervisor_id' => 'required|exists:lecturers,id',
+            'theme_id' => 'required|exists:themes,id',
+            'company_id' => 'required|exists:companies,id',
+            'period_id' => 'required|exists:periods,id',
+            'started_at' => 'required|date',
+            'ended_at' => 'required|date|after:started_at',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $internship = Internship::create($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kelompok KP berhasil dibuat.',
+            'data' => $internship,
+        ], 201);
+    }
+
+    /**
+     * Display the specified internship.
+     */
+    public function show(Internship $internship, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $this->authorize('view', $internship);
+
+        return response()->json([
+            'success' => true,
+            'data' => $internship->load([
+                'leader', 'supervisor', 'company', 'theme', 'period',
+                'members.student.user',
+                'logbooks', 'reports', 'evaluations'
+            ]),
+        ]);
+    }
+
+    /**
+     * Update the specified internship.
+     */
+    public function update(Request $request, Internship $internship): JsonResponse
+    {
+        $this->authorize('update', $internship);
+
+        $validator = Validator::make($request->all(), [
+            'supervisor_id' => 'sometimes|exists:lecturers,id',
+            'status' => 'sometimes|in:ongoing,finished,grading,submitted,approved,rejected',
+            'started_at' => 'sometimes|date',
+            'ended_at' => 'sometimes|date|after:started_at',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $internship->update($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kelompok KP berhasil diperbarui.',
+            'data' => $internship,
+        ]);
+    }
+
+    /**
+     * Remove the specified internship.
+     */
+    public function destroy(Internship $internship): JsonResponse
+    {
+        $this->authorize('delete', $internship);
+
+        $internship->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kelompok KP berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Assign supervisor to internship.
+     */
+    public function assignSupervisor(Request $request, Internship $internship): JsonResponse
+    {
+        $this->authorize('assignSupervisor', Internship::class);
+
+        $validator = Validator::make($request->all(), [
+            'supervisor_id' => 'required|exists:lecturers,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $internship->update(['supervisor_id' => $validator->validated()['supervisor_id']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembimbing berhasil ditugaskan.',
+            'data' => $internship,
+        ]);
     }
 }

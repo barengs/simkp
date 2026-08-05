@@ -8,7 +8,7 @@ use App\Http\Resources\ReportResource;
 use App\Models\Report;
 use App\Services\ReportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\JsonResponse;
 
 class ReportController extends Controller
 {
@@ -21,78 +21,73 @@ class ReportController extends Controller
 
     /**
      * Display a listing of the reports.
+     * Authorization handled by ReportPolicy::viewAny.
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $reports = $this->reportService->getReports($request->user());
+        $this->authorize('viewAny', Report::class);
+
+        $reports = $this->reportService->getAllReports();
+
         return ReportResource::collection($reports);
     }
 
     /**
      * Store a newly created report.
+     * Authorization handled by ReportPolicy::create.
      */
-    public function store(ReportRequest $request)
+    public function store(ReportRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        
-
+        $this->authorize('create', Report::class);
 
         $report = $this->reportService->createReport(
-            $data, 
+            $request->validated(),
             $request->file('file_url')
         );
 
         return response()->json([
             'message' => 'Laporan berhasil diunggah.',
-            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user', 'internship.supervisor.user']))
+            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user', 'internship.supervisor.user'])),
         ], 201);
     }
 
     /**
      * Display the specified report.
+     * Authorization handled by ReportPolicy::view.
      */
-    public function show(Report $report)
+    public function show(Report $report): JsonResponse
     {
+        $this->authorize('view', $report);
+
         $report->load(['internship.company', 'internship.supervisor.user', 'internship.leader.user']);
+
         return new ReportResource($report);
     }
 
     /**
-     * Approve the report (Dosen)
+     * Approve the report.
+     * Authorization handled by ReportPolicy::approve.
      */
-    public function approve(Report $report, Request $request)
+    public function approve(Report $report, Request $request): JsonResponse
     {
-        // Ensure user is Dosen for the specific internship
-        if ($request->user()->role === 'dosen') {
-            if ($report->internship->supervisor_id !== ($request->user()->lecturer->id ?? null)) {
-                return response()->json(['message' => 'Anda tidak memiliki akses untuk memvalidasi laporan ini.'], 403);
-            }
-        } elseif ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Anda tidak memiliki akses untuk memvalidasi laporan ini.'], 403);
-        }
+        $this->authorize('approve', $report);
 
         $report->status = 'approved';
         $report->save();
 
         return response()->json([
             'message' => 'Laporan berhasil disetujui.',
-            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user']))
+            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user'])),
         ]);
     }
 
     /**
-     * Reject the report (Dosen)
+     * Reject the report.
+     * Authorization handled by ReportPolicy::reject.
      */
-    public function reject(Report $report, Request $request)
+    public function reject(Report $report, Request $request): JsonResponse
     {
-        // Ensure user is Dosen for the specific internship
-        if ($request->user()->role === 'dosen') {
-            if ($report->internship->supervisor_id !== ($request->user()->lecturer->id ?? null)) {
-                return response()->json(['message' => 'Anda tidak memiliki akses untuk memvalidasi laporan ini.'], 403);
-            }
-        } elseif ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Anda tidak memiliki akses untuk memvalidasi laporan ini.'], 403);
-        }
+        $this->authorize('reject', $report);
 
         $request->validate([
             'feedback' => ['required', 'string', 'min:5', 'max:1000'],
@@ -104,16 +99,20 @@ class ReportController extends Controller
 
         return response()->json([
             'message' => 'Laporan berhasil ditolak.',
-            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user']))
+            'data' => new ReportResource($report->load(['internship.company', 'internship.leader.user'])),
         ]);
     }
 
     /**
      * Remove the specified report.
+     * Authorization handled by ReportPolicy::delete.
      */
-    public function destroy(Report $report, Request $request)
+    public function destroy(Report $report): JsonResponse
     {
+        $this->authorize('delete', $report);
+
         $this->reportService->deleteReport($report);
+
         return response()->json(['message' => 'Laporan berhasil dihapus.']);
     }
 }
