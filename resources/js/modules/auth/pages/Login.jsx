@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { setCredentials } from '../../store/slices/authSlice';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [serverError, setServerError] = useState(null);
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    // Set CSRF cookie via Sanctum first
+    const initCsrf = async () => {
+        await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCredentials({ ...credentials, [name]: value });
-        if (errors[name]) {
-            setErrors({ ...errors, [name]: '' });
-        }
+        if (errors[name]) setErrors({ ...errors, [name]: '' });
+        setServerError(null);
     };
 
     const validateForm = () => {
@@ -21,13 +34,11 @@ const Login = ({ onLogin }) => {
         }
         if (!credentials.password) {
             newErrors.password = 'Password wajib diisi';
-        } else if (credentials.password.length < 6) {
-            newErrors.password = 'Password minimal 6 karakter';
         }
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const formErrors = validateForm();
         if (Object.keys(formErrors).length > 0) {
@@ -35,17 +46,33 @@ const Login = ({ onLogin }) => {
             return;
         }
 
-        const userData = {
-            name: credentials.email.split('@')[0],
-            email: credentials.email,
-            roles: [],
-            permissions: [],
-        };
+        setLoading(true);
+        setServerError(null);
 
-        if (onLogin) {
-            onLogin(userData);
-        } else {
-            alert(`Login berhasil sebagai ${credentials.email}!`);
+        try {
+            await initCsrf();
+            const { data } = await axios.post('/api/login', credentials, {
+                withCredentials: true,
+                headers: { Accept: 'application/json' },
+            });
+
+            dispatch(setCredentials({
+                user: data.user,
+                roles: data.roles,
+                permissions: data.permissions,
+            }));
+
+            navigate('/dashboard');
+        } catch (err) {
+            if (err.response?.status === 422) {
+                setErrors({ email: err.response.data.errors?.email?.[0] || 'Login gagal' });
+            } else if (err.response?.status === 419) {
+                setServerError('Sesi kadaluarsa. Refresh halaman dan coba lagi.');
+            } else {
+                setServerError('Tidak dapat terhubung ke server.');
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,7 +86,7 @@ const Login = ({ onLogin }) => {
                         </svg>
                     </div>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">SIM-KPTA Login</h2>
-                    <p className="mt-2 text-sm text-gray-600">Sistem Informasi Manajemen Kerja Praktek & Tugas Akhir</p>
+                    <p className="mt-2 text-sm text-gray-600">Sistem Informasi Manajemen KP & TA</p>
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -77,7 +104,9 @@ const Login = ({ onLogin }) => {
                                 className={`mt-1 block w-full px-3 py-2 border ${
                                     errors.email ? 'border-red-300' : 'border-gray-300'
                                 } rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm`}
-                                placeholder="email@university.ac.id"
+                                placeholder="email@simkpta.test"
+                                autoComplete="email"
+                                disabled={loading}
                             />
                             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                         </div>
@@ -96,29 +125,39 @@ const Login = ({ onLogin }) => {
                                     errors.password ? 'border-red-300' : 'border-gray-300'
                                 } rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm`}
                                 placeholder="••••••••"
+                                autoComplete="current-password"
+                                disabled={loading}
                             />
                             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                         </div>
+
+                        {serverError && (
+                            <div className="rounded-md bg-red-50 p-3">
+                                <p className="text-sm text-red-700">{serverError}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div>
                         <button
                             type="submit"
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                            disabled={loading}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Masuk
+                            {loading ? 'Memproses...' : 'Masuk'}
                         </button>
                     </div>
-                </form>
 
-                <div className="text-center text-sm text-gray-600">
-                    <p>
-                        Belum punya akun?{' '}
-                        <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
-                            Daftar
-                        </a>
-                    </p>
-                </div>
+                    <div className="bg-emerald-50 rounded-md p-3 text-xs text-emerald-800">
+                        <p className="font-medium">Akun demo:</p>
+                        <ul className="mt-1 space-y-0.5">
+                            <li>admin@simkpta.test / password</li>
+                            <li>koordinator@simkpta.test / password</li>
+                            <li>dosen@simkpta.test / password</li>
+                            <li>mahasiswa@simkpta.test / password</li>
+                        </ul>
+                    </div>
+                </form>
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Factory;
 
-Route::get('/', function () {
-    return view('index');
-});
+// SPA entry point - React will handle client-side routing
+Route::get('{any?}', fn() => view('index'))->where('any', '.*');
