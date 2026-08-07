@@ -1,165 +1,125 @@
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../store/slices/authSlice';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
-    LayoutDashboard,
-    Users,
-    UserCog,
-    UserPlus,
-    ClipboardList,
-    Briefcase,
-    CalendarDays,
-    Lightbulb,
-    CheckCircle,
-    BookOpen,
-    FileText,
-    Settings,
-    Shield,
-    ChevronLeft,
-    ChevronRight,
-    LogOut,
+  LayoutDashboard,
+  Users,
+  UserCog,
+  UserPlus,
+  ClipboardList,
+  Briefcase,
+  CalendarDays,
+  Lightbulb,
+  CheckCircle,
+  BookOpen,
+  FileText,
+  Settings,
+  Shield,
+  LogOut,
+  ChevronDown,
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { menuConfig } from '../../config/menuConfig';
 
-const iconMap = {
-    LayoutDashboard,
-    Users,
-    UserCog,
-    UserPlus,
-    ClipboardList,
-    Briefcase,
-    CalendarDays,
-    Lightbulb,
-    CheckCircle,
-    BookOpen,
-    FileText,
-    Settings,
-    Shield,
-};
+const Sidebar = () => {
+  const location = useLocation();
+  const { user, permissions } = useSelector((state) => state.auth);
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const [expandedMenus, setExpandedMenus] = useState({});
-    const { permissions } = useSelector((s) => s.auth);
-    const dispatch = useDispatch();
-    const location = useLocation();
+  const visibleMenu = menuConfig.filter(
+    (item) => !item.permission || permissions.includes(item.permission)
+  );
 
-    const toggleMenu = (menuId) => {
-        setExpandedMenus((prev) => ({ ...prev, [menuId]: !prev[menuId] }));
-    };
+  const isActive = (path) => {
+    if (path === '/dashboard') return location.pathname === '/dashboard';
+    return location.pathname.startsWith(path);
+  };
 
-    const visibleMenu = menuConfig.filter((m) => !m.permission || permissions.includes(m.permission));
+  return (
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
+        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-sm">SIM</span>
+        </div>
+        <div>
+          <h1 className="text-sm font-bold text-gray-900">SIM-KPTA</h1>
+          <p className="text-xs text-gray-500">Manajemen KP & TA</p>
+        </div>
+      </div>
 
-    const renderMenuItem = (item, level = 0) => {
-        const hasChildren = item.children && item.children.length > 0;
-        const isExpanded = expandedMenus[item.label];
-        const isActive = location.pathname === item.path;
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        {visibleMenu.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
 
-        const IconComponent = iconMap[item.icon] || LayoutDashboard;
-
-        return (
-            <div key={item.path || item.label}>
-                <button
-                    onClick={() => {
-                        if (hasChildren) {
-                            toggleMenu(item.label);
-                        } else {
-                            setSidebarOpen(false);
-                        }
-                    }}
-                    title={isCollapsed ? item.label : ''}
-                    className={`w-full flex items-center px-2 py-2 text-sm font-medium transition-colors duration-150 border-l-4 ${
-                        isActive && !hasChildren
-                            ? 'bg-yellow-300 text-gray-900 border-yellow-400'
-                            : 'text-emerald-50 hover:bg-emerald-700 border-transparent'
-                    } ${isCollapsed ? 'justify-center' : ''} ${level > 0 ? 'pl-11' : ''}`}
+          if (item.children) {
+            return (
+              <div key={item.label}>
+                <div
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    active
+                      ? 'bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
-                    <span className={isCollapsed ? '' : 'mr-3'}>
-                        <IconComponent className="h-5 w-5" />
-                    </span>
-                    {!isCollapsed && (
-                        <>
-                            <span className="flex-1 text-left">{item.label}</span>
-                            {hasChildren && (
-                                <svg
-                                    className={`ml-2 h-4 w-4 transform transition-transform ${
-                                        isExpanded ? 'rotate-90' : ''
-                                    }`}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            )}
-                        </>
-                    )}
-                </button>
-                {hasChildren && isExpanded && !isCollapsed && (
-                    <div className="space-y-1">
-                        {item.children
-                            .filter((child) => !child.permission || permissions.includes(child.permission))
-                            .map((child) => renderMenuItem(child, level + 1))}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    return (
-        <>
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-40 flex md:hidden">
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-                    <div className="relative flex-1 flex flex-col max-w-xs w-full bg-emerald-800">
-                        <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-                            <div className="flex-shrink-0 flex items-center px-4">
-                                <h1 className="text-xl font-bold text-yellow-300">SIM-KPTA</h1>
-                            </div>
-                            <nav className="mt-5 px-2 space-y-1">{visibleMenu.map((item) => renderMenuItem(item))}</nav>
-                        </div>
-                        <div className="flex-shrink-0 flex border-t border-emerald-700 p-4">
-                            <button
-                                onClick={() => {
-                                    dispatch(logout());
-                                    setSidebarOpen(false);
-                                }}
-                                className="flex items-center w-full text-emerald-100 hover:text-white"
-                            >
-                                <LogOut className="h-5 w-5 mr-3" />
-                                Logout
-                            </button>
-                        </div>
-                    </div>
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
                 </div>
-            )}
-
-            <div className={`hidden md:flex ${isCollapsed ? 'md:w-20' : 'md:w-64'} md:flex-col md:fixed md:inset-y-0 transition-all duration-300 z-30`}>
-                <div className="flex-1 flex flex-col min-h-0 bg-emerald-800 border-r border-emerald-700">
-                    <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-                        <div className={`flex items-center flex-shrink-0 px-4 ${isCollapsed ? 'justify-center' : ''}`}>
-                            {isCollapsed ? (
-                                <span className="text-xl font-bold text-yellow-300">S</span>
-                            ) : (
-                                <h1 className="text-xl font-bold text-yellow-300 truncate">SIM-KPTA</h1>
-                            )}
-                        </div>
-                        <nav className="mt-5 flex-1 px-2 bg-emerald-800 space-y-1">{visibleMenu.map((item) => renderMenuItem(item))}</nav>
-                    </div>
-                    <div className="flex-shrink-0 flex border-t border-emerald-700 p-4">
-                        <button
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="flex items-center w-full text-emerald-100 hover:text-white"
-                        >
-                            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5 mr-2" />}
-                            {!isCollapsed && <span>Collapse</span>}
-                        </button>
-                    </div>
+                <div className="ml-6 mt-1 space-y-1">
+                  {item.children.map((child) => {
+                    const childActive = location.pathname === child.path;
+                    return (
+                      <Link
+                        key={child.path}
+                        to={child.path}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                          childActive
+                            ? 'bg-yellow-50 text-yellow-800 border-l-2 border-yellow-400'
+                            : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {child.label}
+                      </Link>
+                    );
+                  })}
                 </div>
-            </div>
-        </>
-    );
+              </div>
+            );
+          }
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                active
+                  ? 'bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User info */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+            <span className="text-emerald-700 font-medium text-sm">
+              {user?.name?.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
 };
 
 export default Sidebar;

@@ -19,106 +19,71 @@ import LogbookValidation from '../modules/kp/pages/LogbookValidation';
 
 function AppRouter() {
     return (
-        <BrowserRouter>
-            <Routes>
-                {/* Public route */}
-                <Route path="/login" element={<Login />} />
+        <Routes>
+            {/* Public route */}
+            <Route path="/login" element={<Login />} />
 
-                {/* Forbidden */}
-                <Route path="/403" element={<Forbidden />} />
+            {/* Forbidden */}
+            <Route path="/403" element={<Forbidden />} />
 
-                {/* Protected routes inside AppShell */}
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <AppShell />
-                        </ProtectedRoute>
-                    }
-                >
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
+            {/* Protected routes inside AppShell */}
+            <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
 
-                    {/* Master Data */}
-                    <Route
-                        path="/master-data/dosen"
-                        element={
-                            <ProtectedRoute permission="master-data.manage">
-                                <MasterDosen />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/master-data/mahasiswa"
-                        element={
-                            <ProtectedRoute permission="master-data.manage">
-                                <MasterMahasiswa />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/master-data/perusahaan-kp"
-                        element={
-                            <ProtectedRoute permission="master-data.manage">
-                                <MasterPerusahaanKp />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/master-data/periode"
-                        element={
-                            <ProtectedRoute permission="master-data.manage">
-                                <PeriodeAkademik />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/master-data/tema"
-                        element={
-                            <ProtectedRoute permission="master-data.manage">
-                                <TemaKp />
-                            </ProtectedRoute>
-                        }
-                    />
+                {/* Master Data */}
+                <Route path="/master-data/dosen" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <MasterDosen />
+                    </ProtectedRoute>
+                } />
+                <Route path="/master-data/mahasiswa" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <MasterMahasiswa />
+                    </ProtectedRoute>
+                } />
+                <Route path="/master-data/perusahaan-kp" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <MasterPerusahaanKp />
+                    </ProtectedRoute>
+                } />
+                <Route path="/master-data/periode" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <PeriodeAkademik />
+                    </ProtectedRoute>
+                } />
+                <Route path="/master-data/tema" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <TemaKp />
+                    </ProtectedRoute>
+                } />
 
-                    {/* KP Module */}
-                    <Route
-                        path="/kp/verifikasi"
-                        element={
-                            <ProtectedRoute permission="kp.verifikasi-pendaftaran">
-                                <VerifikasiPendaftaran />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/kp/kelompok"
-                        element={
-                            <ProtectedRoute permission="kp.kelompok.create">
-                                <PendaftaranKelompok />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/kp/logbook"
-                        element={
-                            <ProtectedRoute permission="kp.kelompok.create">
-                                <Logbook />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/kp/logbook/validasi"
-                        element={
-                            <ProtectedRoute permission="kp.logbook.approve">
-                                <LogbookValidation />
-                            </ProtectedRoute>
-                        }
-                    />
+                {/* KP Module */}
+                <Route path="/kp/verifikasi" element={
+                    <ProtectedRoute permission="kp.verifikasi-pendaftaran">
+                        <VerifikasiPendaftaran />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/kelompok" element={
+                    <ProtectedRoute permission="kp.kelompok.create">
+                        <PendaftaranKelompok />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/logbook" element={
+                    <ProtectedRoute permission="kp.kelompok.create">
+                        <Logbook />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/logbook/validasi" element={
+                    <ProtectedRoute permission="kp.logbook.approve">
+                        <LogbookValidation />
+                    </ProtectedRoute>
+                } />
 
-                    {/* Catch-all */}
-                    <Route path="*" element={<Dashboard />} />
-                </Route>
-            </Routes>
-        </BrowserRouter>
+                {/* Catch-all */}
+                <Route path="*" element={<Dashboard />} />
+            </Route>
+        </Routes>
     );
 }
 

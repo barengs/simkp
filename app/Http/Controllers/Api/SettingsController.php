@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\PengaturanAplikasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Models\PengaturanAplikasi;
 
 class SettingsController extends Controller
 {
@@ -26,7 +26,7 @@ class SettingsController extends Controller
 
     public function index()
     {
-        $this->authorizeManage();
+        $this->authorizeAction('pengaturan.manage');
 
         return response()->json(
             PengaturanAplikasi::query()->pluck('value', 'key')
@@ -35,7 +35,7 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $this->authorizeManage();
+        $this->authorizeAction('pengaturan.manage');
 
         $data = $request->validate([
             'settings' => ['required', 'array'],
@@ -53,12 +53,12 @@ class SettingsController extends Controller
         return response()->json(['message' => 'Pengaturan disimpan']);
     }
 
-    private function authorizeManage(): void
+    private function authorizeAction(string $permission): void
     {
         abort_unless(
-            request()->user()?->can('pengaturan.manage'),
+            request()->user()?->can($permission),
             403,
-            'Tidak memiliki permission pengaturan.manage'
+            'Tidak memiliki permission: ' . $permission
         );
     }
 }

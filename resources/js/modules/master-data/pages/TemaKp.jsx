@@ -1,192 +1,123 @@
-import React, { useState } from "react";
-import DataTable from "react-data-table-component";
+import React, {useState} from 'react';
+import { useGetTemaKpQuery, useCreateTemaKpMutation, useUpdateTemaKpMutation, useDeleteTemaKpMutation } from '../api/masterDataApi';
+import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
+import PageHeader from '../../../components/ui/PageHeader';
+import Card from '../../../components/ui/Card';
+import Input from '../../../components/ui/Input';
+import Select from '../../../components/ui/Select';
+import Button from '../../../components/ui/Button';
+import Modal from '../../../components/ui/Modal';
+import ConfirmDialog from '../../../components/ui/ConfirmDialog';
+import DataTableWrapper from '../../../components/ui/DataTableWrapper';
+import Badge from '../../../components/ui/Badge';
+import Skeleton from '../../../components/ui/Skeleton';
+import { Lightbulb, Plus, Pencil, Trash2 } from 'lucide-react';
 
-const ThemeManagement = () => {
-    const [themes, setThemes] = useState([
-        {
-            id: 1,
-            name: "Pengembangan Web Application",
-            year: "2024",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            name: "Mobile Application Development",
-            year: "2024",
-            status: "Aktif",
-        },
-        {
-            id: 3,
-            name: "Data Science & Analytics",
-            year: "2023",
-            status: "Tidak Aktif",
-        },
-    ]);
+const TemaKp = () => {
+    const { data: temaList, isLoading } = useGetTemaKpQuery();
+    const [createTema] = useCreateTemaKpMutation();
+    const [updateTema] = useUpdateTemaKpMutation();
+    const [deleteTema] = useDeleteTemaKpMutation();
 
     const [showModal, setShowModal] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [newTheme, setNewTheme] = useState({ name: "", year: "" });
+    const [editing, setEditing] = useState(null);
+    const [deleting, setDeleting] = useState(null);
+    const [form, setForm] = useState({ nama_tema: '', deskripsi: '', is_active: true });
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleAddTheme = () => {
-        const theme = {
-            id: themes.length + 1,
-            ...newTheme,
-            status: "Aktif",
-        };
-        setThemes([...themes, theme]);
-        setNewTheme({ name: "", year: "" });
-        setShowModal(false);
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+        if (errors[name]) setErrors({ ...errors, [name]: '' });
+    };
+
+    const openCreate = () => {
+        setEditing(null);
+        setForm({ nama_tema: '', deskripsi: '', is_active: true });
+        setErrors({});
+        setShowModal(true);
+    };
+
+    const openEdit = (item) => {
+        setEditing(item);
+        setForm({ nama_tema: item.nama_tema || '', deskripsi: item.deskripsi || '', is_active: !!item.is_active });
+        setErrors({});
+        setShowModal(true);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            if (editing) {
+                await updateTema({ id: editing.id, ...form }).unwrap();
+                handleApiSuccess('Tema KP berhasil diperbarui');
+            } else {
+                await createTema(form).unwrap();
+                handleApiSuccess('Tema KP berhasil ditambahkan');
+            }
+            setShowModal(false);
+        } catch (err) {
+            handleApiError(err, 'Gagal menyimpan tema KP');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteTema(deleting.id).unwrap();
+            handleApiSuccess('Tema KP berhasil dihapus');
+            setDeleting(null);
+        } catch (err) {
+            handleApiError(err, 'Gagal menghapus tema KP');
+        }
     };
 
     const columns = [
-        { name: "Nama Tema", selector: (row) => row.name, sortable: true },
-        { name: "Tahun", selector: (row) => row.year, sortable: true },
+        { name: 'Nama Tema', selector: (row) => row.nama_tema || '-', sortable: true, wrap: true },
+        { name: 'Deskripsi', selector: (row) => row.deskripsi || '-', sortable: true, wrap: true },
         {
-            name: "Status",
-            selector: (row) => row.status,
-            sortable: true,
-            cell: (row) => (
-                <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        row.status === "Aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                    }`}
-                >
-                    {row.status}
-                </span>
-            ),
+            name: 'Status',
+            cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
+            ignoreRowClick: true,
         },
         {
-            name: "Aksi",
+            name: 'Aksi',
             cell: (row) => (
-                <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900" title="Edit">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                    </button>
-                    <button className="text-red-600 hover:text-red-900" title="Hapus">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                <div className="flex items-center gap-1 justify-center">
+                    <button onClick={() => openEdit(row)} className="p-1.5 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => setDeleting(row)} className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><Trash2 className="w-4 h-4" /></button>
                 </div>
             ),
+            ignoreRowClick: true,
         },
     ];
 
-    const filteredData = themes.filter((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     return (
         <>
-            <div className="space-y-6">
-                <div className="border-b border-gray-200 pb-5">
-                    <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                        Manajemen Tema KP
-                    </h2>
-                </div>
-
-                <div className="flex justify-between items-center">
-                    <div className="w-1/3">
-                        <input
-                            type="text"
-                            placeholder="Cari tema..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+            <PageHeader title="Tema Kerja Praktek" description="Kelola tema-tema yang tersedia untuk pendaftaran KP" icon={Lightbulb} actions={<Button onClick={openCreate} icon={Plus}>Tambah Tema</Button>} />
+            <Card title="Daftar Tema KP" subtitle={`${temaList?.length || 0} tema terdaftar`}>
+                {isLoading ? <Skeleton rows={4} /> : <DataTableWrapper columns={columns} data={temaList || []} pagination />}
+            </Card>
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Tema KP' : 'Tambah Tema Baru'}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input label="Nama Tema" required name="nama_tema" value={form.nama_tema} onChange={handleInputChange} placeholder="Tema KP 2025" error={errors.nama_tema} />
+                    <Input label="Deskripsi" name="deskripsi" value={form.deskripsi} onChange={handleInputChange} placeholder="Deskripsi tema" error={errors.deskripsi} />
+                    <div className="flex items-center gap-2">
+                        <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleInputChange} className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                        <label className="text-sm text-gray-700">Tema aktif</label>
                     </div>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200 flex items-center"
-                    >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Tema
-                    </button>
-                </div>
-
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:p-6">
-                        <DataTable
-                            columns={columns}
-                            data={filteredData}
-                            pagination
-                            highlightOnHover
-                            pointerOnHover
-                            responsive
-                        />
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
+                        <Button type="submit" loading={submitting}>{editing ? 'Perbarui' : 'Simpan'}</Button>
                     </div>
-                </div>
-            </div>
-
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Tema KP Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama Tema
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newTheme.name}
-                                        onChange={(e) =>
-                                            setNewTheme({
-                                                ...newTheme,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Contoh: Pengembangan Web Application"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Tahun
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={newTheme.year}
-                                        onChange={(e) =>
-                                            setNewTheme({
-                                                ...newTheme,
-                                                year: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Contoh: 2024"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddTheme}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                </form>
+            </Modal>
+            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Tema KP" message={`Yakin ingin menghapus tema "${deleting?.nama_tema}"?`} />
         </>
     );
 };
 
-export default ThemeManagement;
+export default TemaKp;

@@ -1,234 +1,151 @@
-import React, { useState } from "react";
-import DataTable from "react-data-table-component";
+import React, {useState} from 'react';
+import { useGetDosenQuery, useCreateDosenMutation, useUpdateDosenMutation, useDeleteDosenMutation } from '../api/masterDataApi';
+import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
+import PageHeader from '../../../components/ui/PageHeader';
+import Card from '../../../components/ui/Card';
+import Input from '../../../components/ui/Input';
+import Button from '../../../components/ui/Button';
+import Modal from '../../../components/ui/Modal';
+import ConfirmDialog from '../../../components/ui/ConfirmDialog';
+import DataTableWrapper from '../../../components/ui/DataTableWrapper';
+import Badge from '../../../components/ui/Badge';
+import Skeleton from '../../../components/ui/Skeleton';
+import { Users, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 
 const MasterDosen = () => {
+    const { data: dosenList, isLoading } = useGetDosenQuery();
+    const [createDosen] = useCreateDosenMutation();
+    const [updateDosen] = useUpdateDosenMutation();
+    const [deleteDosen] = useDeleteDosenMutation();
+
+    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [dosen, setDosen] = useState([
-        {
-            id: 1,
-            nip: "123456789",
-            name: "Dr. Budi Santoso, S.T., M.T.",
-            email: "budi@university.ac.id",
-            phone: "081234567890",
-            status: "Aktif",
-        },
-        {
-            id: 2,
-            nip: "987654321",
-            name: "Prof. Ani Lestari, S.T., Ph.D.",
-            email: "ani@university.ac.id",
-            phone: "081234567891",
-            status: "Aktif",
-        },
-    ]);
+    const [editing, setEditing] = useState(null);
+    const [deleting, setDeleting] = useState(null);
+    const [form, setForm] = useState({ nip: '', name: '', email: '', phone: '' });
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
 
-    const [newRecord, setNewRecord] = useState({
-        nip: "",
-        name: "",
-        email: "",
-        phone: "",
-    });
-
-    const handleAddRecord = () => {
-        const record = {
-            id: dosen.length + 1,
-            ...newRecord,
-            status: "Aktif",
-        };
-        setDosen([...dosen, record]);
-        setNewRecord({ nip: "", name: "", email: "", phone: "" });
-        setShowModal(false);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+        if (errors[name]) setErrors({ ...errors, [name]: '' });
     };
 
+    const openCreate = () => {
+        setEditing(null);
+        setForm({ nip: '', name: '', email: '', phone: '' });
+        setErrors({});
+        setShowModal(true);
+    };
+
+    const openEdit = (dosen) => {
+        setEditing(dosen);
+        setForm({ nip: dosen.nip || '', name: dosen.name || '', email: dosen.email || '', phone: dosen.phone || '' });
+        setErrors({});
+        setShowModal(true);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+
+        try {
+            if (editing) {
+                await updateDosen({ id: editing.id, ...form }).unwrap();
+                handleApiSuccess('Data dosen berhasil diperbarui');
+            } else {
+                await createDosen(form).unwrap();
+                handleApiSuccess('Data dosen berhasil ditambahkan');
+            }
+            setShowModal(false);
+        } catch (err) {
+            handleApiError(err, 'Gagal menyimpan data dosen');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteDosen(deleting.id).unwrap();
+            handleApiSuccess('Data dosen berhasil dihapus');
+            setDeleting(null);
+        } catch (err) {
+            handleApiError(err, 'Gagal menghapus data dosen');
+        }
+    };
+
+    const filteredData = (dosenList || []).filter(
+        (item) =>
+            !searchTerm ||
+            ['nip', 'name', 'email', 'phone'].some((field) =>
+                String(item[field] || '').toLowerCase().includes(searchTerm.toLowerCase())
+            )
+    );
+
     const columns = [
-        { name: "NIP", selector: (row) => row.nip, sortable: true },
-        { name: "Nama", selector: (row) => row.name, sortable: true },
-        { name: "Email", selector: (row) => row.email, sortable: true },
-        { name: "Telepon", selector: (row) => row.phone, sortable: true },
+        { name: 'NIP', selector: (row) => row.nip || '-', sortable: true, wrap: true },
+        { name: 'Nama', selector: (row) => row.name || '-', sortable: true, wrap: true },
+        { name: 'Email', selector: (row) => row.email || '-', sortable: true, wrap: true },
+        { name: 'Telepon', selector: (row) => row.phone || '-', wrap: true },
         {
-            name: "Status",
-            selector: (row) => row.status,
-            sortable: true,
-            cell: (row) => (
-                <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        row.status === "Aktif"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                    }`}
-                >
-                    {row.status}
-                </span>
-            ),
+            name: 'Status',
+            cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
+            ignoreRowClick: true,
         },
         {
-            name: "Aksi",
+            name: 'Aksi',
             cell: (row) => (
-                <div className="flex space-x-2">
-                    <button className="text-indigo-600 hover:text-indigo-900" title="Edit">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                    </button>
-                    <button className="text-red-600 hover:text-red-900" title="Hapus">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                <div className="flex items-center gap-1">
+                    <button onClick={() => openEdit(row)} className="p-1.5 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => setDeleting(row)} className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><Trash2 className="w-4 h-4" /></button>
                 </div>
             ),
+            ignoreRowClick: true,
         },
     ];
 
-    const filteredData = dosen.filter((item) =>
-        ["nip", "name", "email"].some(
-            (field) =>
-                item[field] &&
-                item[field].toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
-
     return (
         <>
-            <div className="space-y-6">
-                <div className="border-b border-gray-200 pb-5">
-                    <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                        Data Dosen
-                    </h2>
-                </div>
+            <PageHeader
+                title="Data Dosen"
+                description="Kelola data dosen pembimbing & penguji"
+                icon={Users}
+                actions={<Button onClick={openCreate} icon={Plus}>Tambah Dosen</Button>}
+            />
 
-                <div className="flex justify-between items-center">
-                    <div className="w-1/3">
-                        <input
-                            type="text"
-                            placeholder="Cari dosen..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+            <Card
+                title="Daftar Dosen"
+                subtitle={`${filteredData.length} data ditemukan`}
+                actions={
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input type="text" placeholder="Cari dosen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-3 py-2 w-64 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                     </div>
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-200"
-                        >
-                            Tambah Dosen
-                        </button>
-                    </div>
-                </div>
+                }
+            >
+                {isLoading ? (
+                    <Skeleton rows={5} />
+                ) : (
+                    <DataTableWrapper columns={columns} data={filteredData} pagination />
+                )}
+            </Card>
 
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div className="px-4 py-5 sm:p-6">
-                        <DataTable
-                            columns={columns}
-                            data={filteredData}
-                            pagination
-                            paginationPerPage={10}
-                            paginationRowsPerPageOptions={[10, 25, 50, 100]}
-                            highlightOnHover
-                            pointerOnHover
-                            responsive
-                        />
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Dosen' : 'Tambah Dosen Baru'}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input label="NIP" required name="nip" value={form.nip} onChange={handleInputChange} placeholder="NIP Dosen" error={errors.nip} />
+                    <Input label="Nama Lengkap" required name="name" value={form.name} onChange={handleInputChange} placeholder="Nama Lengkap Dosen" error={errors.name} />
+                    <Input label="Email" required type="email" name="email" value={form.email} onChange={handleInputChange} placeholder="email@university.ac.id" error={errors.email} />
+                    <Input label="No. HP" name="phone" value={form.phone} onChange={handleInputChange} placeholder="081234567890" error={errors.phone} />
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
+                        <Button type="submit" loading={submitting}>{editing ? 'Perbarui' : 'Simpan'}</Button>
                     </div>
-                </div>
-            </div>
+                </form>
+            </Modal>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
-                                Tambah Dosen Baru
-                            </h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        NIP
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.nip}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                nip: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="NIP Dosen"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Nama
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.name}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                name: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="Nama Lengkap"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newRecord.email}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                email: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="email@university.ac.id"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Telepon
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRecord.phone}
-                                        onChange={(e) =>
-                                            setNewRecord({
-                                                ...newRecord,
-                                                phone: e.target.value,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="081234567890"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={handleAddRecord}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
-                                    >
-                                        Simpan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Dosen" message={`Yakin ingin menghapus data dosen "${deleting?.name}"?`} />
         </>
     );
 };
