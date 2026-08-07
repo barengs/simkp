@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import axios from 'axios';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: '/api',
@@ -6,15 +7,39 @@ const baseQuery = fetchBaseQuery({
     prepareHeaders: (headers) => {
         headers.set('Accept', 'application/json');
         headers.set('X-Requested-With', 'XMLHttpRequest');
+
+        // Get CSRF token from cookie
+        const csrfToken = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1];
+
+        if (csrfToken) {
+            headers.set('X-XSRF-TOKEN', decodeURIComponent(csrfToken));
+        }
+
         return headers;
     },
 });
 
+// Wrap baseQuery to handle CSRF token mismatch errors
+const baseQueryWithReauth = async (args, api, extraOptions) => {
+    const result = await baseQuery(args, api, extraOptions);
+
+    if (result.error?.status === 419) {
+        // CSRF token mismatch - refresh token and retry
+        await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+        const retryResult = await baseQuery(args, api, extraOptions);
+        return retryResult;
+    }
+
+    return result;
+};
+
 export const kpApi = createApi({
     reducerPath: 'kpApi',
-    baseQuery,
+    baseQuery: baseQueryWithReauth,
     tagTypes: ['KelompokKp', 'Logbook', 'Verifikasi'],
-    // Data transaksional: cache sedang (5 menit)
     keepUnusedDataFor: 300,
     endpoints: (builder) => ({
         getKelompokKp: builder.query({

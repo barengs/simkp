@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import axios from 'axios';
 
 const baseQuery = fetchBaseQuery({
     baseUrl: '/api',
@@ -6,24 +7,48 @@ const baseQuery = fetchBaseQuery({
     prepareHeaders: (headers) => {
         headers.set('Accept', 'application/json');
         headers.set('X-Requested-With', 'XMLHttpRequest');
+
+        // Get CSRF token from cookie
+        const csrfToken = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1];
+
+        if (csrfToken) {
+            headers.set('X-XSRF-TOKEN', decodeURIComponent(csrfToken));
+        }
+
         return headers;
     },
 });
 
+// Wrap baseQuery to handle CSRF token mismatch errors
+const baseQueryWithReauth = async (args, api, extraOptions) => {
+    const result = await baseQuery(args, api, extraOptions);
+
+    if (result.error?.status === 419) {
+        // CSRF token mismatch - refresh token and retry
+        await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+        const retryResult = await baseQuery(args, api, extraOptions);
+        return retryResult;
+    }
+
+    return result;
+};
+
 export const masterDataApi = createApi({
     reducerPath: 'masterDataApi',
-    baseQuery,
-    tagTypes: [
-        'ProgramStudi',
-        'PeriodeAkademik',
-        'Mahasiswa',
-        'Dosen',
-        'PerusahaanKp',
-        'TemaKp',
-    ],
-    keepUnusedDataFor: 600, // master data jarang berubah, cache 10 menit
+    baseQuery: baseQueryWithReauth,
+    tagTypes: ['ProgramStudi', 'PeriodeAkademik', 'Mahasiswa', 'Dosen', 'PerusahaanKp', 'TemaKp'],
+    keepUnusedDataFor: 600,
     endpoints: (builder) => ({
-        // Dosen
+        // Program Studi endpoints (added missing endpoint)
+        getProgramStudi: builder.query({
+            query: () => '/program-studi',
+            providesTags: ['ProgramStudi'],
+        }),
+
+        // Dosen endpoints
         getDosen: builder.query({
             query: () => '/dosen',
             providesTags: ['Dosen'],
@@ -52,7 +77,7 @@ export const masterDataApi = createApi({
             invalidatesTags: ['Dosen'],
         }),
 
-        // Mahasiswa
+        // Mahasiswa endpoints
         getMahasiswa: builder.query({
             query: () => '/mahasiswa',
             providesTags: ['Mahasiswa'],
@@ -81,7 +106,7 @@ export const masterDataApi = createApi({
             invalidatesTags: ['Mahasiswa'],
         }),
 
-        // Perusahaan KP
+        // Perusahaan KP endpoints
         getPerusahaanKp: builder.query({
             query: () => '/perusahaan-kp',
             providesTags: ['PerusahaanKp'],
@@ -110,7 +135,7 @@ export const masterDataApi = createApi({
             invalidatesTags: ['PerusahaanKp'],
         }),
 
-        // Periode Akademik
+        // Periode Akademik endpoints
         getPeriodeAkademik: builder.query({
             query: () => '/periode-akademik',
             providesTags: ['PeriodeAkademik'],
@@ -139,7 +164,7 @@ export const masterDataApi = createApi({
             invalidatesTags: ['PeriodeAkademik'],
         }),
 
-        // Tema KP
+        // Tema KP endpoints
         getTemaKp: builder.query({
             query: () => '/tema-kp',
             providesTags: ['TemaKp'],
@@ -167,39 +192,11 @@ export const masterDataApi = createApi({
             }),
             invalidatesTags: ['TemaKp'],
         }),
-
-        // Program Studi
-        getProgramStudi: builder.query({
-            query: () => '/program-studi',
-            providesTags: ['ProgramStudi'],
-        }),
-        createProgramStudi: builder.mutation({
-            query: (body) => ({
-                url: '/program-studi',
-                method: 'POST',
-                body,
-            }),
-            invalidatesTags: ['ProgramStudi'],
-        }),
-        updateProgramStudi: builder.mutation({
-            query: ({ id, ...body }) => ({
-                url: `/program-studi/${id}`,
-                method: 'PUT',
-                body,
-            }),
-            invalidatesTags: ['ProgramStudi'],
-        }),
-        deleteProgramStudi: builder.mutation({
-            query: (id) => ({
-                url: `/program-studi/${id}`,
-                method: 'DELETE',
-            }),
-            invalidatesTags: ['ProgramStudi'],
-        }),
     }),
 });
 
 export const {
+    useGetProgramStudiQuery,  // Added missing export
     useGetDosenQuery,
     useCreateDosenMutation,
     useUpdateDosenMutation,
@@ -220,8 +217,4 @@ export const {
     useCreateTemaKpMutation,
     useUpdateTemaKpMutation,
     useDeleteTemaKpMutation,
-    useGetProgramStudiQuery,
-    useCreateProgramStudiMutation,
-    useUpdateProgramStudiMutation,
-    useDeleteProgramStudiMutation,
 } = masterDataApi;

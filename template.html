@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Dashboard Master — DataCenter SMS</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+
+        /* Sidebar Collapsed Style for Desktop (min-width: 768px) */
+        @media (min-width: 768px) {
+            #sidebar.collapsed {
+                width: 5rem;
+            }
+            #sidebar.collapsed .sidebar-text,
+            #sidebar.collapsed .sidebar-label,
+            #sidebar.collapsed .brand-text,
+            #sidebar.collapsed .user-info {
+                opacity: 0;
+                display: none;
+            }
+            #sidebar.collapsed .sidebar-item {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            #sidebar.collapsed .brand-container {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            #sidebar.collapsed .sidebar-item i {
+                margin: 0;
+            }
+            #sidebar.collapsed .user-footer-container {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            #sidebar.collapsed .user-footer-container .flex {
+                justify-content: center;
+                gap: 0;
+            }
+            #sidebar.collapsed .logout-btn {
+                display: none;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 antialiased overflow-hidden">
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- ================================================================= -->
+    <!-- COMPONENT: SIDEBAR (aside)                                        -->
+    <!-- ================================================================= -->
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 bg-emerald-950 text-white shadow-2xl transform -translate-x-full transition-all duration-300 ease-in-out md:relative md:translate-x-0">
+        
+        <!-- Brand / Logo -->
+        <div class="flex items-center gap-3 h-16 px-6 border-b border-emerald-900/60 flex-shrink-0 overflow-hidden brand-container">
+            <div class="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-lg flex-shrink-0 shadow-lg shadow-emerald-500/20">
+                <i data-lucide="database" class="w-5 h-5 text-white"></i>
+            </div>
+            <span class="brand-text text-lg font-bold tracking-tight whitespace-nowrap transition-opacity duration-200">DataCenter <span class="text-emerald-400">SMS</span></span>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto sidebar-scroll">
+
+            <!-- Utama -->
+            <p class="sidebar-label px-3 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Utama</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all bg-emerald-800 text-white shadow-inner">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Dashboard</span>
+            </a>
+
+            <!-- Data Sekolah -->
+            <p class="sidebar-label px-3 pt-4 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Data Sekolah</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="users" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Data Siswa</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="briefcase" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Data Guru</span>
+            </a>
+
+            <!-- Data Master -->
+            <p class="sidebar-label px-3 pt-4 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Data Master</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="building" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Data Kelas</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="git-branch" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Data Jurusan</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="calendar-range" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Tahun Ajaran</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="book-open" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Mata Pelajaran</span>
+            </a>
+
+            <!-- Akademik -->
+            <p class="sidebar-label px-3 pt-4 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Akademik</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="calendar-days" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Jadwal Pelajaran</span>
+            </a>
+
+            <!-- Sistem -->
+            <p class="sidebar-label px-3 pt-4 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Sistem</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="user-cog" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Manajemen User</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="shield-check" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Role & Permission</span>
+            </a>
+
+            <!-- Monitoring -->
+            <p class="sidebar-label px-3 pt-4 mb-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider">Monitoring</p>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="activity" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">API Monitoring</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Log Aktivitas</span>
+            </a>
+
+            <a href="#" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-100 hover:bg-emerald-900/60 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="sidebar-text whitespace-nowrap">Pengaturan</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar User Footer -->
+        <div class="p-4 border-t border-emerald-900/60 flex-shrink-0 user-footer-container">
+            <div class="flex items-center gap-3 transition-all duration-300">
+                <img class="w-9 h-9 rounded-xl border-2 border-emerald-500 shadow-md shadow-emerald-500/20 flex-shrink-0"
+                     src="https://ui-avatars.com/api/?name=Admin+User&background=10b981&color=fff&size=64" alt="Avatar">
+                <div class="user-info min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-white truncate">Admin Utama</p>
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Superadmin</p>
+                </div>
+                <a href="#" onclick="triggerToast('Logout berhasil!', 'success')" class="text-emerald-400 hover:text-red-400 transition-colors flex-shrink-0 logout-btn" title="Logout">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay Mobile -->
+    <div id="sidebarOverlay"
+         class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm hidden md:hidden transition-all duration-300"
+         onclick="toggleSidebar()"></div>
+
+    <!-- ================================================================= -->
+    <!-- MAIN CONTENT AREA (Wrapper)                                       -->
+    <!-- ================================================================= -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        <!-- ================================================================= -->
+        <!-- COMPONENT: NAVBAR (header)                                        -->
+        <!-- ================================================================= -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 z-30 flex-shrink-0 shadow-sm shadow-slate-100">
+            <div class="flex items-center gap-4">
+                <!-- Toggle Button (Hamburger) -->
+                <button onclick="toggleSidebar()"
+                        class="p-2 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all focus:outline-none cursor-pointer">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+
+                <!-- Page Info -->
+                <div class="ml-1">
+                    <h1 class="text-base md:text-lg font-bold text-slate-800 leading-tight">Dashboard Utama</h1>
+                    <p class="hidden sm:block text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">Sistem Manajemen Sekolah</p>
+                </div>
+            </div>
+
+            <!-- Header Right Actions -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- Global Search -->
+                <div class="relative hidden lg:block">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text"
+                           class="w-64 py-2 pl-9 pr-4 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-slate-400"
+                           placeholder="Cari menu, guru, atau siswa...">
+                </div>
+
+                <!-- Notification Bell Center with Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleDropdown('notificationDropdown')"
+                            class="relative p-2.5 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 transition-all cursor-pointer">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
+                    </button>
+                    <!-- Notification Dropdown Container -->
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                            <span class="text-xs font-bold text-slate-800">Notifikasi Terbaru</span>
+                            <button class="text-[10px] font-bold text-emerald-600 hover:underline">Tandai semua dibaca</button>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto custom-scroll">
+                            <a href="#" class="block px-4 py-3 hover:bg-slate-50 border-b border-slate-100/60 transition-colors">
+                                <p class="text-xs font-medium text-slate-700">Backup database sistem berhasil disinkronkan.</p>
+                                <span class="text-[10px] text-slate-400 mt-1 block">10 menit yang lalu</span>
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-slate-50 border-b border-slate-100/60 transition-colors">
+                                <p class="text-xs font-medium text-slate-700"><strong>Pendaftaran Siswa Baru</strong> telah dibuka untuk angkatan 2026/2027.</p>
+                                <span class="text-[10px] text-slate-400 mt-1 block">1 jam yang lalu</span>
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-slate-50 transition-colors">
+                                <p class="text-xs font-medium text-slate-700"><span class="text-amber-500">Peringatan:</span> Sesi login terdeteksi dari IP baru.</p>
+                                <span class="text-[10px] text-slate-400 mt-1 block">5 jam yang lalu</span>
+                            </a>
+                        </div>
+                        <div class="px-4 py-2 border-t border-slate-100 text-center bg-slate-50">
+                            <a href="#" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 block">Lihat Semua Notifikasi</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Separator Line -->
+                <div class="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+                <!-- Avatar User Profile Dropdown -->
+                <div class="relative">
+                    <div onclick="toggleDropdown('profileDropdown')" class="flex items-center gap-2 pl-1 cursor-pointer group select-none">
+                        <img class="w-9 h-9 rounded-xl border-2 border-transparent group-hover:border-emerald-500 transition-all duration-200 shadow-sm"
+                             src="https://ui-avatars.com/api/?name=Admin+User&background=d1fae5&color=065f46&size=64" alt="Avatar">
+                        <div class="hidden md:block text-left">
+                            <p class="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">Admin</p>
+                            <p class="text-[10px] text-emerald-500 font-semibold leading-none mt-0.5">Online</p>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors hidden md:block"></i>
+                    </div>
+                    <!-- Profile Dropdown Container -->
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50">
+                            <p class="text-xs text-slate-400 font-medium">Masuk sebagai</p>
+                            <p class="text-sm font-bold text-slate-800 truncate">admin@datacenter.sch.id</p>
+                        </div>
+                        <div class="p-1.5">
+                            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                                <span>Profil Saya</span>
+                            </a>
+                            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                                <i data-lucide="settings-2" class="w-4 h-4"></i>
+                                <span>Pengaturan Sistem</span>
+                            </a>
+                            <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                                <span>Bantuan & FAQ</span>
+                            </a>
+                            <div class="h-px bg-slate-100 my-1"></div>
+                            <a href="#" onclick="triggerToast('Logout berhasil!', 'success')" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-rose-600 hover:bg-rose-50 transition-colors">
+                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                                <span class="font-semibold">Keluar</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- MAIN MAIN SCROLLABLE CONTENT                                      -->
+        <!-- ================================================================= -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto custom-scroll">
+            <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+
+                <!-- Breadcrumb -->
+                <div class="flex items-center text-xs text-slate-400 gap-2">
+                    <span class="hover:text-emerald-600 cursor-pointer transition-colors">App</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span class="text-slate-600 font-semibold">Dashboard</span>
+                </div>
+
+                <!-- Section: Heading & Date -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 pb-5">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-slate-800">Selamat Datang di DataCenter</h2>
+                        <p class="text-xs md:text-sm text-slate-500">Berikut rangkuman kondisi sistem manajemen sekolah hari ini.</p>
+                    </div>
+                    <div class="flex items-center gap-2.5 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm">
+                        <i data-lucide="calendar" class="w-4.5 h-4.5 text-emerald-600"></i>
+                        <span id="currentDateText" class="text-xs md:text-sm font-semibold text-slate-600">Rabu, 13 Mei 2026</span>
+                    </div>
+                </div>
+
+                <!-- ================================================================= -->
+                <!-- COMPONENT: CARDS LAYOUT (Statistics Cards)                        -->
+                <!-- ================================================================= -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1: Total Siswa -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Siswa</span>
+                            <div class="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800">1,240</h3>
+                            <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                <span>+12.4% <span class="text-slate-400 font-normal">dari bln lalu</span></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Total Guru -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Guru</span>
+                            <div class="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800">86</h3>
+                            <p class="text-xs text-indigo-600 font-semibold flex items-center gap-1 mt-1">
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                <span>+3.2% <span class="text-slate-400 font-normal">dari bln lalu</span></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Total Kelas & Jurusan -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jumlah Jurusan</span>
+                            <div class="p-2.5 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300">
+                                <i data-lucide="git-branch" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800">6</h3>
+                            <p class="text-xs text-slate-400 font-semibold flex items-center gap-1 mt-1">
+                                <i data-lucide="minus" class="w-4 h-4 text-slate-400"></i>
+                                <span>Stabil <span class="text-slate-400 font-normal">periode ini</span></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: System Uptime -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">API Status & Uptime</span>
+                            <div class="p-2.5 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                                <i data-lucide="server" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800">99.98%</h3>
+                            <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                                <span>Sangat Optimal <span class="text-slate-400 font-normal">(Online)</span></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================================= -->
+                <!-- SECTION: CHARTS AND ANALYTICS                                     -->
+                <!-- ================================================================= -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Line Chart (Kehadiran Siswa) -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm lg:col-span-2">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                            <div>
+                                <h4 class="text-sm md:text-base font-bold text-slate-800">Tren Kehadiran Harian Siswa</h4>
+                                <p class="text-xs text-slate-400">Rerata kehadiran harian pekan ini</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Live Update</span>
+                            </div>
+                        </div>
+                        <div class="relative h-64 md:h-72">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Right: Bar Chart (Distribusi Siswa per Jurusan) -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                            <div>
+                                <h4 class="text-sm md:text-base font-bold text-slate-800">Distribusi Siswa per Jurusan</h4>
+                                <p class="text-xs text-slate-400">Jumlah siswa per bidang keahlian</p>
+                            </div>
+                        </div>
+                        <div class="relative h-64 md:h-72">
+                            <canvas id="jurusanChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================================= -->
+                <!-- COMPONENT: DATA TABLE (Students List)                             -->
+                <!-- ================================================================= -->
+                <div class="bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
+                    <!-- Table Header & Controls -->
+                    <div class="p-5 border-b border-slate-200/60 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-slate-50/50">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800">Daftar Siswa Terbaru</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Daftar siswa aktif terdaftar di sistem</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                            <!-- Search Bar Local inside Table Header -->
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                </span>
+                                <input type="text" id="tableSearchInput" onkeyup="filterSiswaTable()"
+                                       class="w-full sm:w-56 py-2 pl-9 pr-4 text-xs bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                                       placeholder="Cari siswa...">
+                            </div>
+
+                            <!-- "Tambah Data" Button -->
+                            <button onclick="openAddSiswaModal()"
+                                    class="flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/15 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Tambah Siswa</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Table Outer Wrapper -->
+                    <div class="overflow-x-auto custom-scroll w-full">
+                        <table class="w-full text-left border-collapse" id="siswaTable">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider bg-slate-50/30">
+                                    <th class="py-3 px-5 text-center w-12">No</th>
+                                    <th class="py-3 px-4">Nama Lengkap</th>
+                                    <th class="py-3 px-4">NISN</th>
+                                    <th class="py-3 px-4">Kelas</th>
+                                    <th class="py-3 px-4">Jurusan</th>
+                                    <th class="py-3 px-4 text-center">Status</th>
+                                    <th class="py-3 px-5 text-center w-28">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Row 1 -->
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-5 text-center font-medium text-slate-400">1</td>
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">Ahmad Fauzi</td>
+                                    <td class="py-3.5 px-4 font-mono text-xs text-slate-500">0082713840</td>
+                                    <td class="py-3.5 px-4 font-semibold">XII RPL 1</td>
+                                    <td class="py-3.5 px-4">Rekayasa Perangkat Lunak</td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Aktif</span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="editSiswa('Ahmad Fauzi', '0082713840', 'XII RPL 1', 'Rekayasa Perangkat Lunak', 'Aktif')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteSiswa(this, 'Ahmad Fauzi')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 2 -->
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-5 text-center font-medium text-slate-400">2</td>
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">Siti Nurhaliza</td>
+                                    <td class="py-3.5 px-4 font-mono text-xs text-slate-500">0091845231</td>
+                                    <td class="py-3.5 px-4 font-semibold">XI TKJ 2</td>
+                                    <td class="py-3.5 px-4">Teknik Komputer Jaringan</td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Aktif</span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="editSiswa('Siti Nurhaliza', '0091845231', 'XI TKJ 2', 'Teknik Komputer Jaringan', 'Aktif')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteSiswa(this, 'Siti Nurhaliza')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 3 -->
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-5 text-center font-medium text-slate-400">3</td>
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">Budi Santoso</td>
+                                    <td class="py-3.5 px-4 font-mono text-xs text-slate-500">0075213642</td>
+                                    <td class="py-3.5 px-4 font-semibold">XII MM 1</td>
+                                    <td class="py-3.5 px-4">Multimedia</td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">Skorsing</span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="editSiswa('Budi Santoso', '0075213642', 'XII MM 1', 'Multimedia', 'Skorsing')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteSiswa(this, 'Budi Santoso')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 4 -->
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-5 text-center font-medium text-slate-400">4</td>
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">Diana Lestari</td>
+                                    <td class="py-3.5 px-4 font-mono text-xs text-slate-500">0084123596</td>
+                                    <td class="py-3.5 px-4 font-semibold">X RPL 2</td>
+                                    <td class="py-3.5 px-4">Rekayasa Perangkat Lunak</td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Aktif</span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="editSiswa('Diana Lestari', '0084123596', 'X RPL 2', 'Rekayasa Perangkat Lunak', 'Aktif')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteSiswa(this, 'Diana Lestari')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Row 5 -->
+                                <tr class="hover:bg-slate-50/60 transition-colors">
+                                    <td class="py-3.5 px-5 text-center font-medium text-slate-400">5</td>
+                                    <td class="py-3.5 px-4 font-bold text-slate-800">Fajar Nugraha</td>
+                                    <td class="py-3.5 px-4 font-mono text-xs text-slate-500">0069512348</td>
+                                    <td class="py-3.5 px-4 font-semibold">XII RPL 1</td>
+                                    <td class="py-3.5 px-4">Rekayasa Perangkat Lunak</td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">Alumni</span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="editSiswa('Fajar Nugraha', '0069512348', 'XII RPL 1', 'Rekayasa Perangkat Lunak', 'Alumni')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                            </button>
+                                            <button onclick="deleteSiswa(this, 'Fajar Nugraha')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Table Pagination / Footer -->
+                    <div class="p-5 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/30">
+                        <span class="text-xs text-slate-400 font-semibold">Menampilkan <span class="text-slate-700">1-5</span> dari <span class="text-slate-700">156</span> siswa</span>
+                        
+                        <div class="flex items-center gap-1.5">
+                            <button class="px-3 py-1.5 border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer" disabled>Sebelumnya</button>
+                            <button class="px-3 py-1.5 border-transparent bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-emerald-600/10 cursor-pointer">1</button>
+                            <button class="px-3 py-1.5 border border-slate-100 bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer">2</button>
+                            <button class="px-3 py-1.5 border border-slate-100 bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer">3</button>
+                            <span class="text-slate-400 px-1 text-xs font-bold">...</span>
+                            <button class="px-3 py-1.5 border border-slate-100 bg-white text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer">32</button>
+                            <button class="px-3 py-1.5 border border-slate-200 text-slate-600 hover:text-emerald-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all cursor-pointer">Selanjutnya</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- COMPONENT: INTERACTIVE MODAL (Tambah/Edit Siswa)                  -->
+<!-- ================================================================= -->
+<div id="siswaModal" class="fixed inset-0 z-50 flex items-center justify-center hidden transition-all duration-300">
+    <!-- Modal Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeSiswaModal()"></div>
+    
+    <!-- Modal Body Content -->
+    <div class="bg-white border border-slate-100 rounded-2xl shadow-2xl w-full max-w-lg mx-4 z-10 overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modalCard">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50">
+            <h4 class="font-bold text-slate-800 text-base md:text-lg" id="modalTitle">Tambah Siswa Baru</h4>
+            <button onclick="closeSiswaModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <!-- Modal Form Body -->
+        <form id="siswaForm" onsubmit="handleSiswaSubmit(event)" class="p-6 space-y-4">
+            <!-- Hidden input for edit indicator -->
+            <input type="hidden" id="editRowIndex" value="">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Nama Lengkap -->
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
+                    <input type="text" id="siswaNama" required
+                           class="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                           placeholder="Masukkan nama lengkap siswa...">
+                </div>
+
+                <!-- NISN -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">NISN</label>
+                    <input type="text" id="siswaNisn" required pattern="[0-9]{10}" title="NISN harus berisi 10 digit angka"
+                           class="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-mono"
+                           placeholder="Contoh: 0082713840">
+                </div>
+
+                <!-- Kelas -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kelas</label>
+                    <select id="siswaKelas" required
+                            class="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer">
+                        <option value="">Pilih Kelas</option>
+                        <option value="X RPL 1">X RPL 1</option>
+                        <option value="X RPL 2">X RPL 2</option>
+                        <option value="XI TKJ 1">XI TKJ 1</option>
+                        <option value="XI TKJ 2">XI TKJ 2</option>
+                        <option value="XII RPL 1">XII RPL 1</option>
+                        <option value="XII MM 1">XII MM 1</option>
+                    </select>
+                </div>
+
+                <!-- Jurusan -->
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Jurusan</label>
+                    <select id="siswaJurusan" required
+                            class="w-full px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all cursor-pointer">
+                        <option value="">Pilih Jurusan</option>
+                        <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
+                        <option value="Teknik Komputer Jaringan">Teknik Komputer Jaringan</option>
+                        <option value="Multimedia">Multimedia</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+                    <div class="flex items-center gap-4 mt-2">
+                        <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                            <input type="radio" name="siswaStatus" value="Aktif" checked class="accent-emerald-600 w-4.5 h-4.5">
+                            <span>Aktif</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                            <input type="radio" name="siswaStatus" value="Skorsing" class="accent-amber-500 w-4.5 h-4.5">
+                            <span>Skorsing</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                            <input type="radio" name="siswaStatus" value="Alumni" class="accent-slate-500 w-4.5 h-4.5">
+                            <span>Alumni</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Controls -->
+            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2.5">
+                <button type="button" onclick="closeSiswaModal()"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all cursor-pointer">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/10 transition-all cursor-pointer">
+                    Simpan Data
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- COMPONENT: FLOATING TOAST NOTIFICATION SYSTEM                    -->
+<!-- ================================================================= -->
+<div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+    <!-- Toasts are dynamically injected here, sample format is shown below -->
+    <!--
+    <div class="flex items-center gap-3 bg-white border-l-4 border-emerald-500 shadow-xl rounded-xl p-4 w-80 translate-x-10 opacity-0 transition-all duration-300 pointer-events-auto">
+        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-800">Siswa Berhasil Ditambahkan!</p>
+        </div>
+        <button class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    -->
+</div>
+
+<!-- ================================================================= -->
+<!-- COMPONENT: INTERACTIVE TOOLTIP HELPER                             -->
+<!-- ================================================================= -->
+<div id="tooltip" class="absolute hidden bg-slate-900 text-white text-[11px] font-bold py-1 px-2.5 rounded-lg shadow-lg pointer-events-none z-50"></div>
+
+
+<!-- ================================================================= -->
+<!-- JAVASCRIPT: LOGICAL OPERATIONS & INTERACTIVE FEATURES            -->
+<!-- ================================================================= -->
+<script>
+    // Initialize Lucide Icons
+    document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+        initCharts();
+        updateCurrentDate();
+    });
+
+    // 1. Current Date Renderer
+    function updateCurrentDate() {
+        const dateEl = document.getElementById('currentDateText');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const today  = new Date();
+        dateEl.textContent = today.toLocaleDateString('id-ID', options);
+    }
+
+    // 2. Sidebar Toggle Controller
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (window.innerWidth < 768) {
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        } else {
+            sidebar.classList.toggle('collapsed');
+            
+            // Build temporary tooltips if collapsed
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            setupCollapsedTooltips(isCollapsed);
+        }
+    }
+
+    // Window Resize Auto Handler
+    window.addEventListener('resize', () => {
+        const overlay = document.getElementById('sidebarOverlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (window.innerWidth >= 768) {
+            overlay.classList.add('hidden');
+            sidebar.classList.remove('-translate-x-full');
+        } else {
+            if (!sidebar.classList.contains('-translate-x-full')) {
+                overlay.classList.remove('hidden');
+            }
+        }
+    });
+
+    // Setup hover tooltips on sidebar items when collapsed
+    function setupCollapsedTooltips(isCollapsed) {
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        const tooltip = document.getElementById('tooltip');
+
+        sidebarItems.forEach(item => {
+            if (isCollapsed) {
+                const text = item.querySelector('.sidebar-text').textContent;
+                
+                item.onmouseenter = (e) => {
+                    const rect = item.getBoundingClientRect();
+                    tooltip.textContent = text;
+                    tooltip.style.top = `${rect.top + (rect.height - tooltip.offsetHeight) / 2}px`;
+                    tooltip.style.left = `${rect.right + 10}px`;
+                    tooltip.classList.remove('hidden');
+                };
+
+                item.onmouseleave = () => {
+                    tooltip.classList.add('hidden');
+                };
+            } else {
+                item.onmouseenter = null;
+                item.onmouseleave = null;
+                tooltip.classList.add('hidden');
+            }
+        });
+    }
+
+    // 3. Dropdowns Controller (Generic click outside close)
+    function toggleDropdown(id) {
+        // Close other dropdowns first
+        const dropdowns = ['profileDropdown', 'notificationDropdown'];
+        dropdowns.forEach(dId => {
+            if (dId !== id) {
+                document.getElementById(dId).classList.add('hidden');
+            }
+        });
+
+        const el = document.getElementById(id);
+        el.classList.toggle('hidden');
+    }
+
+    // Close dropdowns and modal if clicked outside
+    window.addEventListener('click', (e) => {
+        // Profile Dropdown close check
+        if (!e.target.closest('#profileDropdown') && !e.target.closest('[onclick="toggleDropdown(\'profileDropdown\')"]')) {
+            document.getElementById('profileDropdown').classList.add('hidden');
+        }
+        // Notification Dropdown close check
+        if (!e.target.closest('#notificationDropdown') && !e.target.closest('[onclick="toggleDropdown(\'notificationDropdown\')"]')) {
+            document.getElementById('notificationDropdown').classList.add('hidden');
+        }
+    });
+
+    // 4. Modal System Controller
+    function openAddSiswaModal() {
+        document.getElementById('modalTitle').textContent = 'Tambah Siswa Baru';
+        document.getElementById('siswaForm').reset();
+        document.getElementById('editRowIndex').value = '';
+        
+        const modal = document.getElementById('siswaModal');
+        const card  = document.getElementById('modalCard');
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            card.classList.remove('scale-95', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeSiswaModal() {
+        const modal = document.getElementById('siswaModal');
+        const card  = document.getElementById('modalCard');
+        
+        card.classList.remove('scale-100', 'opacity-100');
+        card.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
+    // Edit Siswa Prefill Function
+    function editSiswa(nama, nisn, kelas, jurusan, status) {
+        openAddSiswaModal();
+        document.getElementById('modalTitle').textContent = 'Ubah Data Siswa';
+        
+        document.getElementById('siswaNama').value = nama;
+        document.getElementById('siswaNisn').value = nisn;
+        document.getElementById('siswaKelas').value = kelas;
+        document.getElementById('siswaJurusan').value = jurusan;
+        
+        // Radios status prefill
+        const radios = document.getElementsByName('siswaStatus');
+        for (let r of radios) {
+            if (r.value === status) {
+                r.checked = true;
+            }
+        }
+
+        // Simpan referensi ke baris yang sedang diedit (misal cari berdasarkan NISN di tabel)
+        const table = document.getElementById('siswaTable');
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach((row, index) => {
+            const rowNisn = row.cells[2].textContent.trim();
+            if (rowNisn === nisn) {
+                document.getElementById('editRowIndex').value = index;
+            }
+        });
+    }
+
+    // Modal Form Submission
+    function handleSiswaSubmit(event) {
+        event.preventDefault();
+        
+        const nama = document.getElementById('siswaNama').value;
+        const nisn = document.getElementById('siswaNisn').value;
+        const kelas = document.getElementById('siswaKelas').value;
+        const jurusan = document.getElementById('siswaJurusan').value;
+        
+        const radios = document.getElementsByName('siswaStatus');
+        let status = 'Aktif';
+        for (let r of radios) {
+            if (r.checked) status = r.value;
+        }
+
+        const editIndex = document.getElementById('editRowIndex').value;
+        const tableBody = document.querySelector('#siswaTable tbody');
+
+        if (editIndex !== '') {
+            // EDITING MODE
+            const row = tableBody.rows[parseInt(editIndex)];
+            row.cells[1].innerHTML = nama;
+            row.cells[2].innerHTML = nisn;
+            row.cells[3].innerHTML = kelas;
+            row.cells[4].innerHTML = jurusan;
+            
+            // Render Badge
+            let badgeClass = 'bg-emerald-50 text-emerald-700';
+            if (status === 'Skorsing') badgeClass = 'bg-amber-50 text-amber-700';
+            if (status === 'Alumni') badgeClass = 'bg-slate-100 text-slate-600';
+            row.cells[5].innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}">${status}</span>`;
+            
+            // Update onclick prefill parameter
+            row.cells[6].querySelector('button[title="Edit Data"]').setAttribute('onclick', `editSiswa('${nama.replace(/'/g, "\\'")}', '${nisn}', '${kelas}', '${jurusan}', '${status}')`);
+
+            triggerToast('Data siswa berhasil diperbarui!', 'success');
+        } else {
+            // CREATING MODE (Tambah Baris Baru)
+            const nextNo = tableBody.rows.length + 1;
+            const newRow = document.createElement('tr');
+            newRow.className = 'hover:bg-slate-50/60 transition-colors';
+            
+            let badgeClass = 'bg-emerald-50 text-emerald-700';
+            if (status === 'Skorsing') badgeClass = 'bg-amber-50 text-amber-700';
+            if (status === 'Alumni') badgeClass = 'bg-slate-100 text-slate-600';
+
+            newRow.innerHTML = `
+                <td class="py-3.5 px-5 text-center font-medium text-slate-400">${nextNo}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-800">${nama}</td>
+                <td class="py-3.5 px-4 font-mono text-xs text-slate-500">${nisn}</td>
+                <td class="py-3.5 px-4 font-semibold">${kelas}</td>
+                <td class="py-3.5 px-4">${jurusan}</td>
+                <td class="py-3.5 px-4 text-center">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}">${status}</span>
+                </td>
+                <td class="py-3.5 px-5 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <button onclick="editSiswa('${nama.replace(/'/g, "\\'")}', '${nisn}', '${kelas}', '${jurusan}', '${status}')" class="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Edit Data">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="deleteSiswa(this, '${nama.replace(/'/g, "\\'")}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Hapus Data">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(newRow);
+            lucide.createIcons(); // Re-trigger icon render
+            
+            triggerToast('Siswa baru berhasil ditambahkan!', 'success');
+        }
+        
+        closeSiswaModal();
+    }
+
+    // Delete Row Handler
+    function deleteSiswa(button, name) {
+        if (confirm(`Apakah Anda yakin ingin menghapus data "${name}"?`)) {
+            const row = button.closest('tr');
+            row.classList.add('opacity-0', 'transition-all', 'duration-300');
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Re-indexing row numbers
+                const rows = document.querySelectorAll('#siswaTable tbody tr');
+                rows.forEach((r, idx) => {
+                    r.cells[0].textContent = idx + 1;
+                });
+                
+                triggerToast('Data siswa berhasil dihapus!', 'info');
+            }, 300);
+        }
+    }
+
+    // 5. Client-side Table Search Filter
+    function filterSiswaTable() {
+        const input = document.getElementById('tableSearchInput');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('siswaTable');
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const name = row.cells[1].textContent.toLowerCase();
+            const nisn = row.cells[2].textContent.toLowerCase();
+            const kelas = row.cells[3].textContent.toLowerCase();
+            const jurusan = row.cells[4].textContent.toLowerCase();
+
+            if (name.includes(filter) || nisn.includes(filter) || kelas.includes(filter) || jurusan.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // 6. Floating Toast Alert System
+    function triggerToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        
+        const toast = document.createElement('div');
+        toast.className = `flex items-center gap-3 bg-white border-l-4 shadow-xl rounded-xl p-4 w-80 translate-x-10 opacity-0 transition-all duration-300 pointer-events-auto`;
+        
+        let iconHtml = '';
+        if (type === 'success') {
+            toast.classList.add('border-emerald-500');
+            iconHtml = `<i data-lucide="check-circle" class="w-5 h-5 text-emerald-500 flex-shrink-0"></i>`;
+        } else if (type === 'info') {
+            toast.classList.add('border-blue-500');
+            iconHtml = `<i data-lucide="info" class="w-5 h-5 text-blue-500 flex-shrink-0"></i>`;
+        } else if (type === 'error') {
+            toast.classList.add('border-rose-500');
+            iconHtml = `<i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500 flex-shrink-0"></i>`;
+        }
+        
+        toast.innerHTML = `
+            ${iconHtml}
+            <div class="flex-1 min-w-0">
+                <p class="text-xs md:text-sm font-bold text-slate-800">${message}</p>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer flex-shrink-0">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        `;
+        
+        container.appendChild(toast);
+        lucide.createIcons(); // Initialize the dynamic lucide icon
+
+        // Trigger slide-in entry animation
+        setTimeout(() => {
+            toast.classList.remove('translate-x-10', 'opacity-0');
+        }, 10);
+        
+        // Auto remove toast after 4 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-x-10', 'opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 4000);
+    }
+
+    // ================================================================= -->
+    // CHART.JS RENDER INTEGRATIONS                                      -->
+    // ================================================================= -->
+    function initCharts() {
+        // Attendance Trend (Line Chart)
+        const ctxAttendance = document.getElementById('attendanceChart').getContext('2d');
+        const gradientAttendance = ctxAttendance.createLinearGradient(0, 0, 0, 240);
+        gradientAttendance.addColorStop(0, 'rgba(16, 185, 129, 0.25)'); // Emerald light
+        gradientAttendance.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+        new Chart(ctxAttendance, {
+            type: 'line',
+            data: {
+                labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+                datasets: [{
+                    label: 'Kehadiran (%)',
+                    data: [96.5, 98.2, 97.8, 95.9, 94.2, 98.6],
+                    borderColor: '#10b981', // emerald-500
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.35,
+                    fill: true,
+                    backgroundColor: gradientAttendance,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Kehadiran: ${context.parsed.y}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', weight: '500' }, color: '#94a3b8' }
+                    },
+                    y: {
+                        min: 90,
+                        max: 100,
+                        grid: { color: '#f1f5f9' },
+                        ticks: {
+                            font: { family: 'Inter', weight: '500' },
+                            color: '#94a3b8',
+                            callback: function(val) { return val + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Student Distribution (Bar Chart Kejuruan)
+        const ctxJurusan = document.getElementById('jurusanChart').getContext('2d');
+        new Chart(ctxJurusan, {
+            type: 'bar',
+            data: {
+                labels: ['RPL', 'TKJ', 'Multimedia', 'TKR', 'Akuntansi', 'Farmasi'],
+                datasets: [{
+                    data: [420, 310, 240, 150, 180, 120],
+                    backgroundColor: [
+                        '#10b981', // emerald
+                        '#6366f1', // indigo
+                        '#0ea5e9', // sky
+                        '#f59e0b', // amber
+                        '#8b5cf6', // violet
+                        '#ec4899'  // pink
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: true,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', weight: '500' }, color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { family: 'Inter', weight: '500' }, color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
