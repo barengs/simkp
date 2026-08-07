@@ -2,16 +2,27 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\ProgramStudiController;
-use App\Http\Controllers\Api\MahasiswaController;
-use App\Http\Controllers\Api\DosenController;
-use App\Http\Controllers\Api\PerusahaanKpController;
-use App\Http\Controllers\Api\TemaKpController;
-use App\Http\Controllers\Api\PeriodeAkademikController;
-use App\Http\Controllers\Api\KelompokKpController;
-use App\Http\Controllers\Api\VerifikasiPendaftaranController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\StudyProgramController;
+use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\LecturerController;
+use App\Http\Controllers\Api\KpCompanyController;
+use App\Http\Controllers\Api\KpThemeController;
+use App\Http\Controllers\Api\AcademicPeriodController;
+use App\Http\Controllers\Api\KpGroupController;
+use App\Http\Controllers\Api\RegistrationVerificationController;
 use App\Http\Controllers\Api\LogbookController;
+use App\Http\Controllers\Api\DocumentTypeController;
+use App\Http\Controllers\Api\RoomController;
+use App\Http\Controllers\Api\GuidanceController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ExamScheduleController;
+use App\Http\Controllers\Api\EvaluationCriteriaController;
+use App\Http\Controllers\Api\KpGradeController;
+use App\Http\Controllers\Api\ExamGradeController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\StatusHistoryController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,29 +30,44 @@ use App\Http\Controllers\Api\LogbookController;
 |--------------------------------------------------------------------------
 */
 
-// Public
+// Public routes
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/pengaturan/public', [SettingsController::class, 'public']);
+Route::get('/setting/public', [SettingController::class, 'public']);
 
-// Authenticated (Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
+// Authenticated routes
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
     // Settings
-    Route::get('/pengaturan', [SettingsController::class, 'index']);
-    Route::put('/pengaturan', [SettingsController::class, 'update']);
+    Route::get('/setting', [SettingController::class, 'index']);
+    Route::put('/setting', [SettingController::class, 'update']);
 
     // Master Data
-    Route::apiResource('program-studi', ProgramStudiController::class);
-    Route::apiResource('mahasiswa', MahasiswaController::class);
-    Route::apiResource('dosen', DosenController::class);
-    Route::apiResource('perusahaan-kp', PerusahaanKpController::class);
-    Route::apiResource('tema-kp', TemaKpController::class);
-    Route::apiResource('periode-akademik', PeriodeAkademikController::class);
+    Route::apiResource('study-program', StudyProgramController::class);
+    Route::apiResource('student', StudentController::class);
+    Route::apiResource('lecturer', LecturerController::class);
+    Route::apiResource('kp-company', KpCompanyController::class);
+    Route::apiResource('kp-theme', KpThemeController::class);
+    Route::apiResource('academic-period', AcademicPeriodController::class);
+    Route::apiResource('kp-group', KpGroupController::class);
+    Route::apiResource('document-type', DocumentTypeController::class);
+    Route::apiResource('room', RoomController::class);
+    Route::apiResource('guidance', GuidanceController::class);
+    Route::apiResource('report', ReportController::class);
+    Route::apiResource('exam-schedule', ExamScheduleController::class);
+    Route::apiResource('evaluation-criteria', EvaluationCriteriaController::class);
+    Route::apiResource('kp-grade', KpGradeController::class);
+    Route::apiResource('exam-grade', ExamGradeController::class);
+    Route::apiResource('notification', NotificationController::class);
+    Route::apiResource('status-history', StatusHistoryController::class);
+    Route::apiResource('activity-log', ActivityLogController::class);
 
     // KP Module
-    Route::apiResource('kelompok-kp', KelompokKpController::class);
-    Route::apiResource('verifikasi-pendaftaran', VerifikasiPendaftaranController::class)->only(['index', 'show', 'update']);
+    Route::apiResource('kp-group/kp-company', KpCompanyController::class)->shallow();
+    Route::apiResource('kp-group/kp-theme', KpThemeController::class)->shallow();
+    Route::apiResource('kp-group/academic-period', AcademicPeriodController::class)->shallow();
+    Route::apiResource('registration-verification', RegistrationVerificationController::class)
+        ->only(['index', 'show', 'update']);
     Route::apiResource('logbook', LogbookController::class);
 });

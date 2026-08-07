@@ -3,9 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\KelompokKpService;
+use App\Services\KpGroupService;
 use App\Services\LogbookService;
-use App\Services\PengaturanService;
+use App\Services\SettingService;
 
 class AppServiceProvider extends ServiceProvider
 {

@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\KelompokKp;
+use App\Models\KpGroup;
 use Illuminate\Auth\Access\Response;
 
-class KelompokKpPolicy
+class KpGroupPolicy
 {
     public function view(User $user, KelompokKp $kelompok)
     {

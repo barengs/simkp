@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Logbook;
-use App\Models\KelompokKp;
+use App\Models\KpGroup;
 use Illuminate\Support\Facades\DB;
 
 class LogbookService
@@ -17,10 +17,10 @@ class LogbookService
         ])->get();
     }
 
-    public function getByKelompok(int $kelompokKpId): \Illuminate\Database\Eloquent\Collection
+    public function getByKelompok(int $kpGroupId): \Illuminate\Database\Eloquent\Collection
     {
         return Logbook::with(['kelompokKp.programStudi', 'kelompokKp.periodeAkademik'])
-            ->where('kelompok_kp_id', $kelompokKpId)
+            ->where('kelompok_kp_id', $kpGroupId)
             ->orderBy('minggu_ke')
             ->orderBy('tanggal')
             ->get();
