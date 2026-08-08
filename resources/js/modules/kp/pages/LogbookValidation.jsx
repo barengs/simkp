@@ -77,7 +77,7 @@ const LogbookValidation = () => {
                                 ? "Disetujui"
                                 : "Perlu Perbaikan",
                         feedback:
-                            feedback || "Perlu perbaikan sesuai masukan dosen",
+                            feedback || "Perlu perbaikan sesuai masukan lecturer",
                     };
                 }
                 return log;
@@ -187,7 +187,7 @@ const LogbookValidation = () => {
                             <div className="w-1/3 pb-4">
                                 <input
                                     type="text"
-                                    placeholder="Cari mahasiswa..."
+                                    placeholder="Cari student..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"

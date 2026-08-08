@@ -1,10 +1,9 @@
-import React, {useState} from 'react';
-import { useGetPeriodeAkademikQuery, useCreatePeriodeAkademikMutation, useUpdatePeriodeAkademikMutation, useDeletePeriodeAkademikMutation } from '../api/masterDataApi';
+import React, { useState } from 'react';
+import { useGetAcademicPeriodsQuery, useCreateAcademicPeriodMutation, useUpdateAcademicPeriodMutation, useDeleteAcademicPeriodMutation } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
@@ -14,17 +13,21 @@ import Skeleton from '../../../components/ui/Skeleton';
 import { CalendarDays, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const PeriodeAkademik = () => {
-    const { data: periodeList, isLoading } = useGetPeriodeAkademikQuery();
-    const [createPeriode] = useCreatePeriodeAkademikMutation();
-    const [updatePeriode] = useUpdatePeriodeAkademikMutation();
-    const [deletePeriode] = useDeletePeriodeAkademikMutation();
+    const { data: academicPeriodList, isLoading } = useGetAcademicPeriodsQuery();
+    const [createAcademicPeriod] = useCreateAcademicPeriodMutation();
+    const [updateAcademicPeriod] = useUpdateAcademicPeriodMutation();
+    const [deleteAcademicPeriod] = useDeleteAcademicPeriodMutation();
 
+    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
     const [form, setForm] = useState({
-        nama_periode: '', semester: '', tanggal_mulai: '', tanggal_selesai: '',
-        jumlah_anggota_kp: '3', is_active: false,
+        name: '',
+        code: '',
+        start_date: '',
+        end_date: '',
+        is_active: false,
     });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -37,7 +40,7 @@ const PeriodeAkademik = () => {
 
     const openCreate = () => {
         setEditing(null);
-        setForm({ nama_periode: '', semester: '', tanggal_mulai: '', tanggal_selesai: '', jumlah_anggota_kp: '3', is_active: false });
+        setForm({ name: '', code: '', start_date: '', end_date: '', is_active: false });
         setErrors({});
         setShowModal(true);
     };
@@ -45,10 +48,10 @@ const PeriodeAkademik = () => {
     const openEdit = (item) => {
         setEditing(item);
         setForm({
-            nama_periode: item.nama_periode || '', semester: item.semester || '',
-            tanggal_mulai: item.tanggal_mulai?.substring(0, 10) || '',
-            tanggal_selesai: item.tanggal_selesai?.substring(0, 10) || '',
-            jumlah_anggota_kp: String(item.jumlah_anggota_kp || 3),
+            name: item.name || '',
+            code: item.code || '',
+            start_date: item.start_date ? String(item.start_date).substring(0, 10) : '',
+            end_date: item.end_date ? String(item.end_date).substring(0, 10) : '',
             is_active: !!item.is_active,
         });
         setErrors({});
@@ -59,12 +62,18 @@ const PeriodeAkademik = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const payload = { ...form, jumlah_anggota_kp: parseInt(form.jumlah_anggota_kp) || 3 };
+            const payload = {
+                name: form.name,
+                code: form.code,
+                start_date: form.start_date,
+                end_date: form.end_date,
+                is_active: form.is_active,
+            };
             if (editing) {
-                await updatePeriode({ id: editing.id, ...payload }).unwrap();
+                await updateAcademicPeriod({ id: editing.id, ...payload }).unwrap();
                 handleApiSuccess('Periode akademik berhasil diperbarui');
             } else {
-                await createPeriode(payload).unwrap();
+                await createAcademicPeriod(payload).unwrap();
                 handleApiSuccess('Periode akademik berhasil ditambahkan');
             }
             setShowModal(false);
@@ -77,7 +86,7 @@ const PeriodeAkademik = () => {
 
     const handleDelete = async () => {
         try {
-            await deletePeriode(deleting.id).unwrap();
+            await deleteAcademicPeriod(deleting.id).unwrap();
             handleApiSuccess('Periode akademik berhasil dihapus');
             setDeleting(null);
         } catch (err) {
@@ -86,54 +95,66 @@ const PeriodeAkademik = () => {
     };
 
     const columns = [
-        { name: 'Nama Periode', selector: (row) => row.nama_periode || '-', sortable: true, wrap: true },
-        { name: 'Semester', selector: (row) => row.semester || '-', sortable: true },
-        { name: 'Tanggal Mulai', selector: (row) => row.tanggal_mulai || '-', sortable: true },
-        { name: 'Tanggal Selesai', selector: (row) => row.tanggal_selesai || '-', sortable: true },
-        { name: 'Anggota KP', selector: (row) => row.jumlah_anggota_kp || 3, center: true },
+        { name: 'Nama Periode', selector: (row) => row.name || '-', sortable: true, wrap: true },
+        { name: 'Kode', selector: (row) => row.code || '-', sortable: true },
+        { name: 'Tanggal Mulai', selector: (row) => row.start_date || '-', sortable: true },
+        { name: 'Tanggal Selesai', selector: (row) => row.end_date || '-', sortable: true },
         {
-            name: 'Status', center: true,
+            name: 'Status',
             cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
             ignoreRowClick: true,
         },
         {
-            name: 'Aksi', center: true,
+            name: 'Aksi',
             cell: (row) => (
-                <div className="flex items-center gap-1 justify-center">
-                    <button onClick={() => openEdit(row)} className="p-1.5 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => setDeleting(row)} className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><Trash2 className="w-4 h-4" /></button>
+                <div className="flex items-center gap-1">
+                    <Button className='bg-yellow-500 hover:bg-yellow-600' size="sm" onClick={() => openEdit(row)} icon={Pencil}>Edit</Button>
+                    <Button className='bg-red-500 hover:bg-red-600' size="sm" onClick={() => setDeleting(row)} icon={Trash2}>Hapus</Button>
                 </div>
             ),
             ignoreRowClick: true,
         },
     ];
 
+    if (isLoading) return <Skeleton className="h-96" />;
+
+    const filteredData = (academicPeriodList || []).filter(
+        (item) => !searchTerm || ['name', 'code'].some((field) => String(item[field] || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
     return (
         <>
-            <PageHeader title="Periode Akademik" description="Kelola periode akademik & jumlah anggota KP" icon={CalendarDays} actions={<Button onClick={openCreate} icon={Plus}>Tambah Periode</Button>} />
-            <Card title="Daftar Periode Akademik" subtitle={`${periodeList?.length || 0} periode terdaftar`}>
-                {isLoading ? <Skeleton rows={4} /> : <DataTableWrapper columns={columns} data={periodeList || []} pagination />}
+            <PageHeader title="Periode Akademik" description="Kelola periode akademik" icon={CalendarDays} actions={<Button onClick={openCreate} icon={Plus}>Tambah Periode</Button>} />
+            <Card title="Daftar Periode Akademik" subtitle={`${filteredData.length} periode terdaftar`}>
+                <div className="mb-4 max-w-sm">
+                    <Input
+                        type="text"
+                        placeholder="Cari periode..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <DataTableWrapper columns={columns} data={filteredData} pagination />
             </Card>
-            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Periode Akademik' : 'Tambah Periode Baru'}>
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Periode Akademik' : 'Tambah Periode Baru'} bigger>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Nama Periode" required name="nama_periode" value={form.nama_periode} onChange={handleInputChange} placeholder="2025/2026" error={errors.nama_periode} />
-                    <Select label="Semester" required name="semester" value={form.semester} onChange={handleInputChange} options={[{value:'Ganjil',label:'Ganjil'},{value:'Genap',label:'Genap'},{value:'Ganjil-Genap',label:'Ganjil-Genap'}]} placeholder="Pilih Semester" error={errors.semester} />
+                    <Input label="Nama Periode" required name="name" value={form.name} onChange={handleInputChange} placeholder="Ganjil 2025/2026" error={errors.name} />
+                    <Input label="Kode" required name="code" value={form.code} onChange={handleInputChange} placeholder="G25" error={errors.code} />
                     <div className="grid grid-cols-2 gap-4">
-                        <Input label="Tanggal Mulai" required type="date" name="tanggal_mulai" value={form.tanggal_mulai} onChange={handleInputChange} error={errors.tanggal_mulai} />
-                        <Input label="Tanggal Selesai" required type="date" name="tanggal_selesai" value={form.tanggal_selesai} onChange={handleInputChange} error={errors.tanggal_selesai} />
+                        <Input label="Tanggal Mulai" required type="date" name="start_date" value={form.start_date} onChange={handleInputChange} error={errors.start_date} />
+                        <Input label="Tanggal Selesai" required type="date" name="end_date" value={form.end_date} onChange={handleInputChange} error={errors.end_date} />
                     </div>
-                    <Input label="Jumlah Anggota KP Default" type="number" name="jumlah_anggota_kp" value={form.jumlah_anggota_kp} onChange={handleInputChange} error={errors.jumlah_anggota_kp} />
                     <div className="flex items-center gap-2">
                         <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleInputChange} className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                         <label className="text-sm text-gray-700">Set sebagai periode aktif</label>
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
-                        <Button type="submit" loading={submitting}>{editing ? 'Perbarui' : 'Simpan'}</Button>
+                        <Button type="submit" loading={submitting} color="primary" icon={Plus}>{editing ? 'Perbarui' : 'Simpan'}</Button>
                     </div>
                 </form>
             </Modal>
-            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Periode Akademik" message={`Yakin ingin menghapus periode "${deleting?.nama_periode}"?`} />
+            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Periode Akademik" message={`Yakin ingin menghapus periode "${deleting?.name}"?`} />
         </>
     );
 };

@@ -9,6 +9,7 @@ class ApplicationSetting extends Model
 {
     use HasFactory;
 
-    protected $table = 'pengaturan_aplikasi';
-    protected $fillable = ['key', 'value', 'tipe'];
+    protected $table = 'application_setting';
+
+    protected $fillable = ['key', 'value', 'type'];
 }

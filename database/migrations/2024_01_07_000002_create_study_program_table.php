@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('accreditation_level')->nullable();
             $table->string('dean_name')->nullable();
             $table->foreignId('institution_id')->nullable()->constrained('institution')->nullOnDelete();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

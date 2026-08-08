@@ -16,7 +16,6 @@ return new class extends Migration
             $table->date('join_date')->nullable();
             $table->date('leave_date')->nullable();
             $table->string('status')->default('active');
-            $table->softDeletes();
             $table->timestamps();
         });
     }

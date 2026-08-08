@@ -8,7 +8,7 @@ import Forbidden from '../modules/shared/pages/Forbidden';
 
 import MasterDosen from '../modules/master-data/pages/MasterDosen';
 import MasterMahasiswa from '../modules/master-data/pages/MasterMahasiswa';
-import MasterPerusahaanKp from '../modules/master-data/pages/MasterPerusahaanKp';
+import MasterMitra from '../modules/master-data/pages/MasterMitra';
 import PeriodeAkademik from '../modules/master-data/pages/PeriodeAkademik';
 import TemaKp from '../modules/master-data/pages/TemaKp';
 
@@ -42,9 +42,9 @@ function AppRouter() {
                         <MasterMahasiswa />
                     </ProtectedRoute>
                 } />
-                <Route path="/master-data/perusahaan-kp" element={
+                <Route path="/master-data/mitra" element={
                     <ProtectedRoute permission="master-data.manage">
-                        <MasterPerusahaanKp />
+                        <MasterMitra />
                     </ProtectedRoute>
                 } />
                 <Route path="/master-data/periode" element={

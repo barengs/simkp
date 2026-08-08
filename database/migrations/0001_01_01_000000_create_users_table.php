@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
@@ -18,6 +15,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            // Personal identification columns - ONLY phone_number and profile_picture_url remain
+            $table->string('phone_number')->nullable();
+            $table->string('profile_picture_url')->nullable();
             $table->timestamps();
         });
 

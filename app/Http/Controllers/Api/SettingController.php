@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use App\Models\ApplicationSetting;
+use App\Models\Setting as AppSetting;
 
-class SettingsController extends Controller
+class SettingController extends Controller
 {
     public function public()
     {
         $settings = Cache::remember('pengaturan.public', 600, function () {
-            return PengaturanAplikasi::query()
+            return AppSetting::query()
                 ->whereIn('key', ['app_name', 'logo_path', 'favicon_path'])
                 ->pluck('value', 'key');
         });
@@ -29,7 +29,7 @@ class SettingsController extends Controller
         $this->authorizeAction('pengaturan.manage');
 
         return response()->json(
-            PengaturanAplikasi::query()->pluck('value', 'key')
+            AppSetting::query()->pluck('value', 'key')
         );
     }
 
@@ -42,7 +42,7 @@ class SettingsController extends Controller
         ]);
 
         foreach ($data['settings'] as $key => $value) {
-            PengaturanAplikasi::updateOrCreate(
+            AppSetting::updateOrCreate(
                 ['key' => $key],
                 ['value' => is_array($value) ? json_encode($value) : $value]
             );

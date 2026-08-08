@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('phone_number')->nullable();
             $table->string('email')->nullable();
             $table->string('website')->nullable();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

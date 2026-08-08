@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('building')->nullable();
             $table->integer('capacity')->default(0);
             $table->text('description')->nullable();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

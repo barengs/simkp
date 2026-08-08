@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lecturer extends Model
 {
@@ -14,27 +15,11 @@ class Lecturer extends Model
     protected $fillable = [
         'user_id',
         'nip',
-        'name',
-        'email',
-        'phone_number',
-        'birth_date',
-        'gender',
         'nidn',
-        'address',
-        'office_address',
-        'position',
-        'expertise',
-        'profile_picture_url',
-        'study_program_id'
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
-    }
-
-    public function studyProgram()
-    {
-        return $this->belongsTo(\App\Models\StudyProgram::class);
+        return $this->belongsTo(User::class);
     }
 }

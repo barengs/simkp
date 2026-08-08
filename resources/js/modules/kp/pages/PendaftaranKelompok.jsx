@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGetKelompokKpQuery, useCreateKelompokKpMutation, useUpdateKelompokKpMutation, useDeleteKelompokKpMutation } from '../api/kpApi';
-import { useGetPeriodeAkademikQuery, useGetPerusahaanKpQuery, useGetTemaKpQuery } from '../../master-data/api/masterDataApi';
+import { useGetAcademicPeriodsQuery, useGetKpCompaniesQuery, useGetKpThemesQuery } from '../../master-data/api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
@@ -14,9 +14,9 @@ import { UserPlus, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const PendaftaranKelompok = () => {
     const { data: kelompokList, isLoading } = useGetKelompokKpQuery();
-    const { data: periodeList } = useGetPeriodeAkademikQuery();
-    const { data: perusahaanList } = useGetPerusahaanKpQuery();
-    const { data: temaList } = useGetTemaKpQuery();
+    const { data: periodeList } = useGetAcademicPeriodsQuery();
+    const { data: perusahaanList } = useGetKpCompaniesQuery();
+    const { data: temaList } = useGetKpThemesQuery();
     
     const [createKelompok] = useCreateKelompokKpMutation();
     const [updateKelompok] = useUpdateKelompokKpMutation();

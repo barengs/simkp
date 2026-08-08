@@ -18,7 +18,6 @@ return new class extends Migration
             $table->timestamp('submitted_at')->nullable();
             $table->string('status')->default('draft');
             $table->text('remarks')->nullable();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

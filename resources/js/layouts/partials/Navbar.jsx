@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
+import { Bell, Search, ChevronDown, LogOut, Settings } from 'lucide-react';
 
 const Navbar = ({ onToggleSidebar }) => {
   const dispatch = useDispatch();
@@ -54,7 +55,7 @@ const Navbar = ({ onToggleSidebar }) => {
           </span>
           <input
             type="text"
-            className="w-64 py-2 pl-9 pr-4 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-slate-400"
+            className="w-64 py-2 pl-9 pr-4 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-slate-400"
             placeholder="Cari menu, guru, atau siswa..."
           />
         </div>
@@ -106,7 +107,7 @@ const Navbar = ({ onToggleSidebar }) => {
             className="flex items-center gap-2 pl-1 cursor-pointer group select-none"
           >
             <img
-              className="w-9 h-9 rounded-xl border-2 border-transparent group-hover:border-emerald-500 transition-all duration-200 shadow-sm"
+              className="w-9 h-9 rounded-full border-2 border-transparent group-hover:border-emerald-500 transition-all duration-200 shadow-sm"
               src={`https://ui-avatars.com/api/?name=${user?.name?.split(' ')[0] || 'User'}&background=d1fae5&color=065f46&size=64`}
               alt="Avatar"
             />
@@ -132,9 +133,7 @@ const Navbar = ({ onToggleSidebar }) => {
                 <span>Profil Saya</span>
               </a>
               <a href="#" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                <svg data-lucide="settings-2" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.32 4.86c-.07-.43-.27-.87-.52-1.21A2 2 0 0012 2h0a2 2 0 012.2 1.65c.04.2.12.43.28.61M... " />
-                </svg>
+                <Settings className="w-4 h-4" />
                 <span>Pengaturan Sistem</span>
               </a>
               <div className="h-px bg-slate-100 my-1" />

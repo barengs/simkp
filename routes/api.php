@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\KpThemeController;
 use App\Http\Controllers\Api\AcademicPeriodController;
 use App\Http\Controllers\Api\KpGroupController;
 use App\Http\Controllers\Api\RegistrationVerificationController;
-use App\Http\Controllers\Api\LogbookController;
 use App\Http\Controllers\Api\DocumentTypeController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\GuidanceController;
@@ -50,9 +49,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('kp-company', KpCompanyController::class);
     Route::apiResource('kp-theme', KpThemeController::class);
     Route::apiResource('academic-period', AcademicPeriodController::class);
-    Route::apiResource('kp-group', KpGroupController::class);
     Route::apiResource('document-type', DocumentTypeController::class);
     Route::apiResource('room', RoomController::class);
+
+    // KP Module
+    Route::apiResource('kp-group', KpGroupController::class);
+    Route::apiResource('registration-verification', RegistrationVerificationController::class)
+        ->only(['index', 'show', 'update']);
+    Route::apiResource('logbook', \App\Http\Controllers\Api\LogbookController::class);
     Route::apiResource('guidance', GuidanceController::class);
     Route::apiResource('report', ReportController::class);
     Route::apiResource('exam-schedule', ExamScheduleController::class);
@@ -62,12 +66,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('notification', NotificationController::class);
     Route::apiResource('status-history', StatusHistoryController::class);
     Route::apiResource('activity-log', ActivityLogController::class);
-
-    // KP Module
-    Route::apiResource('kp-group/kp-company', KpCompanyController::class)->shallow();
-    Route::apiResource('kp-group/kp-theme', KpThemeController::class)->shallow();
-    Route::apiResource('kp-group/academic-period', AcademicPeriodController::class)->shallow();
-    Route::apiResource('registration-verification', RegistrationVerificationController::class)
-        ->only(['index', 'show', 'update']);
-    Route::apiResource('logbook', LogbookController::class);
 });

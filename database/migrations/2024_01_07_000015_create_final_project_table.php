@@ -18,7 +18,6 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->string('status')->default('draft');
             $table->text('notes')->nullable();
-            $table->softDeletes();
             $table->timestamps();
         });
     }

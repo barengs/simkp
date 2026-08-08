@@ -114,7 +114,7 @@ const RegistrationValidation = () => {
                             <div className="w-1/3">
                                 <input
                                     type="text"
-                                    placeholder="Cari mahasiswa..."
+                                    placeholder="Cari student..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"

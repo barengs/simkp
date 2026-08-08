@@ -25,7 +25,19 @@ class LecturerController extends Controller
 
     public function store(StoreLecturerRequest $request)
     {
-        $lecturer = $this->lecturerService->create($request->validated());
+        $validated = $request->validated();
+        
+        // Flatten user data for service
+        $data = [
+            'nip' => $validated['nip'],
+            'nidn' => $validated['nidn'] ?? null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'password' => $validated['password'] ?? 'dosen123',
+        ];
+        
+        $lecturer = $this->lecturerService->create($data);
         return response()->json(new LecturerResource($lecturer), 201);
     }
 
@@ -37,7 +49,18 @@ class LecturerController extends Controller
 
     public function update(UpdateLecturerRequest $request, int $id)
     {
-        $lecturer = $this->lecturerService->update($id, $request->validated());
+        $validated = $request->validated();
+        
+        // Flatten user data for service
+        $data = [
+            'nip' => $validated['nip'],
+            'nidn' => $validated['nidn'] ?? null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+        ];
+        
+        $lecturer = $this->lecturerService->update($id, $data);
         return response()->json(new LecturerResource($lecturer));
     }
 

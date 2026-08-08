@@ -20,12 +20,25 @@ class StudentController extends Controller
 
     public function index()
     {
-        return response()->json($this->studentService->getAll());
+        return StudentResource::collection($this->studentService->getAll());
     }
 
     public function store(StoreStudentRequest $request)
     {
-        $student = $this->studentService->create($request->validated());
+        $validated = $request->validated();
+        
+        // Prepare data for service
+        $data = [
+            'nim' => $validated['nim'],
+            'study_program_id' => $validated['study_program_id'],
+            'is_active' => $validated['is_active'] ?? true,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+            'password' => $validated['password'] ?? 'mhs123',
+        ];
+        
+        $student = $this->studentService->create($data);
         return response()->json(new StudentResource($student), 201);
     }
 
@@ -37,7 +50,19 @@ class StudentController extends Controller
 
     public function update(UpdateStudentRequest $request, int $id)
     {
-        $student = $this->studentService->update($id, $request->validated());
+        $validated = $request->validated();
+        
+        // Prepare data for service
+        $data = [
+            'nim' => $validated['nim'],
+            'study_program_id' => $validated['study_program_id'],
+            'is_active' => $validated['is_active'] ?? true,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'] ?? null,
+        ];
+        
+        $student = $this->studentService->update($id, $data);
         return response()->json(new StudentResource($student));
     }
 

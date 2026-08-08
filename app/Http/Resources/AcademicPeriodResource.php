@@ -14,6 +14,7 @@ class AcademicPeriodResource extends JsonResource
             'code' => $this->code,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
+            'total_members' => $this->total_members,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

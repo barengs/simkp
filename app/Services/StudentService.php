@@ -3,24 +3,40 @@
 namespace App\Services;
 
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StudentService
 {
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return Student::all()->loadMissing(['studyProgram', 'lecturer']);
+        return Student::with(['user', 'studyProgram'])->get();
     }
 
     public function getById(int $id): Student
     {
-        return Student::with(['studyProgram', 'lecturer'])->findOrFail($id);
+        return Student::with(['user', 'studyProgram'])->findOrFail($id);
     }
 
     public function create(array $data): Student
     {
         return DB::transaction(function () use ($data) {
-            return Student::create($data);
+            // Create user record
+            $user = User::create([
+                'name' => $data['name'] ?? '',
+                'email' => $data['email'] ?? '',
+                'password' => Hash::make($data['password'] ?? 'mhs123'), // default for students
+                'phone_number' => $data['phone_number'] ?? null,
+            ]);
+
+            // Create student record linked to user
+            return Student::create([
+                'user_id' => $user->id,
+                'nim' => $data['nim'],
+                'study_program_id' => $data['study_program_id'],
+                'is_active' => $data['is_active'] ?? true,
+            ]);
         });
     }
 
@@ -28,15 +44,36 @@ class StudentService
     {
         return DB::transaction(function () use ($id, $data) {
             $student = Student::findOrFail($id);
-            $student->update($data);
-            return $student->fresh(['studyProgram', 'lecturer']);
+
+            // Update student fields
+            $student->update([
+                'nim' => $data['nim'],
+                'study_program_id' => $data['study_program_id'],
+                'is_active' => $data['is_active'] ?? $student->is_active,
+            ]);
+
+            // Update related user record
+            if ($student->user) {
+                $student->user->update([
+                    'name' => $data['name'] ?? $student->user->name,
+                    'email' => $data['email'] ?? $student->user->email,
+                    'phone_number' => $data['phone_number'] ?? $student->user->phone_number,
+                ]);
+            }
+
+            return $student->fresh(['user', 'studyProgram']);
         });
     }
 
     public function delete(int $id): bool
     {
         return DB::transaction(function () use ($id) {
-            Student::destroy($id);
+            $student = Student::findOrFail($id);
+            // Delete related user as well
+            if ($student->user) {
+                $student->user->delete();
+            }
+            $student->delete();
             return true;
         });
     }

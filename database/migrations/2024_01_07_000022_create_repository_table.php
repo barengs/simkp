@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('lecturer_id')->nullable()->constrained('lecturer')->nullOnDelete();
             $table->timestamp('uploaded_at')->nullable();
             $table->string('status')->default('public');
-            $table->softDeletes();
             $table->timestamps();
         });
     }

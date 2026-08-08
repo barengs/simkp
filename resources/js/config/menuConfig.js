@@ -23,7 +23,7 @@ export const menuConfig = [
         children: [
             { label: 'Dosen', path: '/master-data/dosen', permission: 'master-data.manage' },
             { label: 'Mahasiswa', path: '/master-data/mahasiswa', permission: 'master-data.manage' },
-            { label: 'Perusahaan KP', path: '/master-data/perusahaan-kp', permission: 'master-data.manage' },
+            { label: 'Mitra', path: '/master-data/mitra', permission: 'master-data.manage' },
             { label: 'Periode Akademik', path: '/master-data/periode', permission: 'master-data.manage' },
             { label: 'Tema KP', path: '/master-data/tema', permission: 'master-data.manage' },
         ],
@@ -59,7 +59,7 @@ export const menuConfig = [
         icon: UserCog,
     },
     {
-        label: 'Manajemen Role & Permission',
+        label: 'Manajemen Peran',
         path: '/roles',
         permission: 'pengaturan.manage',
         icon: Shield,

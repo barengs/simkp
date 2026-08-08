@@ -15,11 +15,8 @@ class StoreKpThemeRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:20', 'unique:kp_theme,code'],
             'description' => ['nullable', 'string'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'is_active' => ['nullable', 'boolean'],
+            'is_active' => ['boolean'],
         ];
     }
 }

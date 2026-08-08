@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('student_id')->nullable()->constrained('student')->nullOnDelete();
             $table->date('report_date')->nullable();
             $table->string('status')->default('draft');
-            $table->softDeletes();
             $table->timestamps();
         });
     }

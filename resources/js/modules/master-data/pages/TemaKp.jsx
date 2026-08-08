@@ -1,10 +1,9 @@
-import React, {useState} from 'react';
-import { useGetTemaKpQuery, useCreateTemaKpMutation, useUpdateTemaKpMutation, useDeleteTemaKpMutation } from '../api/masterDataApi';
+import React, { useState } from 'react';
+import { useGetKpThemesQuery, useCreateKpThemeMutation, useUpdateKpThemeMutation, useDeleteKpThemeMutation } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
@@ -14,15 +13,16 @@ import Skeleton from '../../../components/ui/Skeleton';
 import { Lightbulb, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const TemaKp = () => {
-    const { data: temaList, isLoading } = useGetTemaKpQuery();
-    const [createTema] = useCreateTemaKpMutation();
-    const [updateTema] = useUpdateTemaKpMutation();
-    const [deleteTema] = useDeleteTemaKpMutation();
+    const { data: temaList, isLoading } = useGetKpThemesQuery();
+    const [createTema] = useCreateKpThemeMutation();
+    const [updateTema] = useUpdateKpThemeMutation();
+    const [deleteTema] = useDeleteKpThemeMutation();
 
+    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
-    const [form, setForm] = useState({ nama_tema: '', deskripsi: '', is_active: true });
+    const [form, setForm] = useState({ title: '', description: '', is_active: true });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
 
@@ -34,14 +34,18 @@ const TemaKp = () => {
 
     const openCreate = () => {
         setEditing(null);
-        setForm({ nama_tema: '', deskripsi: '', is_active: true });
+        setForm({ title: '', description: '', is_active: true });
         setErrors({});
         setShowModal(true);
     };
 
     const openEdit = (item) => {
         setEditing(item);
-        setForm({ nama_tema: item.nama_tema || '', deskripsi: item.deskripsi || '', is_active: !!item.is_active });
+        setForm({
+            title: item.title || '',
+            description: item.description || '',
+            is_active: item.is_active !== undefined ? item.is_active : true,
+        });
         setErrors({});
         setShowModal(true);
     };
@@ -50,11 +54,16 @@ const TemaKp = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
+            const payload = {
+                title: form.title,
+                description: form.description,
+                is_active: form.is_active,
+            };
             if (editing) {
-                await updateTema({ id: editing.id, ...form }).unwrap();
+                await updateTema({ id: editing.id, ...payload }).unwrap();
                 handleApiSuccess('Tema KP berhasil diperbarui');
             } else {
-                await createTema(form).unwrap();
+                await createTema(payload).unwrap();
                 handleApiSuccess('Tema KP berhasil ditambahkan');
             }
             setShowModal(false);
@@ -76,8 +85,8 @@ const TemaKp = () => {
     };
 
     const columns = [
-        { name: 'Nama Tema', selector: (row) => row.nama_tema || '-', sortable: true, wrap: true },
-        { name: 'Deskripsi', selector: (row) => row.deskripsi || '-', sortable: true, wrap: true },
+        { name: 'Nama Tema', selector: (row) => row.title || '-', sortable: true, wrap: true },
+        { name: 'Deskripsi', selector: (row) => row.description || '-', sortable: true, wrap: true },
         {
             name: 'Status',
             cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
@@ -86,37 +95,77 @@ const TemaKp = () => {
         {
             name: 'Aksi',
             cell: (row) => (
-                <div className="flex items-center gap-1 justify-center">
-                    <button onClick={() => openEdit(row)} className="p-1.5 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => setDeleting(row)} className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors" title="Hapus"><Trash2 className="w-4 h-4" /></button>
+                <div className="flex items-center gap-1">
+                    <Button className='bg-yellow-500 hover:bg-yellow-600' size="sm" onClick={() => openEdit(row)} icon={Pencil}>Edit</Button>
+                    <Button className='bg-red-500 hover:bg-red-600' size="sm" onClick={() => setDeleting(row)} icon={Trash2}>Hapus</Button>
                 </div>
             ),
             ignoreRowClick: true,
         },
     ];
 
+    if (isLoading) return <Skeleton className="h-96" />;
+
+    const filteredData = (temaList || []).filter(
+        (item) => !searchTerm || ['title', 'description'].some((f) => String(item[f] || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
     return (
-        <>
-            <PageHeader title="Tema Kerja Praktek" description="Kelola tema-tema yang tersedia untuk pendaftaran KP" icon={Lightbulb} actions={<Button onClick={openCreate} icon={Plus}>Tambah Tema</Button>} />
-            <Card title="Daftar Tema KP" subtitle={`${temaList?.length || 0} tema terdaftar`}>
-                {isLoading ? <Skeleton rows={4} /> : <DataTableWrapper columns={columns} data={temaList || []} pagination />}
+        <div className="space-y-6">
+            <PageHeader
+                title="Tema Kerja Praktek"
+                description="Kelola tema-tema yang tersedia untuk pendaftaran KP"
+                icon={Lightbulb}
+                actions={<Button onClick={openCreate} icon={Plus}>Tambah Tema</Button>}
+            />
+            <Card title="Daftar Tema KP" subtitle={`${filteredData.length} tema terdaftar`}>
+                <div className="mb-4 max-w-sm">
+                    <Input
+                        type="text"
+                        placeholder="Cari nama atau deskripsi tema..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <DataTableWrapper columns={columns} data={filteredData} pagination />
             </Card>
-            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Tema KP' : 'Tambah Tema Baru'}>
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Tema KP' : 'Tambah Tema Baru'} bigger>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Nama Tema" required name="nama_tema" value={form.nama_tema} onChange={handleInputChange} placeholder="Tema KP 2025" error={errors.nama_tema} />
-                    <Input label="Deskripsi" name="deskripsi" value={form.deskripsi} onChange={handleInputChange} placeholder="Deskripsi tema" error={errors.deskripsi} />
+                    <Input
+                        label="Nama Tema"
+                        required
+                        name="title"
+                        value={form.title}
+                        onChange={handleInputChange}
+                        placeholder="Tema KP 2025"
+                        error={errors.title}
+                    />
+                    <Input
+                        label="Deskripsi"
+                        name="description"
+                        value={form.description}
+                        onChange={handleInputChange}
+                        placeholder="Deskripsi tema"
+                        error={errors.description}
+                    />
                     <div className="flex items-center gap-2">
-                        <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleInputChange} className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            checked={form.is_active}
+                            onChange={handleInputChange}
+                            className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        />
                         <label className="text-sm text-gray-700">Tema aktif</label>
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
-                        <Button type="submit" loading={submitting}>{editing ? 'Perbarui' : 'Simpan'}</Button>
+                        <Button type="submit" loading={submitting} color="primary" icon={Plus}>{editing ? 'Perbarui' : 'Simpan'}</Button>
                     </div>
                 </form>
             </Modal>
-            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Tema KP" message={`Yakin ingin menghapus tema "${deleting?.nama_tema}"?`} />
-        </>
+            <ConfirmDialog isOpen={!!deleting} onClose={() => setDeleting(null)} onConfirm={handleDelete} title="Hapus Tema KP" message={`Yakin ingin menghapus tema "${deleting?.title}"?`} />
+        </div>
     );
 };
 

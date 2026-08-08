@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\PengaturanAplikasi;
+use App\Models\ApplicationSetting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -117,9 +117,9 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($defaults as $key => $value) {
-            PengaturanAplikasi::updateOrCreate(
+            ApplicationSetting::updateOrCreate(
                 ['key' => $key],
-                ['value' => $value, 'tipe' => 'string']
+                ['value' => $value, 'type' => 'string']
             );
         }
     }

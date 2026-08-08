@@ -39,182 +39,257 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const masterDataApi = createApi({
     reducerPath: 'masterDataApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['ProgramStudi', 'PeriodeAkademik', 'Mahasiswa', 'Dosen', 'PerusahaanKp', 'TemaKp'],
+    tagTypes: [
+        'StudyProgram',
+        'AcademicPeriod',
+        'Student',
+        'Lecturer',
+        'KpCompany',
+        'KpTheme',
+        'DocumentType',
+        'Room',
+    ],
     keepUnusedDataFor: 600,
     endpoints: (builder) => ({
-        // Program Studi endpoints (added missing endpoint)
-        getProgramStudi: builder.query({
-            query: () => '/program-studi',
-            providesTags: ['ProgramStudi'],
+        // Study Program endpoints (program-studi -> study-program)
+        getStudyPrograms: builder.query({
+            query: () => '/study-program',
+            providesTags: ['StudyProgram'],
         }),
 
-        // Dosen endpoints
-        getDosen: builder.query({
-            query: () => '/dosen',
-            providesTags: ['Dosen'],
+        // Lecturer endpoints (dosen -> lecturer)
+        getLecturers: builder.query({
+            query: () => '/lecturer',
+            providesTags: ['Lecturer'],
         }),
-        createDosen: builder.mutation({
+        createLecturer: builder.mutation({
             query: (body) => ({
-                url: '/dosen',
+                url: '/lecturer',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: ['Dosen'],
+            invalidatesTags: ['Lecturer'],
         }),
-        updateDosen: builder.mutation({
+        updateLecturer: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/dosen/${id}`,
+                url: `/lecturer/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['Dosen'],
+            invalidatesTags: ['Lecturer'],
         }),
-        deleteDosen: builder.mutation({
+        deleteLecturer: builder.mutation({
             query: (id) => ({
-                url: `/dosen/${id}`,
+                url: `/lecturer/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Dosen'],
+            invalidatesTags: ['Lecturer'],
         }),
 
-        // Mahasiswa endpoints
-        getMahasiswa: builder.query({
-            query: () => '/mahasiswa',
-            providesTags: ['Mahasiswa'],
+        // Student endpoints (mahasiswa -> student)
+        getStudents: builder.query({
+            query: () => '/student',
+            providesTags: ['Student'],
         }),
-        createMahasiswa: builder.mutation({
+        createStudent: builder.mutation({
             query: (body) => ({
-                url: '/mahasiswa',
+                url: '/student',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: ['Mahasiswa'],
+            invalidatesTags: ['Student'],
         }),
-        updateMahasiswa: builder.mutation({
+        updateStudent: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/mahasiswa/${id}`,
+                url: `/student/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['Mahasiswa'],
+            invalidatesTags: ['Student'],
         }),
-        deleteMahasiswa: builder.mutation({
+        deleteStudent: builder.mutation({
             query: (id) => ({
-                url: `/mahasiswa/${id}`,
+                url: `/student/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Mahasiswa'],
+            invalidatesTags: ['Student'],
         }),
 
-        // Perusahaan KP endpoints
-        getPerusahaanKp: builder.query({
-            query: () => '/perusahaan-kp',
-            providesTags: ['PerusahaanKp'],
+        // KP Company endpoints (perusahaan_kp -> kp_company)
+        getKpCompanies: builder.query({
+            query: () => '/kp-company',
+            providesTags: ['KpCompany'],
         }),
-        createPerusahaanKp: builder.mutation({
+        createKpCompany: builder.mutation({
             query: (body) => ({
-                url: '/perusahaan-kp',
+                url: '/kp-company',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: ['PerusahaanKp'],
+            invalidatesTags: ['KpCompany'],
         }),
-        updatePerusahaanKp: builder.mutation({
+        updateKpCompany: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/perusahaan-kp/${id}`,
+                url: `/kp-company/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['PerusahaanKp'],
+            invalidatesTags: ['KpCompany'],
         }),
-        deletePerusahaanKp: builder.mutation({
+        deleteKpCompany: builder.mutation({
             query: (id) => ({
-                url: `/perusahaan-kp/${id}`,
+                url: `/kp-company/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['PerusahaanKp'],
+            invalidatesTags: ['KpCompany'],
         }),
 
-        // Periode Akademik endpoints
-        getPeriodeAkademik: builder.query({
-            query: () => '/periode-akademik',
-            providesTags: ['PeriodeAkademik'],
+        // Academic Period endpoints (periode_akademik -> academic_period)
+        getAcademicPeriods: builder.query({
+            query: () => '/academic-period',
+            providesTags: ['AcademicPeriod'],
         }),
-        createPeriodeAkademik: builder.mutation({
+        createAcademicPeriod: builder.mutation({
             query: (body) => ({
-                url: '/periode-akademik',
+                url: '/academic-period',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: ['PeriodeAkademik'],
+            invalidatesTags: ['AcademicPeriod'],
         }),
-        updatePeriodeAkademik: builder.mutation({
+        updateAcademicPeriod: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/periode-akademik/${id}`,
+                url: `/academic-period/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['PeriodeAkademik'],
+            invalidatesTags: ['AcademicPeriod'],
         }),
-        deletePeriodeAkademik: builder.mutation({
+        deleteAcademicPeriod: builder.mutation({
             query: (id) => ({
-                url: `/periode-akademik/${id}`,
+                url: `/academic-period/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['PeriodeAkademik'],
+            invalidatesTags: ['AcademicPeriod'],
         }),
 
-        // Tema KP endpoints
-        getTemaKp: builder.query({
-            query: () => '/tema-kp',
-            providesTags: ['TemaKp'],
+        // KP Theme endpoints (tema_kp -> kp_theme)
+        getKpThemes: builder.query({
+            query: () => '/kp-theme',
+            providesTags: ['KpTheme'],
         }),
-        createTemaKp: builder.mutation({
+        createKpTheme: builder.mutation({
             query: (body) => ({
-                url: '/tema-kp',
+                url: '/kp-theme',
                 method: 'POST',
                 body,
             }),
-            invalidatesTags: ['TemaKp'],
+            invalidatesTags: ['KpTheme'],
         }),
-        updateTemaKp: builder.mutation({
+        updateKpTheme: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/tema-kp/${id}`,
+                url: `/kp-theme/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['TemaKp'],
+            invalidatesTags: ['KpTheme'],
         }),
-        deleteTemaKp: builder.mutation({
+        deleteKpTheme: builder.mutation({
             query: (id) => ({
-                url: `/tema-kp/${id}`,
+                url: `/kp-theme/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['TemaKp'],
+            invalidatesTags: ['KpTheme'],
+        }),
+
+        // Document Type (jenis_dokumen_kp -> document_type)
+        getDocumentTypes: builder.query({
+            query: () => '/document-type',
+            providesTags: ['DocumentType'],
+        }),
+        createDocumentType: builder.mutation({
+            query: (body) => ({
+                url: '/document-type',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['DocumentType'],
+        }),
+        updateDocumentType: builder.mutation({
+            query: ({ id, ...body }) => ({
+                url: `/document-type/${id}`,
+                method: 'PUT',
+                body,
+            }),
+            invalidatesTags: ['DocumentType'],
+        }),
+        deleteDocumentType: builder.mutation({
+            query: (id) => ({
+                url: `/document-type/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['DocumentType'],
+        }),
+
+        // Room endpoints (ruangan -> room)
+        getRooms: builder.query({
+            query: () => '/room',
+            providesTags: ['Room'],
+        }),
+        createRoom: builder.mutation({
+            query: (body) => ({
+                url: '/room',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['Room'],
+        }),
+        updateRoom: builder.mutation({
+            query: ({ id, ...body }) => ({
+                url: `/room/${id}`,
+                method: 'PUT',
+                body,
+            }),
+            invalidatesTags: ['Room'],
+        }),
+        deleteRoom: builder.mutation({
+            query: (id) => ({
+                url: `/room/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Room'],
         }),
     }),
 });
 
 export const {
-    useGetProgramStudiQuery,  // Added missing export
-    useGetDosenQuery,
-    useCreateDosenMutation,
-    useUpdateDosenMutation,
-    useDeleteDosenMutation,
-    useGetMahasiswaQuery,
-    useCreateMahasiswaMutation,
-    useUpdateMahasiswaMutation,
-    useDeleteMahasiswaMutation,
-    useGetPerusahaanKpQuery,
-    useCreatePerusahaanKpMutation,
-    useUpdatePerusahaanKpMutation,
-    useDeletePerusahaanKpMutation,
-    useGetPeriodeAkademikQuery,
-    useCreatePeriodeAkademikMutation,
-    useUpdatePeriodeAkademikMutation,
-    useDeletePeriodeAkademikMutation,
-    useGetTemaKpQuery,
-    useCreateTemaKpMutation,
-    useUpdateTemaKpMutation,
-    useDeleteTemaKpMutation,
+    useGetStudyProgramsQuery,
+    useGetLecturersQuery,
+    useCreateLecturerMutation,
+    useUpdateLecturerMutation,
+    useDeleteLecturerMutation,
+    useGetStudentsQuery,
+    useCreateStudentMutation,
+    useUpdateStudentMutation,
+    useDeleteStudentMutation,
+    useGetKpCompaniesQuery,
+    useCreateKpCompanyMutation,
+    useUpdateKpCompanyMutation,
+    useDeleteKpCompanyMutation,
+    useGetAcademicPeriodsQuery,
+    useCreateAcademicPeriodMutation,
+    useUpdateAcademicPeriodMutation,
+    useDeleteAcademicPeriodMutation,
+    useGetKpThemesQuery,
+    useCreateKpThemeMutation,
+    useUpdateKpThemeMutation,
+    useDeleteKpThemeMutation,
+    useGetDocumentTypesQuery,
+    useCreateDocumentTypeMutation,
+    useUpdateDocumentTypeMutation,
+    useDeleteDocumentTypeMutation,
+    useGetRoomsQuery,
+    useCreateRoomMutation,
+    useUpdateRoomMutation,
+    useDeleteRoomMutation,
 } = masterDataApi;

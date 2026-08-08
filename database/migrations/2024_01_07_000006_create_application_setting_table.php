@@ -10,13 +10,9 @@ return new class extends Migration
     {
         Schema::create('application_setting', function (Blueprint $table) {
             $table->id();
-            $table->string('app_name');
-            $table->string('app_title')->nullable();
-            $table->string('app_logo_url')->nullable();
-            $table->string('primary_color')->default('#10b981');
-            $table->string('secondary_color')->default('#059669');
-            $table->string('default_language')->default('id');
-            $table->string('timezone')->default('Asia/Jakarta');
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('type')->default('string');
             $table->timestamps();
         });
     }

@@ -15,7 +15,6 @@ return new class extends Migration
             $table->integer('weight')->default(0);
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->softDeletes();
             $table->timestamps();
         });
     }

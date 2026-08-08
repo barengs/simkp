@@ -17,7 +17,6 @@ return new class extends Migration
             $table->text('activity');
             $table->text('note')->nullable();
             $table->string('status')->default('draft');
-            $table->softDeletes();
             $table->timestamps();
         });
     }
