@@ -9,15 +9,29 @@ class KpGroupMember extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kelompok_kp_id', 'mahasiswa_id', 'urutan'];
+    protected $table = 'kp_group_member';
 
-    public function kelompokKp()
+    protected $fillable = [
+        'kp_group_id',
+        'student_id',
+        'role',       // 'ketua' | 'anggota'
+        'join_date',
+        'leave_date',
+        'status',     // 'active' | 'inactive'
+    ];
+
+    protected $casts = [
+        'join_date'  => 'date',
+        'leave_date' => 'date',
+    ];
+
+    public function kpGroup()
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(KpGroup::class);
     }
 
-    public function mahasiswa()
+    public function student()
     {
-        return $this->belongsTo(Mahasiswa::class);
+        return $this->belongsTo(Student::class);
     }
 }

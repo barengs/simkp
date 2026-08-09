@@ -15,7 +15,10 @@ class AcademicPeriodController extends Controller
         private readonly AcademicPeriodService $aService
     ) {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:master-data.manage');
+        // index & show boleh diakses semua role terautentikasi (mahasiswa, dosen, dst.)
+        // karena data ini dibutuhkan sebagai referensi saat mengisi form KP/TA.
+        // Hanya CUD yang memerlukan permission master-data.manage (Admin).
+        $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

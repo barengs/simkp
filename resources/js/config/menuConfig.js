@@ -75,5 +75,8 @@ export const menuConfig = [
         path: '/pengaturan',
         permission: 'pengaturan.manage',
         icon: Settings,
+        children: [
+            { label: 'Dokumen KP', path: '/pengaturan/dokumen-kp', permission: 'master-data.manage' },
+        ],
     },
 ];

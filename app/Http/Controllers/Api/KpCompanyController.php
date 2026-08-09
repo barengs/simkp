@@ -15,12 +15,24 @@ class KpCompanyController extends Controller
         private readonly KpCompanyService $kService
     ) {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:master-data.manage');
+        // index & show boleh diakses semua role terautentikasi (mahasiswa, dosen, dst.)
+        // Hanya CUD yang memerlukan permission master-data.manage (Admin).
+        $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
     public function index()
     {
         return response()->json($this->kService->getAll());
+    }
+
+    /**
+     * Mahasiswa mengajukan perusahaan baru tempat KP mereka sendiri.
+     * Tidak butuh master-data.manage — cukup auth:sanctum.
+     */
+    public function propose(StoreKpCompanyRequest $request)
+    {
+        $k = $this->kService->create($request->validated());
+        return response()->json(new KpCompanyResource($k), 201);
     }
 
     public function store(StoreKpCompanyRequest $request)

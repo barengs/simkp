@@ -15,7 +15,10 @@ class StudentController extends Controller
         private readonly StudentService $studentService
     ) {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:master-data.manage');
+        // index & show terbuka untuk semua user terautentikasi — mahasiswa perlu
+        // baca daftar student untuk mencari anggota kelompok by NIM.
+        // Hanya CUD yang memerlukan permission master-data.manage.
+        $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

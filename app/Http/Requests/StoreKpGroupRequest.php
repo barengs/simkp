@@ -4,27 +4,36 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreKelompokKpRequest extends FormRequest
+class StoreKpGroupRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return true; // otorisasi ditangani di controller
     }
 
     public function rules(): array
     {
         return [
-            'kode_kelompok' => ['required', 'string', 'unique:kelompok_kp,kode_kelompok'],
-            'nama_kelompok' => ['required', 'string'],
-            'program_studi_id' => ['required', 'exists:program_studi,id'],
-            'periode_akademik_id' => ['required', 'exists:periode_akademik,id'],
-            'tema_kp_id' => ['required', 'exists:tema_kp,id'],
-            'perusahaan_kp_id' => ['required', 'exists:perusahaan_kp,id'],
-            'dosen_pembimbing_id' => ['nullable', 'exists:dosen,id'],
-            'dosen_penguji_id' => ['nullable', 'exists:dosen,id'],
-            'jumlah_anggota' => ['required', 'integer', 'min:1'],
-            'anggota_ids' => ['nullable', 'array'],
-            'anggota_ids.*' => ['exists:mahasiswa,id'],
+            'kp_company_id'      => ['required', 'exists:kp_company,id'],
+            'kp_theme_id'        => ['required', 'exists:kp_theme,id'],
+            'academic_period_id' => ['required', 'exists:academic_period,id'],
+            'description'        => ['nullable', 'string', 'max:1000'],
+            // anggota_ids: daftar student.id anggota (di luar ketua, ketua di-inject controller)
+            'anggota_ids'        => ['nullable', 'array'],
+            'anggota_ids.*'      => ['integer', 'exists:student,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'kp_company_id.required'      => 'Perusahaan tujuan KP wajib dipilih.',
+            'kp_company_id.exists'        => 'Perusahaan tidak ditemukan.',
+            'kp_theme_id.required'        => 'Tema KP wajib dipilih.',
+            'kp_theme_id.exists'          => 'Tema KP tidak ditemukan.',
+            'academic_period_id.required' => 'Periode akademik wajib dipilih.',
+            'academic_period_id.exists'   => 'Periode akademik tidak ditemukan.',
+            'anggota_ids.*.exists'        => 'Salah satu mahasiswa yang ditambahkan tidak ditemukan.',
         ];
     }
 }

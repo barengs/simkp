@@ -5,99 +5,146 @@ namespace App\Services;
 use App\Models\KpGroup;
 use App\Models\KpGroupMember;
 use App\Models\Student;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class KpGroupService
 {
+    private function withRelations()
+    {
+        return KpGroup::with([
+            'academicPeriod',
+            'kpTheme',
+            'kpCompany',
+            'members.student.user',
+        ]);
+    }
+
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return KelompokKp::with([
-            'programStudi',
-            'periodeAkademik',
-            'temaKp',
-            'perusahaanKp',
-            'dosenPembimbing',
-            'dosenPenguji',
-            'anggota.mahasiswa.user',
-        ])->get();
+        return $this->withRelations()->get();
     }
 
-    public function getById(int $id): KelompokKp
+    public function getById(int $id): KpGroup
     {
-        return KelompokKp::with([
-            'programStudi',
-            'periodeAkademik',
-            'temaKp',
-            'perusahaanKp',
-            'dosenPembimbing',
-            'dosenPenguji',
-            'anggota.mahasiswa.user',
-        ])->findOrFail($id);
+        return $this->withRelations()->findOrFail($id);
     }
 
-    public function create(array $data): KelompokKp
+    /**
+     * Ambil kelompok milik mahasiswa tertentu (by student.id).
+     */
+    public function getByStudent(int $studentId): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->withRelations()
+            ->whereHas('members', fn ($q) => $q->where('student_id', $studentId))
+            ->get();
+    }
+
+    /**
+     * Buat kelompok baru.
+     * - Auto-generate code dari periode + urutan jika tidak disuplai.
+     * - Mahasiswa pembuat otomatis menjadi ketua (role = 'ketua').
+     */
+    public function create(array $data): KpGroup
     {
         return DB::transaction(function () use ($data) {
-            $kelompok = KelompokKp::create($data);
+            // Auto-generate code jika tidak disuplai
+            $code = $data['code'] ?? $this->generateCode($data['academic_period_id']);
 
-            if (isset($data['anggota_ids'])) {
-                foreach ($data['anggota_ids'] as $urutan => $studentId) {
-                    AnggotaKelompokKp::create([
-                        'kelompok_kp_id' => $kelompok->id,
-                        'mahasiswa_id' => $studentId,
-                        'urutan' => $urutan + 1,
-                    ]);
-                }
+            $kelompok = KpGroup::create([
+                'name'               => $data['name'] ?? $code,
+                'code'               => $code,
+                'kp_company_id'      => $data['kp_company_id'],
+                'kp_theme_id'        => $data['kp_theme_id'],
+                'academic_period_id' => $data['academic_period_id'],
+                'status'             => 'draft',
+                'description'        => $data['description'] ?? null,
+            ]);
+
+            // Ketua: user yang membuat (ketua_student_id wajib ada di payload)
+            if (!empty($data['ketua_student_id'])) {
+                KpGroupMember::create([
+                    'kp_group_id' => $kelompok->id,
+                    'student_id'  => $data['ketua_student_id'],
+                    'role'        => 'ketua',
+                    'join_date'   => now()->toDateString(),
+                    'status'      => 'active',
+                ]);
             }
 
-            return $kelompok->load([
-                'programStudi', 'periodeAkademik', 'temaKp', 'perusahaanKp',
-                'dosenPembimbing', 'dosenPenguji', 'anggota.mahasiswa.user',
-            ]);
+            // Anggota tambahan
+            foreach (($data['anggota_ids'] ?? []) as $studentId) {
+                // Jangan duplikasi jika studentId sama dengan ketua
+                if (!empty($data['ketua_student_id']) && $studentId == $data['ketua_student_id']) {
+                    continue;
+                }
+                KpGroupMember::create([
+                    'kp_group_id' => $kelompok->id,
+                    'student_id'  => $studentId,
+                    'role'        => 'anggota',
+                    'join_date'   => now()->toDateString(),
+                    'status'      => 'active',
+                ]);
+            }
+
+            return $this->withRelations()->find($kelompok->id);
         });
     }
 
-    public function update(int $id, array $data): KelompokKp
+    public function update(int $id, array $data): KpGroup
     {
         return DB::transaction(function () use ($id, $data) {
-            $kelompok = KelompokKp::findOrFail($id);
-            $kelompok->update($data);
+            $kelompok = KpGroup::findOrFail($id);
 
-            if (isset($data['anggota_ids'])) {
-                AnggotaKelompokKp::where('kelompok_kp_id', $id)->delete();
-                foreach ($data['anggota_ids'] as $urutan => $studentId) {
-                    AnggotaKelompokKp::create([
-                        'kelompok_kp_id' => $id,
-                        'mahasiswa_id' => $studentId,
-                        'urutan' => $urutan + 1,
+            $kelompok->update(array_filter([
+                'kp_company_id'      => $data['kp_company_id']      ?? null,
+                'kp_theme_id'        => $data['kp_theme_id']         ?? null,
+                'academic_period_id' => $data['academic_period_id']  ?? null,
+                'description'        => $data['description']         ?? null,
+            ], fn ($v) => $v !== null));
+
+            // Sync anggota jika disuplai
+            if (array_key_exists('anggota_ids', $data)) {
+                // Pertahankan ketua, ganti anggota biasa
+                KpGroupMember::where('kp_group_id', $id)
+                    ->where('role', 'anggota')
+                    ->delete();
+
+                foreach ($data['anggota_ids'] as $studentId) {
+                    // Skip jika sudah jadi ketua
+                    if (KpGroupMember::where('kp_group_id', $id)
+                        ->where('student_id', $studentId)
+                        ->exists()) {
+                        continue;
+                    }
+                    KpGroupMember::create([
+                        'kp_group_id' => $id,
+                        'student_id'  => $studentId,
+                        'role'        => 'anggota',
+                        'join_date'   => now()->toDateString(),
+                        'status'      => 'active',
                     ]);
                 }
             }
 
-            return $kelompok->fresh([
-                'programStudi', 'periodeAkademik', 'temaKp', 'perusahaanKp',
-                'dosenPembimbing', 'dosenPenguji', 'anggota.mahasiswa.user',
-            ]);
+            return $this->withRelations()->find($kelompok->id);
         });
     }
 
     public function delete(int $id): bool
     {
         return DB::transaction(function () use ($id) {
-            AnggotaKelompokKp::where('kelompok_kp_id', $id)->delete();
-            KelompokKp::destroy($id);
+            KpGroupMember::where('kp_group_id', $id)->delete();
+            KpGroup::destroy($id);
             return true;
         });
     }
 
-    public function getByMahasiswa(int $studentId): \Illuminate\Database\Eloquent\Collection
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    private function generateCode(int $periodId): string
     {
-        return KelompokKp::with([
-            'programStudi', 'periodeAkademik', 'temaKp', 'perusahaanKp',
-            'dosenPembimbing', 'dosenPenguji', 'anggota',
-        ])
-            ->whereHas('anggota', fn($q) => $q->where('mahasiswa_id', $studentId))
-            ->get();
+        $count  = KpGroup::where('academic_period_id', $periodId)->count() + 1;
+        return 'KP-' . $periodId . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
     }
 }

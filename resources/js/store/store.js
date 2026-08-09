@@ -4,6 +4,7 @@ import settingsReducer from './slices/settingsSlice';
 import { masterDataApi } from '../modules/master-data/api/masterDataApi';
 import { kpApi } from '../modules/kp/api/kpApi';
 import { roleManagementApi } from '../modules/role-management/api/roleManagementApi';
+import { pengaturanApi } from '../modules/pengaturan/api/pengaturanApi';
 
 export const store = configureStore({
     reducer: {
@@ -12,9 +13,10 @@ export const store = configureStore({
         [masterDataApi.reducerPath]: masterDataApi.reducer,
         [kpApi.reducerPath]: kpApi.reducer,
         [roleManagementApi.reducerPath]: roleManagementApi.reducer,
+        [pengaturanApi.reducerPath]: pengaturanApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: false,
-        }).concat(masterDataApi.middleware, kpApi.middleware, roleManagementApi.middleware),
+        }).concat(masterDataApi.middleware, kpApi.middleware, roleManagementApi.middleware, pengaturanApi.middleware),
 });

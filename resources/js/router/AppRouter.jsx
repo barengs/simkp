@@ -12,6 +12,8 @@ import MasterMitra from '../modules/master-data/pages/MasterMitra';
 import PeriodeAkademik from '../modules/master-data/pages/PeriodeAkademik';
 import TemaKp from '../modules/master-data/pages/TemaKp';
 
+import ManajemenDokumenKP from '../modules/pengaturan/pages/ManajemenDokumenKP';
+
 import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
 import Logbook from '../modules/kp/pages/Logbook';
@@ -63,6 +65,13 @@ function AppRouter() {
                 <Route path="/roles" element={
                     <ProtectedRoute permission="pengaturan.manage">
                         <RoleManagement />
+                    </ProtectedRoute>
+                } />
+
+                {/* Pengaturan */}
+                <Route path="/pengaturan/dokumen-kp" element={
+                    <ProtectedRoute permission="master-data.manage">
+                        <ManajemenDokumenKP />
                     </ProtectedRoute>
                 } />
 

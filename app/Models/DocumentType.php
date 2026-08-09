@@ -9,5 +9,24 @@ class DocumentType extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama_dokumen', 'deskripsi'];
+    protected $table = 'document_type';
+
+    protected $fillable = [
+        'name',
+        'code',
+        'description',
+        'is_required',
+    ];
+
+    protected $casts = [
+        'is_required' => 'boolean',
+    ];
+
+    // ── Relasi ────────────────────────────────────────────────────────────────
+
+    /** Dokumen yang menggunakan tipe ini */
+    public function documents()
+    {
+        return $this->hasMany(KpDocument::class);
+    }
 }

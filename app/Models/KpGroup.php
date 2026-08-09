@@ -9,106 +9,48 @@ class KpGroup extends Model
 {
     use HasFactory;
 
+    protected $table = 'kp_group';
+
     protected $fillable = [
-        'kode_kelompok',
-        'nama_kelompok',
-        'program_studi_id',
-        'periode_akademik_id',
-        'tema_kp_id',
-        'perusahaan_kp_id',
-        'dosen_pembimbing_id',
-        'dosen_penguji_id',
-        'jumlah_anggota',
+        'name',
+        'code',
+        'kp_company_id',
+        'kp_theme_id',
+        'academic_period_id',
         'status',
+        'rejection_note',
+        'description',
     ];
 
     protected $casts = [
-        'jumlah_anggota' => 'integer',
         'status' => 'string',
     ];
 
-    public function programStudi()
+    // ── Relasi ────────────────────────────────────────────────────────────────
+
+    public function academicPeriod()
     {
-        return $this->belongsTo(ProgramStudi::class);
+        return $this->belongsTo(AcademicPeriod::class);
     }
 
-    public function periodeAkademik()
+    public function kpTheme()
     {
-        return $this->belongsTo(PeriodeAkademik::class);
+        return $this->belongsTo(KpTheme::class);
     }
 
-    public function temaKp()
+    public function kpCompany()
     {
-        return $this->belongsTo(TemaKp::class);
+        return $this->belongsTo(KpCompany::class);
     }
 
-    public function perusahaanKp()
+    /** Anggota kelompok (pivot kp_group_member) */
+    public function members()
     {
-        return $this->belongsTo(PerusahaanKp::class);
+        return $this->hasMany(KpGroupMember::class);
     }
 
-    public function dosenPembimbing()
-    {
-        return $this->belongsTo(Dosen::class, 'dosen_pembimbing_id');
-    }
-
-    public function dosenPenguji()
-    {
-        return $this->belongsTo(Dosen::class, 'dosen_penguji_id');
-    }
-
-    public function anggota()
-    {
-        return $this->hasMany(AnggotaKelompokKp::class);
-    }
-
-    public function logbook()
+    public function logbooks()
     {
         return $this->hasMany(Logbook::class);
-    }
-
-    public function dokumenKp()
-    {
-        return $this->hasMany(DokumenKp::class);
-    }
-
-    public function tugasAkhir()
-    {
-        return $this->hasOne(TugasAkhir::class);
-    }
-
-    public function bimbingan()
-    {
-        return $this->morphMany(Bimbingan::class, 'bimbable');
-    }
-
-    public function laporan()
-    {
-        return $this->morphMany(Laporan::class, 'laporable');
-    }
-
-    public function jadwalUjian()
-    {
-        return $this->hasOne(JadwalUjian::class);
-    }
-
-    public function nilaiKp()
-    {
-        return $this->hasOne(NilaiKp::class);
-    }
-
-    public function nilaiUjian()
-    {
-        return $this->hasOne(NilaiUjian::class);
-    }
-
-    public function repository()
-    {
-        return $this->hasMany(Repository::class);
-    }
-
-    public function statusHistories()
-    {
-        return $this->morphMany(StatusHistory::class, 'statusable');
     }
 }

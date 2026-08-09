@@ -63,6 +63,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // KP Module
+    // Mahasiswa boleh mengajukan perusahaan baru (propose) tanpa master-data.manage
+    Route::post('kp-company/propose', [KpCompanyController::class, 'propose']);
     Route::apiResource('kp-group', KpGroupController::class);
     Route::apiResource('registration-verification', RegistrationVerificationController::class)
         ->only(['index', 'show', 'update']);

@@ -9,15 +9,37 @@ class KpDocument extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kelompok_kp_id', 'jenis_dokumen_kp_id', 'nama_file', 'path_file', 'catatan', 'status'];
+    protected $table = 'kp_document';
 
-    public function kelompokKp()
+    protected $fillable = [
+        'title',
+        'document_type_id',
+        'kp_group_id',
+        'student_id',
+        'file_url',
+        'submitted_at',
+        'status',
+        'remarks',
+    ];
+
+    protected $casts = [
+        'submitted_at' => 'datetime',
+    ];
+
+    // ── Relasi ────────────────────────────────────────────────────────────────
+
+    public function documentType()
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(DocumentType::class);
     }
 
-    public function jenisDokumenKp()
+    public function kpGroup()
     {
-        return $this->belongsTo(JenisDokumenKp::class);
+        return $this->belongsTo(KpGroup::class);
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
 }

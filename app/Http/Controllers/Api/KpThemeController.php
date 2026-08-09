@@ -15,7 +15,9 @@ class KpThemeController extends Controller
         private readonly KpThemeService $kService
     ) {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:master-data.manage');
+        // index & show boleh diakses semua role terautentikasi (mahasiswa, dosen, dst.)
+        // Hanya CUD yang memerlukan permission master-data.manage (Admin).
+        $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

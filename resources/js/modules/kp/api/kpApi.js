@@ -8,7 +8,6 @@ const baseQuery = fetchBaseQuery({
         headers.set('Accept', 'application/json');
         headers.set('X-Requested-With', 'XMLHttpRequest');
 
-        // Get CSRF token from cookie
         const csrfToken = document.cookie
             .split('; ')
             .find((row) => row.startsWith('XSRF-TOKEN='))
@@ -22,113 +21,132 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-// Wrap baseQuery to handle CSRF token mismatch errors
 const baseQueryWithReauth = async (args, api, extraOptions) => {
     const result = await baseQuery(args, api, extraOptions);
-
     if (result.error?.status === 419) {
-        // CSRF token mismatch - refresh token and retry
         await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
-        const retryResult = await baseQuery(args, api, extraOptions);
-        return retryResult;
+        return await baseQuery(args, api, extraOptions);
     }
-
     return result;
 };
 
 export const kpApi = createApi({
     reducerPath: 'kpApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['KelompokKp', 'Logbook', 'Verifikasi'],
+    tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument'],
     keepUnusedDataFor: 300,
     endpoints: (builder) => ({
-        getKelompokKp: builder.query({
-            query: () => '/kelompok-kp',
-            providesTags: ['KelompokKp'],
+
+        // ── Kelompok KP ────────────────────────────────────────────────────────
+        getKpGroups: builder.query({
+            query: () => '/kp-group',
+            providesTags: ['KpGroup'],
         }),
-        getKelompokKpById: builder.query({
-            query: (id) => `/kelompok-kp/${id}`,
-            providesTags: (result, error, id) => [{ type: 'KelompokKp', id }],
+        getKpGroupById: builder.query({
+            query: (id) => `/kp-group/${id}`,
+            providesTags: (result, error, id) => [{ type: 'KpGroup', id }],
         }),
-        createKelompokKp: builder.mutation({
-            query: (body) => ({
-                url: '/kelompok-kp',
-                method: 'POST',
-                body,
-            }),
-            invalidatesTags: ['KelompokKp'],
+        createKpGroup: builder.mutation({
+            query: (body) => ({ url: '/kp-group', method: 'POST', body }),
+            invalidatesTags: ['KpGroup'],
         }),
-        updateKelompokKp: builder.mutation({
-            query: ({ id, ...body }) => ({
-                url: `/kelompok-kp/${id}`,
-                method: 'PUT',
-                body,
-            }),
-            invalidatesTags: ['KelompokKp'],
+        updateKpGroup: builder.mutation({
+            query: ({ id, ...body }) => ({ url: `/kp-group/${id}`, method: 'PUT', body }),
+            invalidatesTags: ['KpGroup'],
         }),
-        deleteKelompokKp: builder.mutation({
-            query: (id) => ({
-                url: `/kelompok-kp/${id}`,
-                method: 'DELETE',
-            }),
-            invalidatesTags: ['KelompokKp'],
+        deleteKpGroup: builder.mutation({
+            query: (id) => ({ url: `/kp-group/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['KpGroup'],
         }),
 
-        // Logbook
+        // ── Propose perusahaan baru (mahasiswa, tanpa master-data.manage) ─────
+        proposeKpCompany: builder.mutation({
+            query: (body) => ({ url: '/kp-company/propose', method: 'POST', body }),
+            // Invalidate cache KpCompany di masterDataApi agar list langsung update
+            // (cross-slice invalidation tidak langsung, tapi cukup untuk refetch)
+            invalidatesTags: ['KpCompany'],
+        }),
+
+        // ── Tipe Dokumen ───────────────────────────────────────────────────────
+        getDocumentTypes: builder.query({
+            query: () => '/document-type',
+            providesTags: ['DocumentType'],
+        }),
+        getDocumentTypeById: builder.query({
+            query: (id) => `/document-type/${id}`,
+            providesTags: (result, error, id) => [{ type: 'DocumentType', id }],
+        }),
+        createDocumentType: builder.mutation({
+            query: (body) => ({ url: '/document-type', method: 'POST', body }),
+            invalidatesTags: ['DocumentType'],
+        }),
+        updateDocumentType: builder.mutation({
+            query: ({ id, ...body }) => ({ url: `/document-type/${id}`, method: 'PUT', body }),
+            invalidatesTags: ['DocumentType'],
+        }),
+        deleteDocumentType: builder.mutation({
+            query: (id) => ({ url: `/document-type/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['DocumentType'],
+        }),
+
+        // ── Logbook ────────────────────────────────────────────────────────────
         getLogbook: builder.query({
             query: () => '/logbook',
             providesTags: ['Logbook'],
         }),
         createLogbook: builder.mutation({
-            query: (body) => ({
-                url: '/logbook',
-                method: 'POST',
-                body,
-            }),
+            query: (body) => ({ url: '/logbook', method: 'POST', body }),
             invalidatesTags: ['Logbook'],
         }),
         updateLogbook: builder.mutation({
-            query: ({ id, ...body }) => ({
-                url: `/logbook/${id}`,
-                method: 'PUT',
-                body,
-            }),
+            query: ({ id, ...body }) => ({ url: `/logbook/${id}`, method: 'PUT', body }),
             invalidatesTags: ['Logbook'],
         }),
         deleteLogbook: builder.mutation({
-            query: (id) => ({
-                url: `/logbook/${id}`,
-                method: 'DELETE',
-            }),
+            query: (id) => ({ url: `/logbook/${id}`, method: 'DELETE' }),
             invalidatesTags: ['Logbook'],
         }),
 
-        // Verifikasi Pendaftaran
+        // ── Verifikasi Pendaftaran ─────────────────────────────────────────────
         getVerifikasi: builder.query({
-            query: () => '/verifikasi-pendaftaran',
+            query: () => '/registration-verification',
             providesTags: ['Verifikasi'],
         }),
         updateVerifikasi: builder.mutation({
             query: ({ id, ...body }) => ({
-                url: `/verifikasi-pendaftaran/${id}`,
+                url: `/registration-verification/${id}`,
                 method: 'PUT',
                 body,
             }),
-            invalidatesTags: ['Verifikasi', 'KelompokKp'],
+            invalidatesTags: ['Verifikasi', 'KpGroup'],
         }),
     }),
 });
 
 export const {
-    useGetKelompokKpQuery,
-    useGetKelompokKpByIdQuery,
-    useCreateKelompokKpMutation,
-    useUpdateKelompokKpMutation,
-    useDeleteKelompokKpMutation,
+    useGetKpGroupsQuery,
+    useGetKpGroupByIdQuery,
+    useCreateKpGroupMutation,
+    useUpdateKpGroupMutation,
+    useDeleteKpGroupMutation,
+    useProposeKpCompanyMutation,
+    useGetDocumentTypesQuery,
+    useGetDocumentTypeByIdQuery,
+    useCreateDocumentTypeMutation,
+    useUpdateDocumentTypeMutation,
+    useDeleteDocumentTypeMutation,
     useGetLogbookQuery,
     useCreateLogbookMutation,
     useUpdateLogbookMutation,
     useDeleteLogbookMutation,
     useGetVerifikasiQuery,
     useUpdateVerifikasiMutation,
+} = kpApi;
+
+// Alias lama agar tidak breaking pages lain yang masih pakai nama lama
+export const {
+    useGetKpGroupsQuery   : useGetKelompokKpQuery,
+    useCreateKpGroupMutation : useCreateKelompokKpMutation,
+    useUpdateKpGroupMutation : useUpdateKelompokKpMutation,
+    useDeleteKpGroupMutation : useDeleteKelompokKpMutation,
 } = kpApi;

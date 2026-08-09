@@ -32,4 +32,16 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /** Relasi ke data mahasiswa (jika user ini adalah mahasiswa) */
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id');
+    }
+
+    /** Relasi ke data dosen (jika user ini adalah dosen) */
+    public function lecturer()
+    {
+        return $this->hasOne(Lecturer::class, 'user_id');
+    }
 }

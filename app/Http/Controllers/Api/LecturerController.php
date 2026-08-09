@@ -15,7 +15,9 @@ class LecturerController extends Controller
         private readonly LecturerService $lecturerService
     ) {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:master-data.manage');
+        // index & show terbuka untuk semua user terautentikasi.
+        // Hanya CUD yang memerlukan permission master-data.manage.
+        $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

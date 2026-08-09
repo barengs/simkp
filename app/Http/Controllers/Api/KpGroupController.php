@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreKelompokKpRequest;
-use App\Http\Requests\UpdateKelompokKpRequest;
+use App\Http\Requests\StoreKpGroupRequest;
+use App\Http\Requests\UpdateKpGroupRequest;
 use App\Http\Resources\KpGroupResource;
 use App\Services\KpGroupService;
 use Illuminate\Http\Request;
@@ -12,58 +12,104 @@ use Illuminate\Http\Request;
 class KpGroupController extends Controller
 {
     public function __construct(
-        private readonly KelompokKpService $kpGroupService
+        private readonly KpGroupService $kpGroupService
     ) {
         $this->middleware('auth:sanctum');
     }
 
-    public function index()
+    /**
+     * Mahasiswa: hanya kelompok milik sendiri.
+     * Role lain (koordinator, dosen, admin): semua kelompok.
+     */
+    public function index(Request $request)
     {
-        $user = request()->user();
+        $user = $request->user();
 
-        if ($user->can('kp.kelompok.create')) {
-            return response()->json($this->kelompokKpService->getAll());
+        // Mahasiswa: tampilkan kelompok di mana dia menjadi anggota (ketua maupun anggota biasa)
+        // Ini mencakup kelompok yang dia buat sendiri maupun yang dia diundang
+        if ($user->hasRole('mahasiswa')) {
+            $student = $user->student;
+            if (!$student) {
+                return response()->json([]);
+            }
+            return KpGroupResource::collection(
+                $this->kpGroupService->getByStudent($student->id)
+            );
         }
 
-        return response()->json(
-            $this->kelompokKpService->getByMahasiswa($user->mahasiswa->id ?? 0)
-        );
+        // Koordinator / Dosen / Admin: semua kelompok
+        return KpGroupResource::collection($this->kpGroupService->getAll());
     }
 
-    public function store(StoreKelompokKpRequest $request)
+    /**
+     * Hanya mahasiswa dengan permission kp.kelompok.create yang boleh membuat kelompok.
+     */
+    public function store(StoreKpGroupRequest $request)
     {
-        $this->authorize('create', \App\Models\KpGroup::class);
+        if (!$request->user()->can('kp.kelompok.create')) {
+            abort(403, 'Anda tidak memiliki izin untuk mendaftar kelompok KP.');
+        }
 
-        $kelompok = $this->kelompokKpService->create($request->validated());
+        $user    = $request->user();
+        $student = $user->student;
 
-        return response()->json(new KelompokKpResource($kelompok), 201);
+        if (!$student) {
+            abort(422, 'Data mahasiswa tidak ditemukan untuk akun ini.');
+        }
+
+        $data                    = $request->validated();
+        $data['ketua_student_id'] = $student->id;
+
+        $kelompok = $this->kpGroupService->create($data);
+        return response()->json(new KpGroupResource($kelompok), 201);
     }
 
     public function show(int $id)
     {
-        $kelompok = $this->kelompokKpService->getById($id);
-        $this->authorize('view', $kelompok);
-
-        return response()->json(new KelompokKpResource($kelompok));
+        $kelompok = $this->kpGroupService->getById($id);
+        return response()->json(new KpGroupResource($kelompok));
     }
 
-    public function update(UpdateKelompokKpRequest $request, int $id)
+    public function update(UpdateKpGroupRequest $request, int $id)
     {
-        $kelompok = $this->kelompokKpService->getById($id);
-        $this->authorize('update', $kelompok);
+        $kelompok = $this->kpGroupService->getById($id);
 
-        $updated = $this->kelompokKpService->update($id, $request->validated());
+        // Hanya ketua kelompok atau admin/koordinator yang boleh edit
+        $user    = $request->user();
+        $student = $user->student;
+        $isKetua = $student && $kelompok->members
+            ->where('student_id', $student->id)
+            ->where('role', 'ketua')
+            ->isNotEmpty();
 
-        return response()->json(new KelompokKpResource($updated));
+        if (!$isKetua && !$user->can('kp.verifikasi-pendaftaran')) {
+            abort(403, 'Hanya ketua kelompok yang dapat mengubah data pendaftaran.');
+        }
+
+        if ($kelompok->status !== 'draft') {
+            abort(422, 'Pendaftaran yang sudah diajukan tidak dapat diubah.');
+        }
+
+        $updated = $this->kpGroupService->update($id, $request->validated());
+        return response()->json(new KpGroupResource($updated));
     }
 
     public function destroy(int $id)
     {
-        $kelompok = $this->kelompokKpService->getById($id);
-        $this->authorize('delete', $kelompok);
+        $kelompok = $this->kpGroupService->getById($id);
 
-        $this->kelompokKpService->delete($id);
+        $user    = request()->user();
+        $student = $user->student;
+        $isKetua = $student && $kelompok->members
+            ->where('student_id', $student->id)
+            ->where('role', 'ketua')
+            ->isNotEmpty();
 
+        if (!$isKetua && !$user->can('master-data.manage')) {
+            abort(403, 'Hanya ketua kelompok yang dapat menghapus pendaftaran.');
+        }
+
+        $this->kpGroupService->delete($id);
         return response()->json(['message' => 'Deleted']);
     }
 }
