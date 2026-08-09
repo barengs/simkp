@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import settingsReducer from './slices/settingsSlice';
 import { masterDataApi } from '../modules/master-data/api/masterDataApi';
 import { kpApi } from '../modules/kp/api/kpApi';
+import { roleManagementApi } from '../modules/role-management/api/roleManagementApi';
 
 export const store = configureStore({
     reducer: {
@@ -10,9 +11,10 @@ export const store = configureStore({
         settings: settingsReducer,
         [masterDataApi.reducerPath]: masterDataApi.reducer,
         [kpApi.reducerPath]: kpApi.reducer,
+        [roleManagementApi.reducerPath]: roleManagementApi.reducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: false,
-        }).concat(masterDataApi.middleware, kpApi.middleware),
+        }).concat(masterDataApi.middleware, kpApi.middleware, roleManagementApi.middleware),
 });

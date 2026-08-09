@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Lecturer;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class LecturerSeeder extends Seeder
 {
@@ -84,6 +85,9 @@ class LecturerSeeder extends Seeder
                 //     'Teknik Informatika', 'Sistem Informasi', 'Matematika', 'Ilmu Komputer'
                 // ])],
             ]);
+
+            // Auto-assign role dosen agar user dapat mengakses fitur pembimbingan
+            $user->syncRoles(['dosen']);
         }
 
         $this->command->info('50 lecturers created successfully!');

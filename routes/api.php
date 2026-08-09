@@ -52,6 +52,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('document-type', DocumentTypeController::class);
     Route::apiResource('room', RoomController::class);
 
+    // Role & Permission
+    Route::get('/role', [\App\Http\Controllers\Api\RoleController::class, 'index']);
+    Route::post('/role', [\App\Http\Controllers\Api\RoleController::class, 'store']);
+    Route::get('/role/{id}', [\App\Http\Controllers\Api\RoleController::class, 'show']);
+    Route::put('/role/{id}', [\App\Http\Controllers\Api\RoleController::class, 'update']);
+    Route::delete('/role/{id}', [\App\Http\Controllers\Api\RoleController::class, 'destroy']);
+    Route::get('/permission', function () {
+        return response()->json(\Spatie\Permission\Models\Permission::all());
+    });
+
     // KP Module
     Route::apiResource('kp-group', KpGroupController::class);
     Route::apiResource('registration-verification', RegistrationVerificationController::class)

@@ -16,6 +16,7 @@ import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
 import Logbook from '../modules/kp/pages/Logbook';
 import LogbookValidation from '../modules/kp/pages/LogbookValidation';
+import RoleManagement from '../modules/role-management/pages/RoleManagement';
 
 function AppRouter() {
     return (
@@ -55,6 +56,13 @@ function AppRouter() {
                 <Route path="/master-data/tema" element={
                     <ProtectedRoute permission="master-data.manage">
                         <TemaKp />
+                    </ProtectedRoute>
+                } />
+
+                {/* Role Management */}
+                <Route path="/roles" element={
+                    <ProtectedRoute permission="pengaturan.manage">
+                        <RoleManagement />
                     </ProtectedRoute>
                 } />
 

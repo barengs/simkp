@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\StudyProgram;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class StudentSeeder extends Seeder
 {
@@ -60,6 +61,9 @@ class StudentSeeder extends Seeder
                 'is_active' => $i % 10 !== 0, // ~90% active
                 'study_program_id' => $studyProgram->id,
             ]);
+
+            // Auto-assign role mahasiswa agar user dapat mengakses fitur KP/TA
+            $user->syncRoles(['mahasiswa']);
         }
 
         $this->command->info('100 students created successfully (password: mhs123)!');

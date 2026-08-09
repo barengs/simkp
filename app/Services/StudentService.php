@@ -30,6 +30,10 @@ class StudentService
                 'phone_number' => $data['phone_number'] ?? null,
             ]);
 
+            // Auto-assign role mahasiswa agar user langsung dapat permission yang sesuai
+            // (kp.kelompok.create, kp.logbook.input, ta.pengajuan.create, dst.)
+            $user->syncRoles(['mahasiswa']);
+
             // Create student record linked to user
             return Student::create([
                 'user_id' => $user->id,

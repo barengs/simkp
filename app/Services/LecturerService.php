@@ -30,6 +30,10 @@ class LecturerService
                 'phone_number' => $data['phone_number'] ?? null,
             ]);
 
+            // Auto-assign role dosen agar user langsung dapat permission yang sesuai
+            // (kp.logbook.approve, kp.laporan.approve, kp.nilai.input, ta.*, dst.)
+            $user->syncRoles(['dosen']);
+
             // Create lecturer record linked to user
             return Lecturer::create([
                 'user_id' => $user->id,
