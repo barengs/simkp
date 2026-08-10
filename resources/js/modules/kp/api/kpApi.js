@@ -120,6 +120,46 @@ export const kpApi = createApi({
             }),
             invalidatesTags: ['Verifikasi', 'KpGroup'],
         }),
+
+        // ── Plotting Dosen Pembimbing ──────────────────────────────────────────
+        getUnassignedGroups: builder.query({
+            query: () => '/kp-plotting/groups/unassigned',
+            providesTags: ['Plotting'],
+        }),
+        getAssignedGroups: builder.query({
+            query: () => '/kp-plotting/groups/assigned',
+            providesTags: ['Plotting'],
+        }),
+        getAvailableLecturers: builder.query({
+            query: () => '/kp-plotting/lecturers',
+            providesTags: ['Plotting'],
+        }),
+        getMyAssignedGroups: builder.query({
+            query: () => '/kp-plotting/my-groups',
+            providesTags: ['Plotting'],
+        }),
+        assignSupervisor: builder.mutation({
+            query: (body) => ({ url: '/kp-plotting/assign', method: 'POST', body }),
+            invalidatesTags: ['Plotting', 'KpGroup'],
+        }),
+        removeSupervisor: builder.mutation({
+            query: (kpGroupId) => ({ url: `/kp-plotting/groups/${kpGroupId}/remove`, method: 'DELETE' }),
+            invalidatesTags: ['Plotting', 'KpGroup'],
+        }),
+
+        // ── Upload Dokumen KP ──────────────────────────────────────────────────
+        uploadKpDocument: builder.mutation({
+            query: (formData) => ({
+                url: '/kp-document',
+                method: 'POST',
+                body: formData,
+            }),
+            invalidatesTags: ['KpDocument'],
+        }),
+        deleteKpDocument: builder.mutation({
+            query: (id) => ({ url: `/kp-document/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['KpDocument'],
+        }),
     }),
 });
 
@@ -141,6 +181,14 @@ export const {
     useDeleteLogbookMutation,
     useGetVerifikasiQuery,
     useUpdateVerifikasiMutation,
+    useGetUnassignedGroupsQuery,
+    useGetAssignedGroupsQuery,
+    useGetAvailableLecturersQuery,
+    useGetMyAssignedGroupsQuery,
+    useAssignSupervisorMutation,
+    useRemoveSupervisorMutation,
+    useUploadKpDocumentMutation,
+    useDeleteKpDocumentMutation,
 } = kpApi;
 
 // Alias lama agar tidak breaking pages lain yang masih pakai nama lama

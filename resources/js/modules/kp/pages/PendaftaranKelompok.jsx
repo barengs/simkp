@@ -6,6 +6,7 @@ import {
     useUpdateKpGroupMutation,
     useProposeKpCompanyMutation,
     useGetDocumentTypesQuery,
+    useUploadKpDocumentMutation,
 } from '../api/kpApi';
 import {
     useGetAcademicPeriodsQuery,
@@ -429,15 +430,12 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
 };
 
 // ─── Langkah 4: Dokumen ───────────────────────────────────────────────────────
-const Step4Dokumen = ({ form, onChange, documentTypes = [] }) => {
-    const [uploads, setUploads] = useState({}); // { document_type_id: file }
-
+const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, onUploadChange }) => {
     const handleFileChange = (documentTypeId, file) => {
         if (file) {
-            setUploads(prev => ({ ...prev, [documentTypeId]: file }));
-            // Update form jika perlu
+            onUploadChange(prev => ({ ...prev, [documentTypeId]: file }));
         } else {
-            setUploads(prev => {
+            onUploadChange(prev => {
                 const updated = { ...prev };
                 delete updated[documentTypeId];
                 return updated;
@@ -764,6 +762,7 @@ const PendaftaranKelompok = () => {
     const [createKpGroup]                = useCreateKpGroupMutation();
     const [updateKpGroup]                = useUpdateKpGroupMutation();
     const [proposeKpCompany]             = useProposeKpCompanyMutation();
+    const [uploadKpDocument]             = useUploadKpDocumentMutation();
 
     const perusahaanList = useMemo(() =>
         Array.isArray(perusahaanListRaw) ? perusahaanListRaw
@@ -809,6 +808,7 @@ const PendaftaranKelompok = () => {
     const [currentStep, setStep]          = useState(1);
     const [completedSteps, setCompleted]  = useState([]);
     const [form, setForm]                 = useState(EMPTY);
+    const [uploads, setUploads]           = useState({}); // { document_type_id: File }
     const [errors, setErrors]             = useState({});
     const [submitting, setSubmitting]     = useState(false);
     const [showConfirm, setShowConfirm]   = useState(false);
@@ -855,9 +855,7 @@ const PendaftaranKelompok = () => {
         const e = {};
         if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
         if (step === 1 && !form.kp_company_id)      e.kp_company_id      = 'Pilih perusahaan tujuan KP';
-        if (step === 2 && !form.kp_theme_id)         e.kp_theme_id        = 'Pilih tema KP';
-        if (step === 3 && form.anggota_ids.length === 0)
-            e.anggota_ids = 'Tambah minimal 1 anggota tambahan (selain ketua)';
+        // Catatan: Anggota tidak wajib. Ketua otomatis menjadi anggota. Anggota tambahan opsional.
         // Step 4 (Dokumen): validasi dapat ditambahkan nanti
         // Step 5 (Preview): tidak ada validasi khusus
         return e;
@@ -894,13 +892,34 @@ const PendaftaranKelompok = () => {
                 kp_theme_id:        Number(form.kp_theme_id),
                 anggota_ids:        form.anggota_ids,
             };
+            
+            let savedGroup;
             if (editing) {
                 await updateKpGroup({ id: editing.id, ...payload }).unwrap();
+                savedGroup = editing;
                 handleApiSuccess('Pendaftaran kelompok berhasil diperbarui');
             } else {
-                await createKpGroup(payload).unwrap();
+                savedGroup = await createKpGroup(payload).unwrap();
                 handleApiSuccess('Pendaftaran kelompok berhasil dikirim');
             }
+            
+            // Upload dokumen setelah kelompok berhasil disimpan
+            const documentTypes = Array.isArray(documentTypesRaw) 
+                ? documentTypesRaw 
+                : (Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : []);
+            
+            for (const [documentTypeId, file] of Object.entries(uploads)) {
+                if (file) {
+                    const docType = documentTypes.find(dt => String(dt.id) === String(documentTypeId));
+                    const formData = new FormData();
+                    formData.append('kp_group_id', String(savedGroup.id));
+                    formData.append('document_type_id', String(documentTypeId));
+                    formData.append('title', docType?.name || 'Dokumen');
+                    formData.append('file', file);
+                    await uploadKpDocument(formData).unwrap();
+                }
+            }
+            
             resetWizard();
             setShowConfirm(false);
         } catch (err) {
@@ -1017,7 +1036,13 @@ const PendaftaranKelompok = () => {
                                 />
                             )}
                             {currentStep === 4 && (
-                                <Step4Dokumen form={form} onChange={handleChange} documentTypes={documentTypes} />
+                                <Step4Dokumen 
+                                    form={form} 
+                                    onChange={handleChange} 
+                                    documentTypes={documentTypes}
+                                    uploads={uploads}
+                                    onUploadChange={setUploads}
+                                />
                             )}
                             {currentStep === 5 && (
                                 <Step5Preview 

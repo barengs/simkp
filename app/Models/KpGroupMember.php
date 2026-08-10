@@ -18,6 +18,7 @@ class KpGroupMember extends Model
         'join_date',
         'leave_date',
         'status',     // 'active' | 'inactive'
+        'supervisor_lecturer_id',
     ];
 
     protected $casts = [
@@ -33,5 +34,10 @@ class KpGroupMember extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function supervisor()
+    {
+        return $this->belongsTo(Lecturer::class, 'supervisor_lecturer_id');
     }
 }

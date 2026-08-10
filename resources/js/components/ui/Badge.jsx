@@ -4,7 +4,8 @@ const statusStyles = {
     // KP status
     draft: 'bg-gray-100 text-gray-700 border-gray-200',
     diajukan: 'bg-blue-100 text-blue-700 border-blue-200',
-    menunggu_validasi: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    emerald: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     disetujui: 'bg-green-100 text-green-700 border-green-200',
     ditolak: 'bg-red-100 text-red-700 border-red-200',
     berjalan: 'bg-indigo-100 text-indigo-700 border-indigo-200',
@@ -21,6 +22,9 @@ const statusStyles = {
     tidak_aktif: 'bg-gray-100 text-gray-600 border-gray-200',
     sukses: 'bg-green-100 text-green-700 border-green-200',
     gagal: 'bg-red-100 text-red-700 border-red-200',
+    // Peran
+    ketua: 'bg-amber-100 text-amber-700 border-amber-200',
+    anggota: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
 const Badge = ({ status, children, className = '' }) => {

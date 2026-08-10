@@ -18,6 +18,7 @@ import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
 import Logbook from '../modules/kp/pages/Logbook';
 import LogbookValidation from '../modules/kp/pages/LogbookValidation';
+import KelompokBimbinganDosen from '../modules/kp/pages/KelompokBimbinganDosen';
 import RoleManagement from '../modules/role-management/pages/RoleManagement';
 
 function AppRouter() {
@@ -94,6 +95,13 @@ function AppRouter() {
                 <Route path="/kp/logbook/validasi" element={
                     <ProtectedRoute permission="kp.logbook.approve">
                         <LogbookValidation />
+                    </ProtectedRoute>
+                } />
+
+                {/* Kelompok Bimbingan untuk Dosen */}
+                <Route path="/kp/bimbingan" element={
+                    <ProtectedRoute permission="kp.plotting-dosen">
+                        <KelompokBimbinganDosen />
                     </ProtectedRoute>
                 } />
 

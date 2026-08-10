@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\ExamGradeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StatusHistoryController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\KpDocumentController;
+use App\Http\Controllers\Api\PlottingDosenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,8 +68,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Mahasiswa boleh mengajukan perusahaan baru (propose) tanpa master-data.manage
     Route::post('kp-company/propose', [KpCompanyController::class, 'propose']);
     Route::apiResource('kp-group', KpGroupController::class);
+    Route::apiResource('kp-document', KpDocumentController::class)->only(['store', 'destroy']);
     Route::apiResource('registration-verification', RegistrationVerificationController::class)
         ->only(['index', 'show', 'update']);
+
+    // Plotting Dosen Pembimbing
+    Route::prefix('kp-plotting')->group(function () {
+        Route::get('/groups/unassigned', [PlottingDosenController::class, 'unassignedGroups']);
+        Route::get('/groups/assigned', [PlottingDosenController::class, 'assignedGroups']);
+        Route::get('/my-groups', [PlottingDosenController::class, 'myGroups']);
+        Route::get('/lecturers', [PlottingDosenController::class, 'availableLecturers']);
+        Route::post('/assign', [PlottingDosenController::class, 'assignSupervisor']);
+        Route::delete('/groups/{kpGroupId}/remove', [PlottingDosenController::class, 'removeSupervisor']);
+    });
     Route::apiResource('logbook', \App\Http\Controllers\Api\LogbookController::class);
     Route::apiResource('guidance', GuidanceController::class);
     Route::apiResource('report', ReportController::class);

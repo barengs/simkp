@@ -17,6 +17,7 @@ class KpGroupService
             'kpTheme',
             'kpCompany',
             'members.student.user',
+            'kpDocuments.documentType',
         ]);
     }
 
@@ -57,7 +58,7 @@ class KpGroupService
                 'kp_company_id'      => $data['kp_company_id'],
                 'kp_theme_id'        => $data['kp_theme_id'],
                 'academic_period_id' => $data['academic_period_id'],
-                'status'             => 'draft',
+                'status'             => 'diajukan', // Langsung diajukan, bukan draft
                 'description'        => $data['description'] ?? null,
             ]);
 
@@ -96,6 +97,17 @@ class KpGroupService
         return DB::transaction(function () use ($id, $data) {
             $kelompok = KpGroup::findOrFail($id);
 
+            // Handle status update (for verifikasi)
+            if (isset($data['status'])) {
+                $kelompok->status = $data['status'];
+            }
+
+            // Handle rejection note (for verifikasi)
+            if (isset($data['rejection_note'])) {
+                $kelompok->rejection_note = $data['rejection_note'];
+            }
+
+            // Update other fields only if provided
             $kelompok->update(array_filter([
                 'kp_company_id'      => $data['kp_company_id']      ?? null,
                 'kp_theme_id'        => $data['kp_theme_id']         ?? null,

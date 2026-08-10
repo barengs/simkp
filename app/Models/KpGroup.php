@@ -53,4 +53,10 @@ class KpGroup extends Model
     {
         return $this->hasMany(Logbook::class);
     }
+
+    /** Dokumen yang diupload untuk kelompok ini */
+    public function kpDocuments()
+    {
+        return $this->hasMany(KpDocument::class);
+    }
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('join_date')->nullable();
             $table->date('leave_date')->nullable();
             $table->string('status')->default('active');
+            $table->foreignId('supervisor_lecturer_id')->nullable()->constrained('lecturer')->nullOnDelete();
             $table->timestamps();
         });
     }

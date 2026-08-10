@@ -42,11 +42,34 @@ class KpGroupResource extends JsonResource
                     'role'       => $m->role,    // 'ketua' | 'anggota'
                     'status'     => $m->status,  // 'active' | 'inactive'
                     'join_date'  => $m->join_date,
+                    'supervisor_lecturer_id' => $m->supervisor_lecturer_id,
+                    'supervisor' => $m->supervisor ? [
+                        'id'   => $m->supervisor->id,
+                        'name' => $m->supervisor->name,
+                        'nidn' => $m->supervisor->nidn,
+                    ] : null,
                     'student'    => $m->student ? [
                         'id'   => $m->student->id,
                         'nim'  => $m->student->nim,
                         'name' => $m->student->user?->name,
                     ] : null,
+                ])
+            ),
+            // Dokumen yang diupload untuk kelompok ini
+            'kp_documents' => $this->whenLoaded('kpDocuments', fn () =>
+                $this->kpDocuments->map(fn ($d) => [
+                    'id'              => $d->id,
+                    'title'           => $d->title,
+                    'file_url'        => $d->file_url,
+                    'status'          => $d->status,
+                    'submitted_at'    => $d->submitted_at,
+                    'remarks'         => $d->remarks,
+                    'document_type'   => $d->documentType ? [
+                        'id'   => $d->documentType->id,
+                        'name' => $d->documentType->name,
+                        'code' => $d->documentType->code,
+                    ] : null,
+                    'created_at'      => $d->created_at,
                 ])
             ),
             'created_at' => $this->created_at,

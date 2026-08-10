@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('academic_period_id')->nullable()->constrained('academic_period')->nullOnDelete();
             $table->string('status')->default('draft');
             $table->text('description')->nullable();
+            $table->text('rejection_note')->nullable();
             $table->timestamps();
         });
     }

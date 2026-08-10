@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateVerifikasiRequest;
 use App\Services\KpGroupService;
 use Illuminate\Http\Request;
+// use App\Http\Controllers\Api\KpGroupService;
 
 class RegistrationVerificationController extends Controller
 {
     public function __construct(
-        private readonly KelompokKpService $kpGroupService
+        private readonly KpGroupService $kpGroupService
     ) {
         $this->middleware('auth:sanctum');
         $this->middleware('permission:kp.verifikasi-pendaftaran');
@@ -18,19 +19,19 @@ class RegistrationVerificationController extends Controller
 
     public function index()
     {
-        return response()->json($this->kelompokKpService->getAll());
+        return response()->json($this->kpGroupService->getAll());
     }
 
     public function show(int $id)
     {
-        $kelompok = $this->kelompokKpService->getById($id);
+        $kelompok = $this->kpGroupService->getById($id);
         return response()->json($kelompok);
     }
 
     public function update(UpdateVerifikasiRequest $request, int $id)
     {
-        $kelompok = $this->kelompokKpService->getById($id);
-        $updated = $this->kelompokKpService->update($id, $request->validated());
+        $kelompok = $this->kpGroupService->getById($id);
+        $updated = $this->kpGroupService->update($id, $request->validated());
 
         return response()->json($updated);
     }
