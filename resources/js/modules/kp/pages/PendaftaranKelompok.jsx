@@ -929,68 +929,95 @@ const PendaftaranKelompok = () => {
         }
     };
 
-    // Kolom tabel riwayat — kelompok yang user ini jadi ketua
-    const columns = [
-        {
-            name: 'Peran',
-            cell: r => {
-                const isKetua = r.members?.some(m => m.student_id === myStudent?.id && m.role === 'ketua');
-                return (
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                        isKetua ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                        {isKetua ? <><Crown className="w-3 h-3" /> Ketua</> : <><UserCheck className="w-3 h-3" /> Anggota</>}
-                    </span>
-                );
-            },
-            width: '100px',
-        },
-        { name: 'Kode',       selector: r => r.code || '-',                  sortable: true, width: '120px' },
-        { name: 'Periode',    selector: r => r.academic_period?.name || '-', sortable: true, wrap: true },
-        { name: 'Perusahaan', selector: r => r.kp_company?.name || '-',      sortable: true, wrap: true },
-        { name: 'Tema',       selector: r => r.kp_theme?.title || '-',       sortable: true, wrap: true },
-        {
-            name: 'Anggota',
-            selector: r => r.members?.length ?? '-',
-            width: '90px',
-            center: true,
-        },
-        {
-            name: 'Status',
-            cell: r => <Badge status={r.status}>{STATUS_LABEL[r.status] || r.status}</Badge>,
-            width: '130px',
-        },
-        {
-            name: 'Aksi',
-            cell: r => {
-                const isKetua = r.members?.some(m => m.student_id === myStudent?.id && m.role === 'ketua');
-                return isKetua && r.status === 'draft' ? (
-                    <Button size="sm" variant="warning" icon={Pencil} onClick={() => openEdit(r)}>Edit</Button>
-                ) : null;
-            },
-            width: '90px',
-        },
-    ];
-
-        // Wizard tampil jika: sedang edit, form sudah diisi, atau belum ada kelompok sebagai ketua
+    // Tampilkan wizard hanya jika sedang edit atau belum ada kelompok
     const hasKelompokSebagaiKetua = kelompokSebagaiKetua.length > 0;
-    const showWizard = editing !== null || currentStep > 1 ||
-        form.academic_period_id !== '' || !hasKelompokSebagaiKetua;
+    const showWizard = editing !== null || !hasKelompokSebagaiKetua;
 
     return (
         <div className="space-y-6">
             <PageHeader
-                title="Pendaftaran Kelompok KP"
-                description="Daftarkan kelompok Kerja Praktek Anda melalui panduan langkah demi langkah."
-                icon={UserPlus}
-                actions={
-                    !showWizard && hasKelompokSebagaiKetua ? (
-                        <Button icon={Plus} onClick={() => setStep(1)}>
-                            Daftar Kelompok Baru
-                        </Button>
-                    ) : null
+                title={hasKelompokSebagaiKetua ? "Detail Pendaftaran Kelompok" : "Pendaftaran Kelompok KP"}
+                description={hasKelompokSebagaiKetua 
+                    ? "Kelompok KP yang telah Anda daftarkan" 
+                    : "Daftarkan kelompok Kerja Praktek Anda melalui panduan langkah demi langkah."
                 }
+                icon={UserPlus}
             />
+
+            {/* ── Detail jika sudah ada kelompok sebagai ketua ── */}
+            {hasKelompokSebagaiKetua && !editing && (
+                <Card>
+                    <div className="p-6 space-y-6">
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Informasi Kelompok</h3>
+                            <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
+                                    <p className="text-sm font-medium text-gray-900 font-mono">{kelompokSebagaiKetua[0].code || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+                                    <Badge status={kelompokSebagaiKetua[0].status}>{STATUS_LABEL[kelompokSebagaiKetua[0].status] || kelompokSebagaiKetua[0].status}</Badge>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Periode</p>
+                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].academic_period?.name || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Perusahaan</p>
+                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].kp_company?.name || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Tema KP</p>
+                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].kp_theme?.title || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Anggota Kelompok ({kelompokSebagaiKetua[0].members?.length || 0} orang)</h3>
+                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">NIM</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Peran</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {(kelompokSebagaiKetua[0].members || []).map((member, index) => (
+                                            <tr key={member.id}>
+                                                <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
+                                                <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                                                    {member.student?.name || member.student?.user?.name || '-'}
+                                                </td>
+                                                <td className="px-4 py-2 text-sm text-gray-500 font-mono">
+                                                    {member.student?.nim || '-'}
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <Badge status={member.role === 'ketua' ? 'amber' : 'gray'}>
+                                                        {member.role === 'ketua' ? 'Ketua' : 'Anggota'}
+                                                    </Badge>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                            {kelompokSebagaiKetua[0].status === 'draft' && (
+                                <Button variant="primary" icon={Pencil} onClick={() => openEdit(kelompokSebagaiKetua[0])}>
+                                    Edit Pendaftaran
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </Card>
+            )}
 
             {/* ── Wizard ── */}
             {(showWizard || editing !== null) && (
@@ -1135,19 +1162,6 @@ const PendaftaranKelompok = () => {
                         ))}
                     </div>
                 </div>
-            )}
-
-            {/* ── Tabel riwayat kelompok yang user buat/ketua ── */}
-            {kelompokSebagaiKetua.length > 0 && (
-                <Card
-                    title="Kelompok yang Anda Buat"
-                    subtitle={`${kelompokSebagaiKetua.length} kelompok sebagai ketua`}
-                >
-                    {isLoading
-                        ? <Skeleton className="h-48" />
-                        : <DataTableWrapper columns={columns} data={kelompokSebagaiKetua} pagination />
-                    }
-                </Card>
             )}
         </div>
     );

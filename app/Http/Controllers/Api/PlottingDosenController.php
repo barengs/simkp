@@ -14,6 +14,13 @@ class PlottingDosenController extends Controller
     public function __construct()
     {
         $this->middleware('auth:sanctum');
+        $this->middleware(function ($request, $next) {
+            $response = $next($request);
+            $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', 'Sat, 01 Jan 1990 00:00:00 GMT');
+            return $response;
+        });
     }
 
     /**
@@ -158,7 +165,6 @@ class PlottingDosenController extends Controller
     {
         $user = auth()->user();
         
-        // Cek apakah user adalah dosen
         $lecturer = $user->lecturer;
         if (!$lecturer) {
             return response()->json([]);

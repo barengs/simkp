@@ -18,7 +18,8 @@ import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
 import Logbook from '../modules/kp/pages/Logbook';
 import LogbookValidation from '../modules/kp/pages/LogbookValidation';
-import KelompokBimbinganDosen from '../modules/kp/pages/KelompokBimbinganDosen';
+import DaftarKelompok from '../modules/kp/pages/DaftarKelompok';
+import DetailKelompok from '../modules/kp/pages/DetailKelompok';
 import RoleManagement from '../modules/role-management/pages/RoleManagement';
 
 function AppRouter() {
@@ -99,9 +100,21 @@ function AppRouter() {
                 } />
 
                 {/* Kelompok Bimbingan untuk Dosen */}
-                <Route path="/kp/bimbingan" element={
+                {/* <Route path="/kp/bimbingan" element={
                     <ProtectedRoute permission="kp.plotting-dosen">
                         <KelompokBimbinganDosen />
+                    </ProtectedRoute>
+                } /> */}
+
+                {/* Daftar Kelompok (Admin: semua kelompok terplotting, Dosen: kelompok bimbingannya) */}
+                <Route path="/kp/daftar-kelompok/:id" element={
+                    <ProtectedRoute permission="kp.plotting-dosen">
+                        <DetailKelompok />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/daftar-kelompok" element={
+                    <ProtectedRoute permission="kp.plotting-dosen">
+                        <DaftarKelompok />
                     </ProtectedRoute>
                 } />
 

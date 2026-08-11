@@ -1,0 +1,249 @@
+import React, { useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useGetAssignedGroupsQuery, useGetMyAssignedGroupsQuery } from '../api/kpApi';
+import PageHeader from '../../../components/ui/PageHeader';
+import Card from '../../../components/ui/Card';
+import Button from '../../../components/ui/Button';
+import Badge from '../../../components/ui/Badge';
+import DataTableWrapper from '../../../components/ui/DataTableWrapper';
+import Skeleton from '../../../components/ui/Skeleton';
+import {
+    Users, FileText, Search, Building2, BookOpen, CalendarDays,
+    GraduationCap, Crown, Eye, Trash2, UserMinus, UsersRound, ArrowLeft,
+} from 'lucide-react';
+
+const STATUS_LABEL = {
+    draft: 'Draft', diajukan: 'Menunggu Validasi', ditolak: 'Ditolak',
+    disetujui: 'Disetujui', berjalan: 'Berjalan', laporan_masuk: 'Laporan Masuk',
+    revisi_laporan: 'Revisi Laporan', dinilai: 'Dinilai', selesai: 'Selesai',
+};
+
+const getStatusBadge = (status) => {
+    const config = {
+        draft: 'gray', diajukan: 'blue', ditolak: 'red',
+        disetujui: 'emerald', berjalan: 'yellow', laporan_masuk: 'purple',
+        revisi_laporan: 'orange', dinilai: 'teal', selesai: 'green',
+    };
+    return <Badge status={config[status] || 'gray'}>{STATUS_LABEL[status] || status}</Badge>;
+};
+
+const DetailKelompok = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { user } = useSelector(s => s.auth);
+    const isDosen = !!user?.lecturer_id;
+
+    const { data: groupsRaw, isLoading: isLoadingAdmin } = useGetAssignedGroupsQuery();
+    const { data: myGroupsRaw, isLoading: isLoadingDosen } = useGetMyAssignedGroupsQuery();
+
+    const source = isDosen ? myGroupsRaw : groupsRaw;
+    const isLoading = isDosen ? isLoadingDosen : isLoadingAdmin;
+    const groups = useMemo(() =>
+        Array.isArray(source) ? source
+        : Array.isArray(source?.data) ? source.data : [],
+    [source]);
+
+    const data = useMemo(() => groups.find(g => g.id == id), [groups, id]);
+
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                <PageHeader title="Detail Kelompok KP" description="Memuat data..." icon={Users} />
+                <Card><Skeleton className="h-64" /></Card>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="space-y-6">
+                <PageHeader title="Detail Kelompok KP" description="Data tidak ditemukan" icon={Users} />
+                <Card>
+                    <div className="p-8 text-center">
+                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">Kelompok tidak ditemukan.</p>
+                        <Button variant="secondary" onClick={() => navigate(-1)} className="mt-4">
+                            <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
+                        </Button>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    const ketua = data.members?.find(m => m.role === 'ketua');
+
+    return (
+        <div className="space-y-6">
+            <PageHeader
+                title={`Detail Kelompok ${data.code}`}
+                description="Informasi lengkap kelompok KP"
+                icon={Users}
+            />
+
+            <div className="flex items-center gap-3">
+                <Button variant="secondary" onClick={() => navigate(-1)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Kembali
+                </Button>
+            </div>
+
+            {/* Info Kelompok */}
+            <Card>
+                <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-emerald-600" />
+                        Informasi Kelompok
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
+                            <p className="text-sm font-medium text-gray-900 font-mono">{data.code || '-'}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+                            {getStatusBadge(data.status)}
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Periode</p>
+                            <p className="text-sm font-medium text-gray-900">{data.academic_period?.name || '-'}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Tanggal Plotting</p>
+                            <p className="text-sm font-medium text-gray-900">
+                                {data.assigned_at ? new Date(data.assigned_at).toLocaleDateString('id-ID') : '-'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Dosen Pembimbing */}
+            {data.supervisor && (
+                <Card className="bg-emerald-50 border-emerald-200">
+                    <div className="p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <GraduationCap className="w-5 h-5 text-emerald-600" />
+                            Dosen Pembimbing
+                        </h3>
+                        <div className="bg-white rounded-lg p-4 border border-emerald-100">
+                            <p className="text-sm font-medium text-gray-900">{data.supervisor.name}</p>
+                            {data.supervisor.nidn && (
+                                <p className="text-xs text-gray-500 font-mono mt-1">{data.supervisor.nidn}</p>
+                            )}
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* Detail KP */}
+            <Card>
+                <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-emerald-600" />
+                        Detail KP
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Perusahaan</p>
+                            <p className="text-sm font-medium text-gray-900">{data.kp_company?.name || '-'}</p>
+                            {data.kp_company?.address && (
+                                <p className="text-xs text-gray-500 mt-1">{data.kp_company.address}</p>
+                            )}
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Tema KP</p>
+                            <p className="text-sm font-medium text-gray-900">{data.kp_theme?.title || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Daftar Anggota */}
+            <Card>
+                <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <UsersRound className="w-5 h-5 text-emerald-600" />
+                        Anggota Kelompok ({data.members?.length || data.members_count || 0} orang)
+                    </h3>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <DataTableWrapper
+                            columns={[
+                                {
+                                    name: 'No',
+                                    width: '60px',
+                                    center: true,
+                                    cell: (_, index) => index + 1,
+                                },
+                                {
+                                    name: 'Nama',
+                                    selector: r => r.student?.user?.name || '-',
+                                    sortable: true,
+                                },
+                                {
+                                    name: 'NIM',
+                                    selector: r => r.student?.nim || '-',
+                                    width: '120px',
+                                },
+                                {
+                                    name: 'Peran',
+                                    width: '120px',
+                                    center: true,
+                                    cell: r => (
+                                        <Badge status={r.role === 'ketua' ? 'amber' : 'gray'}>
+                                            {r.role === 'ketua' ? 'Ketua' : 'Anggota'}
+                                        </Badge>
+                                    ),
+                                },
+                            ]}
+                            data={data.members || []}
+                            pagination={false}
+                        />
+                    </div>
+                </div>
+            </Card>
+
+            {/* Dokumen yang Diunggah */}
+            {data.kp_documents?.length > 0 && (
+                <Card>
+                    <div className="p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-emerald-600" />
+                            Dokumen ({data.kp_documents.length} file)
+                        </h3>
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <DataTableWrapper
+                                columns={[
+                                    {
+                                        name: 'No',
+                                        width: '60px',
+                                        center: true,
+                                        cell: (_, index) => index + 1,
+                                    },
+                                    {
+                                        name: 'Jenis Dokumen',
+                                        selector: r => r.document_type?.name || r.title || '-',
+                                    },
+                                    {
+                                        name: 'Status',
+                                        width: '120px',
+                                        center: true,
+                                        cell: r => (
+                                            <Badge status={r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'ditolak' : 'submitted'}>
+                                                {r.status === 'approved' ? 'Disetujui' : r.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                                            </Badge>
+                                        ),
+                                    },
+                                ]}
+                                data={data.kp_documents}
+                                pagination={false}
+                            />
+                        </div>
+                    </div>
+                </Card>
+            )}
+        </div>
+    );
+};
+
+export default DetailKelompok;

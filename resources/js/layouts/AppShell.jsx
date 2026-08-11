@@ -1,21 +1,34 @@
+// AppShell.jsx
 import React, { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './partials/Sidebar';
 import Navbar from './partials/Navbar';
 import Footer from './partials/Footer';
 
 const AppShell = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Set default sidebar tertutup jika dibuka pada perangkat mobile
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const location = useLocation();
 
+  // Otomatis menutup sidebar saat berpindah route di mobile
   useEffect(() => {
-    const handleToggleSidebar = () => {
-      setSidebarOpen((prev) => !prev);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Handle auto-resize window
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
     };
 
-    window.addEventListener('toggleSidebar', handleToggleSidebar);
-    return () => {
-      window.removeEventListener('toggleSidebar', handleToggleSidebar);
-    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
@@ -23,10 +36,10 @@ const AppShell = () => {
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} />
 
-      {/* Overlay for mobile */}
+      {/* Overlay Backdrop Mobile (z-40 berada tepat di bawah z-50 milik Sidebar) */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

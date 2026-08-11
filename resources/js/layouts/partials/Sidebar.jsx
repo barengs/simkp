@@ -1,26 +1,9 @@
+// Sidebar.jsx
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Users,
-  UserCog,
-  UserPlus,
-  ClipboardList,
-  Briefcase,
-  CalendarDays,
-  Lightbulb,
-  CheckCircle,
-  BookOpen,
-  FileText,
-  Settings,
-  Shield,
-  LogOut,
   ChevronDown,
   Database,
-  Building,
-  GitBranch,
-  CalendarRange,
-  Activity,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { menuConfig } from '../../config/menuConfig';
@@ -49,7 +32,11 @@ const Sidebar = ({ isOpen = true }) => {
   return (
     <aside
       id="sidebar"
-      className={`fixed inset-y-0 left-0 z-50 flex flex-col ${isOpen ? 'w-64' : 'w-[4.5rem]'} bg-emerald-950 text-white shadow-2xl transition-all duration-300 ease-in-out md:relative md:translate-x-0`}
+      className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-emerald-950 text-white shadow-2xl transition-all duration-300 ease-in-out 
+        /* Mobile logic */
+        ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} 
+        /* Desktop logic (md ke atas) */
+        md:translate-x-0 ${isOpen ? 'md:w-64' : 'md:w-[4.5rem]'} md:relative`}
     >
       {/* Brand / Logo */}
       <div className={`flex items-center h-16 border-b border-emerald-900/60 flex-shrink-0 overflow-hidden ${isOpen ? 'gap-3 px-6' : 'gap-0 px-4 justify-center'}`}>

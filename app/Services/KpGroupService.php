@@ -23,7 +23,9 @@ class KpGroupService
 
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->withRelations()->get();
+        return $this->withRelations()
+            ->whereDoesntHave('members', fn ($q) => $q->whereNotNull('supervisor_lecturer_id'))
+            ->get();
     }
 
     public function getById(int $id): KpGroup

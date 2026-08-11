@@ -129,6 +129,10 @@ export const kpApi = createApi({
         getAssignedGroups: builder.query({
             query: () => '/kp-plotting/groups/assigned',
             providesTags: ['Plotting'],
+            refetchOnMountOrArgChange: true,
+            refetchOnFocus: true,
+            refetchOnReconnect: true,
+            keepUnusedDataFor: 0,
         }),
         getAvailableLecturers: builder.query({
             query: () => '/kp-plotting/lecturers',
@@ -137,6 +141,10 @@ export const kpApi = createApi({
         getMyAssignedGroups: builder.query({
             query: () => '/kp-plotting/my-groups',
             providesTags: ['Plotting'],
+            refetchOnMountOrArgChange: true,
+            refetchOnFocus: true,
+            refetchOnReconnect: true,
+            keepUnusedDataFor: 0,
         }),
         assignSupervisor: builder.mutation({
             query: (body) => ({ url: '/kp-plotting/assign', method: 'POST', body }),

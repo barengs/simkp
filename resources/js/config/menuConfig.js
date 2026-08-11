@@ -12,6 +12,7 @@ import {
     FileText,
     Settings,
     Shield,
+    UsersRound,
 } from 'lucide-react';
 
 export const menuConfig = [
@@ -39,6 +40,12 @@ export const menuConfig = [
         path: '/kp/kelompok',
         permission: 'kp.kelompok.create',
         icon: UserPlus,
+    },
+    {
+        label: 'Daftar Kelompok',
+        path: '/kp/daftar-kelompok',
+        permission: 'kp.plotting-dosen',
+        icon: UsersRound,
     },
     {
         label: 'Logbook',
