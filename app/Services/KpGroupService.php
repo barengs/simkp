@@ -75,9 +75,8 @@ class KpGroupService
                 ]);
             }
 
-            // Anggota tambahan
+            // Anggota tambahan — dibuat sebagai undangan (inactive) terlebih dahulu
             foreach (($data['anggota_ids'] ?? []) as $studentId) {
-                // Jangan duplikasi jika studentId sama dengan ketua
                 if (!empty($data['ketua_student_id']) && $studentId == $data['ketua_student_id']) {
                     continue;
                 }
@@ -86,7 +85,7 @@ class KpGroupService
                     'student_id'  => $studentId,
                     'role'        => 'anggota',
                     'join_date'   => now()->toDateString(),
-                    'status'      => 'active',
+                    'status'      => 'inactive',
                 ]);
             }
 
@@ -136,7 +135,7 @@ class KpGroupService
                         'student_id'  => $studentId,
                         'role'        => 'anggota',
                         'join_date'   => now()->toDateString(),
-                        'status'      => 'active',
+                        'status'      => 'inactive',
                     ]);
                 }
             }
@@ -152,6 +151,30 @@ class KpGroupService
             KpGroup::destroy($id);
             return true;
         });
+    }
+
+    public function acceptInvitation(int $kpGroupId, int $studentId): KpGroupMember
+    {
+        $member = KpGroupMember::where('kp_group_id', $kpGroupId)
+            ->where('student_id', $studentId)
+            ->where('role', 'anggota')
+            ->firstOrFail();
+
+        $member->update(['status' => 'active']);
+
+        return $member->fresh(['kpGroup', 'student']);
+    }
+
+    public function declineInvitation(int $kpGroupId, int $studentId): bool
+    {
+        $member = KpGroupMember::where('kp_group_id', $kpGroupId)
+            ->where('student_id', $studentId)
+            ->where('role', 'anggota')
+            ->firstOrFail();
+
+        $member->delete();
+
+        return true;
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────

@@ -68,6 +68,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Mahasiswa boleh mengajukan perusahaan baru (propose) tanpa master-data.manage
     Route::post('kp-company/propose', [KpCompanyController::class, 'propose']);
     Route::apiResource('kp-group', KpGroupController::class);
+    Route::post('/kp-group/{id}/accept-invitation', [KpGroupController::class, 'acceptInvitation']);
+    Route::post('/kp-group/{id}/decline-invitation', [KpGroupController::class, 'declineInvitation']);
     Route::apiResource('kp-document', KpDocumentController::class)->only(['store', 'destroy']);
     Route::apiResource('registration-verification', RegistrationVerificationController::class)
         ->only(['index', 'show', 'update']);

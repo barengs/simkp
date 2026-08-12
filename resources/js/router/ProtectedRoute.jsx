@@ -10,6 +10,11 @@ const ProtectedRoute = ({ permission, children }) => {
   }
 
   if (permission && !permissions.includes(permission)) {
+    console.warn('ProtectedRoute blocked access:', {
+        required: permission,
+        has: permissions,
+        isAuthenticated,
+    });
     return <Navigate to="/403" replace />;
   }
 

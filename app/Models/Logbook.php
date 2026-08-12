@@ -4,22 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Logbook extends Model
 {
     use HasFactory;
 
+    protected $table = 'logbook';
+
     protected $fillable = [
-        'kelompok_kp_id', 'minggu_ke', 'tanggal', 'kegiatan', 'catatan', 'status',
+        'kp_group_id',
+        'student_id',
+        'date',
+        'attachment',
+        'activity',
+        'evidence_photo',
+        'status',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
-        'minggu_ke' => 'integer',
+        'date' => 'date',
     ];
 
-    public function kelompokKp()
+    public function kpGroup(): BelongsTo
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(KpGroup::class, 'kp_group_id');
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
     }
 }

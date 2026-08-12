@@ -17,7 +17,11 @@ return new class extends Migration
             $table->foreignId('kp_company_id')->nullable()->constrained('kp_company')->nullOnDelete();
             $table->foreignId('kp_theme_id')->nullable()->constrained('kp_theme')->nullOnDelete();
             $table->foreignId('academic_period_id')->nullable()->constrained('academic_period')->nullOnDelete();
-            $table->string('status')->default('draft');
+            $table->enum('status', [
+                'draft', 'diajukan', 'ditolak', 'disetujui',
+                'berjalan', 'laporan_masuk', 'revisi_laporan',
+                'dinilai', 'selesai',
+            ])->default('draft');
             $table->text('description')->nullable();
             $table->text('rejection_note')->nullable();
             $table->timestamps();

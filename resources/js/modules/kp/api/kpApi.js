@@ -58,6 +58,14 @@ export const kpApi = createApi({
             query: (id) => ({ url: `/kp-group/${id}`, method: 'DELETE' }),
             invalidatesTags: ['KpGroup'],
         }),
+        acceptInvitation: builder.mutation({
+            query: (id) => ({ url: `/kp-group/${id}/accept-invitation`, method: 'POST' }),
+            invalidatesTags: ['KpGroup'],
+        }),
+        declineInvitation: builder.mutation({
+            query: (id) => ({ url: `/kp-group/${id}/decline-invitation`, method: 'POST' }),
+            invalidatesTags: ['KpGroup'],
+        }),
 
         // ── Propose perusahaan baru (mahasiswa, tanpa master-data.manage) ─────
         proposeKpCompany: builder.mutation({
@@ -91,7 +99,7 @@ export const kpApi = createApi({
 
         // ── Logbook ────────────────────────────────────────────────────────────
         getLogbook: builder.query({
-            query: () => '/logbook',
+            query: (groupId) => groupId ? `/logbook?group_id=${groupId}` : '/logbook',
             providesTags: ['Logbook'],
         }),
         createLogbook: builder.mutation({
@@ -99,7 +107,15 @@ export const kpApi = createApi({
             invalidatesTags: ['Logbook'],
         }),
         updateLogbook: builder.mutation({
-            query: ({ id, ...body }) => ({ url: `/logbook/${id}`, method: 'PUT', body }),
+            query: (arg) => {
+                const id = arg.id;
+                let body = arg.body;
+                if (!body) {
+                    const { id: _, ...rest } = arg;
+                    body = rest;
+                }
+                return { url: `/logbook/${id}`, method: 'PUT', body };
+            },
             invalidatesTags: ['Logbook'],
         }),
         deleteLogbook: builder.mutation({
@@ -133,6 +149,9 @@ export const kpApi = createApi({
             refetchOnFocus: true,
             refetchOnReconnect: true,
             keepUnusedDataFor: 0,
+            async onQueryStarted(_args, { queryFulfilled }) {
+                await queryFulfilled;
+            },
         }),
         getAvailableLecturers: builder.query({
             query: () => '/kp-plotting/lecturers',
@@ -145,6 +164,9 @@ export const kpApi = createApi({
             refetchOnFocus: true,
             refetchOnReconnect: true,
             keepUnusedDataFor: 0,
+            async onQueryStarted(_args, { queryFulfilled }) {
+                await queryFulfilled;
+            },
         }),
         assignSupervisor: builder.mutation({
             query: (body) => ({ url: '/kp-plotting/assign', method: 'POST', body }),
@@ -197,6 +219,8 @@ export const {
     useRemoveSupervisorMutation,
     useUploadKpDocumentMutation,
     useDeleteKpDocumentMutation,
+    useAcceptInvitationMutation,
+    useDeclineInvitationMutation,
 } = kpApi;
 
 // Alias lama agar tidak breaking pages lain yang masih pakai nama lama

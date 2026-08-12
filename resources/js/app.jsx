@@ -10,6 +10,7 @@ import axios from 'axios';
 import { store } from './store/store';
 import { setCredentials } from './store/slices/authSlice';
 import AppRouter from './router/AppRouter';
+import { kpApi } from './modules/kp/api/kpApi';
 
 const App = () => {
   const [hydrated, setHydrated] = useState(false);
@@ -24,6 +25,7 @@ const App = () => {
             roles: data.roles || [],
             permissions: data.permissions || [],
           }));
+          store.dispatch(kpApi.util.invalidateTags(['Plotting']));
         }
       } catch (err) {
         // Not authenticated or error - keep isAuthenticated as false

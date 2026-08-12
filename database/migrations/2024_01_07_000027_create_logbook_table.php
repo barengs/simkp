@@ -12,11 +12,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('student')->cascadeOnDelete();
             $table->foreignId('kp_group_id')->nullable()->constrained('kp_group')->nullOnDelete();
-            $table->date('activity_date');
-            $table->string('title')->nullable();
+            $table->date('date');
+            $table->string('attachment')->nullable();
+            $table->string('evidence_photo')->nullable();
             $table->text('activity');
-            $table->text('note')->nullable();
-            $table->string('status')->default('draft');
+            $table->enum('status', ['draft', 'submitted', 'approved', 'revision'])
+                ->default('draft');
             $table->timestamps();
         });
     }

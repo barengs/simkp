@@ -10,12 +10,15 @@ class LogbookResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'kelompok_kp' => $this->whenLoaded('kelompokKp'),
-            'minggu_ke' => $this->minggu_ke,
-            'tanggal' => $this->tanggal,
-            'kegiatan' => $this->kegiatan,
-            'catatan' => $this->catatan,
+            'kp_group_id' => $this->kp_group_id,
+            'student_id' => $this->student_id,
+            'date' => $this->date,
+            'attachment' => $this->attachment ? '/storage/' . ltrim($this->attachment, '/') : null,
+            'activity' => $this->activity,
+            'evidence_photo' => $this->evidence_photo ? '/storage/' . ltrim($this->evidence_photo, '/') : null,
             'status' => $this->status,
+            'kp_group' => $this->whenLoaded('kpGroup'),
+            'student' => $this->whenLoaded('student'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

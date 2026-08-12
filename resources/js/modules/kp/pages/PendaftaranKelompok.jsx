@@ -7,6 +7,8 @@ import {
     useProposeKpCompanyMutation,
     useGetDocumentTypesQuery,
     useUploadKpDocumentMutation,
+    useAcceptInvitationMutation,
+    useDeclineInvitationMutation,
 } from '../api/kpApi';
 import {
     useGetAcademicPeriodsQuery,
@@ -641,17 +643,22 @@ const STATUS_LABEL = {
 };
 
 // ─── Kartu undangan: tampil di halaman mahasiswa yang diundang ────────────────
-const KartuUndangan = ({ group, myStudentId }) => {
+const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
     const ketua = group.members?.find(m => m.role === 'ketua');
     const saya  = group.members?.find(m => m.student_id === myStudentId);
+    const isPending = saya?.status === 'inactive';
 
     return (
-        <div className="bg-white rounded-xl border-2 border-blue-200 shadow-sm p-5 space-y-4">
+        <div className={`bg-white rounded-xl border-2 shadow-sm p-5 space-y-4 ${
+            isPending ? 'border-orange-200' : 'border-blue-200'
+        }`}>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
-                        <UserCheck className="w-5 h-5 text-blue-600" />
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-xl border flex items-center justify-center ${
+                        isPending ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'
+                    }`}>
+                        <UserCheck className={`w-5 h-5 ${isPending ? 'text-orange-600' : 'text-blue-600'}`} />
                     </div>
                     <div>
                         <p className="text-sm font-bold text-gray-900">{group.name || group.code}</p>
@@ -660,8 +667,13 @@ const KartuUndangan = ({ group, myStudentId }) => {
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                     <Badge status={group.status}>{STATUS_LABEL[group.status] || group.status}</Badge>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                        <UserCheck className="w-3 h-3" /> Anggota
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        isPending
+                            ? 'bg-orange-100 text-orange-700 border-orange-200'
+                            : 'bg-blue-100 text-blue-700 border-blue-200'
+                    }`}>
+                        <UserCheck className="w-3 h-3" />
+                        {isPending ? 'Menunggu Respons' : 'Anggota'}
                     </span>
                 </div>
             </div>
@@ -740,6 +752,18 @@ const KartuUndangan = ({ group, myStudentId }) => {
                     </div>
                 </div>
             )}
+
+            {/* Aksi undangan */}
+            {isPending && (
+                <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+                    <Button size="sm" variant="secondary" onClick={onDecline}>
+                        Tolak
+                    </Button>
+                    <Button size="sm" variant="primary" onClick={onAccept}>
+                        Terima
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };
@@ -753,7 +777,7 @@ const PendaftaranKelompok = () => {
     const authUser = useSelector(s => s.auth.user);
 
     // Data fetching
-    const { data: kpGroups, isLoading }  = useGetKpGroupsQuery();
+    const { data: kpGroups, isLoading, refetch }  = useGetKpGroupsQuery();
     const { data: periodeList }          = useGetAcademicPeriodsQuery();
     const { data: perusahaanListRaw }    = useGetKpCompaniesQuery();
     const { data: temaList }             = useGetKpThemesQuery();
@@ -763,6 +787,8 @@ const PendaftaranKelompok = () => {
     const [updateKpGroup]                = useUpdateKpGroupMutation();
     const [proposeKpCompany]             = useProposeKpCompanyMutation();
     const [uploadKpDocument]             = useUploadKpDocumentMutation();
+    const [acceptInvitation]             = useAcceptInvitationMutation();
+    const [declineInvitation]            = useDeclineInvitationMutation();
 
     const perusahaanList = useMemo(() =>
         Array.isArray(perusahaanListRaw) ? perusahaanListRaw
@@ -850,6 +876,26 @@ const PendaftaranKelompok = () => {
         setCompleted([]);
     };
 
+    const handleAcceptInvitation = async (groupId) => {
+        try {
+            await acceptInvitation(groupId).unwrap();
+            handleApiSuccess('Undangan berhasil diterima. Anda sekarang menjadi anggota kelompok.');
+            refetch();
+        } catch (err) {
+            handleApiError(err, 'Gagal menerima undangan');
+        }
+    };
+
+    const handleDeclineInvitation = async (groupId) => {
+        try {
+            await declineInvitation(groupId).unwrap();
+            handleApiSuccess('Undangan berhasil ditolak');
+            refetch();
+        } catch (err) {
+            handleApiError(err, 'Gagal menolak undangan');
+        }
+    };
+
     // Validasi per langkah (untuk 5 steps)
     const validate = (step) => {
         const e = {};
@@ -931,21 +977,24 @@ const PendaftaranKelompok = () => {
 
     // Tampilkan wizard hanya jika sedang edit atau belum ada kelompok
     const hasKelompokSebagaiKetua = kelompokSebagaiKetua.length > 0;
-    const showWizard = editing !== null || !hasKelompokSebagaiKetua;
+    const hasKelompokSebagaiAnggota = kelompokSebagaiAnggota.length > 0;
+    const showWizard = editing !== null || (!hasKelompokSebagaiKetua && !hasKelompokSebagaiAnggota);
+
+    const currentGroup = hasKelompokSebagaiKetua ? kelompokSebagaiKetua[0] : kelompokSebagaiAnggota[0];
 
     return (
         <div className="space-y-6">
             <PageHeader
-                title={hasKelompokSebagaiKetua ? "Detail Pendaftaran Kelompok" : "Pendaftaran Kelompok KP"}
-                description={hasKelompokSebagaiKetua 
-                    ? "Kelompok KP yang telah Anda daftarkan" 
+                title={(hasKelompokSebagaiKetua || hasKelompokSebagaiAnggota) ? "Detail Pendaftaran Kelompok" : "Pendaftaran Kelompok KP"}
+                description={(hasKelompokSebagaiKetua || hasKelompokSebagaiAnggota)
+                    ? "Kelompok KP yang telah Anda daftarkan"
                     : "Daftarkan kelompok Kerja Praktek Anda melalui panduan langkah demi langkah."
                 }
                 icon={UserPlus}
             />
 
-            {/* ── Detail jika sudah ada kelompok sebagai ketua ── */}
-            {hasKelompokSebagaiKetua && !editing && (
+            {/* ── Detail jika sudah ada kelompok sebagai ketua atau anggota ── */}
+            {(hasKelompokSebagaiKetua || hasKelompokSebagaiAnggota) && !editing && (
                 <Card>
                     <div className="p-6 space-y-6">
                         <div>
@@ -953,29 +1002,29 @@ const PendaftaranKelompok = () => {
                             <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
-                                    <p className="text-sm font-medium text-gray-900 font-mono">{kelompokSebagaiKetua[0].code || '-'}</p>
+                                    <p className="text-sm font-medium text-gray-900 font-mono">{currentGroup.code || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
-                                    <Badge status={kelompokSebagaiKetua[0].status}>{STATUS_LABEL[kelompokSebagaiKetua[0].status] || kelompokSebagaiKetua[0].status}</Badge>
+                                    <Badge status={currentGroup.status}>{STATUS_LABEL[currentGroup.status] || currentGroup.status}</Badge>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Periode</p>
-                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].academic_period?.name || '-'}</p>
+                                    <p className="text-sm font-medium text-gray-900">{currentGroup.academic_period?.name || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Perusahaan</p>
-                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].kp_company?.name || '-'}</p>
+                                    <p className="text-sm font-medium text-gray-900">{currentGroup.kp_company?.name || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Tema KP</p>
-                                    <p className="text-sm font-medium text-gray-900">{kelompokSebagaiKetua[0].kp_theme?.title || '-'}</p>
+                                    <p className="text-sm font-medium text-gray-900">{currentGroup.kp_theme?.title || '-'}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Anggota Kelompok ({kelompokSebagaiKetua[0].members?.length || 0} orang)</h3>
+                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Anggota Kelompok ({currentGroup.members?.length || 0} orang)</h3>
                             <div className="border border-gray-200 rounded-lg overflow-hidden">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
@@ -987,7 +1036,7 @@ const PendaftaranKelompok = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {(kelompokSebagaiKetua[0].members || []).map((member, index) => (
+                                        {(currentGroup.members || []).map((member, index) => (
                                             <tr key={member.id}>
                                                 <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
                                                 <td className="px-4 py-2 text-sm font-medium text-gray-900">
@@ -996,7 +1045,7 @@ const PendaftaranKelompok = () => {
                                                 <td className="px-4 py-2 text-sm text-gray-500 font-mono">
                                                     {member.student?.nim || '-'}
                                                 </td>
-                                                <td className="px-4 py-2">
+                                                <td className="px-4 py-2 text-sm">
                                                     <Badge status={member.role === 'ketua' ? 'amber' : 'gray'}>
                                                         {member.role === 'ketua' ? 'Ketua' : 'Anggota'}
                                                     </Badge>
@@ -1009,8 +1058,8 @@ const PendaftaranKelompok = () => {
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                            {kelompokSebagaiKetua[0].status === 'draft' && (
-                                <Button variant="primary" icon={Pencil} onClick={() => openEdit(kelompokSebagaiKetua[0])}>
+                            {currentGroup.status === 'draft' && hasKelompokSebagaiKetua && (
+                                <Button variant="primary" icon={Pencil} onClick={() => openEdit(currentGroup)}>
                                     Edit Pendaftaran
                                 </Button>
                             )}
@@ -1144,25 +1193,6 @@ const PendaftaranKelompok = () => {
                 </div>
             )}
 
-            {/* ── Undangan: kelompok di mana user diundang sebagai anggota ── */}
-            {kelompokSebagaiAnggota.length > 0 && (
-                <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <UserCheck className="w-5 h-5 text-blue-600" />
-                        <h2 className="text-sm font-bold text-gray-800">
-                            Undangan Kelompok ({kelompokSebagaiAnggota.length})
-                        </h2>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">
-                        Anda telah diundang bergabung ke kelompok berikut oleh ketua kelompok masing-masing.
-                    </p>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {kelompokSebagaiAnggota.map(g => (
-                            <KartuUndangan key={g.id} group={g} myStudentId={myStudent?.id} />
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

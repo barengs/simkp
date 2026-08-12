@@ -14,11 +14,11 @@ class UpdateLogbookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kelompok_kp_id' => ['sometimes', 'exists:kelompok_kp,id'],
-            'minggu_ke' => ['sometimes', 'integer', 'min:1'],
-            'tanggal' => ['sometimes', 'date'],
-            'kegiatan' => ['sometimes', 'string'],
-            'catatan' => ['nullable', 'string'],
+            'kp_group_id' => ['sometimes', 'exists:kp_group,id'],
+            'date' => ['sometimes', 'date'],
+            'attachment' => ['nullable', 'file', 'max:10240'],
+            'activity' => ['sometimes', 'string'],
+            'evidence_photo' => ['nullable', 'file', 'max:5120'],
             'status' => ['sometimes', 'in:draft,submitted,approved,revision'],
         ];
     }

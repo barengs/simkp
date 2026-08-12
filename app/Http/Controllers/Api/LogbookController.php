@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateLogbookRequest;
 use App\Http\Resources\LogbookResource;
 use App\Services\LogbookService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LogbookController extends Controller
 {
@@ -22,13 +23,49 @@ class LogbookController extends Controller
         $user = request()->user();
 
         if ($user->can('kp.logbook.approve')) {
-            return response()->json($this->logbookService->getAll());
+            $groupId = request()->query('group_id');
+
+            if ($groupId) {
+                return response()->json(
+                    LogbookResource::collection($this->logbookService->getByKpGroup((int) $groupId))
+                );
+            }
+
+            if ($user->hasRole('dosen')) {
+                $lecturerId = optional($user->lecturer)->id;
+
+                if (!$lecturerId) {
+                    return response()->json([]);
+                }
+
+                $supervisedGroupIds = \App\Models\KpGroupMember::query()
+                    ->whereNotNull('supervisor_lecturer_id')
+                    ->where('supervisor_lecturer_id', $lecturerId)
+                    ->pluck('kp_group_id')
+                    ->unique()
+                    ->toArray();
+
+                if (empty($supervisedGroupIds)) {
+                    return response()->json([]);
+                }
+
+                return response()->json(
+                    LogbookResource::collection($this->logbookService->getByKpGroupIds($supervisedGroupIds))
+                );
+            }
+
+            return response()->json(LogbookResource::collection($this->logbookService->getAll()));
         }
 
+        $student = $user->student;
+        if (!$student) {
+            return response()->json([]);
+        }
+
+        $kpGroupId = $student->kpGroupMembers()->where('status', 'active')->first()?->kp_group_id ?? 0;
+
         return response()->json(
-            $this->logbookService->getByKelompok(
-                $user->mahasiswa->kelompokKp->id ?? 0
-            )
+            LogbookResource::collection($this->logbookService->getByKpGroup($kpGroupId))
         );
     }
 
@@ -36,7 +73,37 @@ class LogbookController extends Controller
     {
         $this->authorize('create', \App\Models\Logbook::class);
 
-        $logbook = $this->logbookService->create($request->validated());
+        $user = $request->user();
+        $student = $user->student;
+
+        if (!$student) {
+            abort(403, 'Data mahasiswa tidak ditemukan.');
+        }
+
+        $approvedGroup = $student->kpGroupMembers()
+            ->where('status', 'active')
+            ->whereHas('kpGroup', function ($q) {
+                $q->where('status', 'disetujui');
+            })
+            ->first();
+
+        if (!$approvedGroup) {
+            abort(403, 'Pendaftaran KP Anda belum disetujui. Logbook hanya dapat diisi setelah pendaftaran disetujui.');
+        }
+
+        $data = $request->validated();
+        $data['student_id'] = $student->id;
+        $data['kp_group_id'] = $approvedGroup->kp_group_id;
+
+        if ($request->hasFile('attachment')) {
+            $data['attachment'] = $request->file('attachment')->store('logbooks', 'public');
+        }
+
+        if ($request->hasFile('evidence_photo')) {
+            $data['evidence_photo'] = $request->file('evidence_photo')->store('logbooks', 'public');
+        }
+
+        $logbook = $this->logbookService->create($data);
 
         return response()->json(new LogbookResource($logbook), 201);
     }
@@ -54,7 +121,23 @@ class LogbookController extends Controller
         $logbook = $this->logbookService->getById($id);
         $this->authorize('update', $logbook);
 
-        $updated = $this->logbookService->update($id, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('attachment')) {
+            if ($logbook->attachment && Storage::disk('public')->exists($logbook->attachment)) {
+                Storage::disk('public')->delete($logbook->attachment);
+            }
+            $data['attachment'] = $request->file('attachment')->store('logbooks', 'public');
+        }
+
+        if ($request->hasFile('evidence_photo')) {
+            if ($logbook->evidence_photo && Storage::disk('public')->exists($logbook->evidence_photo)) {
+                Storage::disk('public')->delete($logbook->evidence_photo);
+            }
+            $data['evidence_photo'] = $request->file('evidence_photo')->store('logbooks', 'public');
+        }
+
+        $updated = $this->logbookService->update($id, $data);
 
         return response()->json(new LogbookResource($updated));
     }
@@ -63,6 +146,14 @@ class LogbookController extends Controller
     {
         $logbook = $this->logbookService->getById($id);
         $this->authorize('delete', $logbook);
+
+        if ($logbook->attachment && Storage::disk('public')->exists($logbook->attachment)) {
+            Storage::disk('public')->delete($logbook->attachment);
+        }
+
+        if ($logbook->evidence_photo && Storage::disk('public')->exists($logbook->evidence_photo)) {
+            Storage::disk('public')->delete($logbook->evidence_photo);
+        }
 
         $this->logbookService->delete($id);
 

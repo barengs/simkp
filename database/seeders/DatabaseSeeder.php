@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create roles, permissions and demo users
         $this->call(RolePermissionSeeder::class);
+        $this->call(RoleManagementSeeder::class);
 
         // Seed institutions (Indonesian universities)
         $this->call(InstitutionSeeder::class);

@@ -10,14 +10,12 @@ class LogbookPolicy
 {
     public function view(User $user, Logbook $logbook)
     {
-        // Admin/Koordinator/Dosen bisa lihat semua
         if ($user->hasAnyRole(['admin', 'koordinator', 'dosen'])) {
             return true;
         }
 
-        // Mahasiswa hanya lihat logbook kelompok mereka
-        return $logbook->kelompokKp->anggota()
-            ->whereHas('mahasiswa.user', fn($q) => $q->where('id', $user->id))
+        return $logbook->kpGroup->members()
+            ->whereHas('student.user', fn($q) => $q->where('id', $user->id))
             ->exists();
     }
 
@@ -28,16 +26,26 @@ class LogbookPolicy
 
     public function update(User $user, Logbook $logbook)
     {
-        // Dosen pembimbing bisa approve logbook
-        if ($user->hasRole('dosen')) {
-            return $logbook->kelompokKp->dosen_pembimbing_id === optional($user->dosen)->id;
+        if ($user->hasAnyRole(['admin', 'koordinator'])) {
+            return true;
         }
 
-        return $user->hasAnyRole(['admin', 'koordinator']);
+        if ($user->hasRole('dosen')) {
+            return $logbook->kpGroup->members()
+                ->whereNotNull('supervisor_lecturer_id')
+                ->where('supervisor_lecturer_id', optional($user->lecturer)->id)
+                ->exists();
+        }
+
+        if ($user->hasRole('mahasiswa')) {
+            return $logbook->student_id === $user->student?->id;
+        }
+
+        return false;
     }
 
-    public function delete(User $user, Logbook $logbook)
+    public function delete(User $user)
     {
-        return $user->hasRole('admin');
+        return $user->hasAnyRole(['admin', 'koordinator']);
     }
 }

@@ -11,24 +11,32 @@ class LogbookService
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return Logbook::with([
-            'kelompokKp.programStudi',
-            'kelompokKp.periodeAkademik',
-            'kelompokKp.dosenPembimbing',
+            'kpGroup.academicPeriod',
+            'kpGroup.kpCompany',
+            'kpGroup.members.student.user',
+            'student.user',
         ])->get();
     }
 
-    public function getByKelompok(int $kpGroupId): \Illuminate\Database\Eloquent\Collection
+    public function getByKpGroup(int $kpGroupId): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::with(['kelompokKp.programStudi', 'kelompokKp.periodeAkademik'])
-            ->where('kelompok_kp_id', $kpGroupId)
-            ->orderBy('minggu_ke')
-            ->orderBy('tanggal')
+        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.members.student.user'])
+            ->where('kp_group_id', $kpGroupId)
+            ->orderBy('date')
+            ->get();
+    }
+
+    public function getByKpGroupIds(array $kpGroupIds): \Illuminate\Database\Eloquent\Collection
+    {
+        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.members.student.user'])
+            ->whereIn('kp_group_id', $kpGroupIds)
+            ->orderBy('date')
             ->get();
     }
 
     public function getById(int $id): Logbook
     {
-        return Logbook::with(['kelompokKp.programStudi', 'kelompokKp.periodeAkademik', 'kelompokKp.dosenPembimbing'])
+        return Logbook::with(['kpGroup.academicPeriod', 'kpGroup.kpCompany', 'student.user'])
             ->findOrFail($id);
     }
 
@@ -41,7 +49,7 @@ class LogbookService
     {
         $logbook = Logbook::findOrFail($id);
         $logbook->update($data);
-        return $logbook->fresh(['kelompokKp']);
+        return $logbook->fresh(['kpGroup', 'student.user']);
     }
 
     public function delete(int $id): bool

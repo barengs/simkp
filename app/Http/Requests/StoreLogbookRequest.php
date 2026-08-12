@@ -14,11 +14,11 @@ class StoreLogbookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kelompok_kp_id' => ['required', 'exists:kelompok_kp,id'],
-            'minggu_ke' => ['required', 'integer', 'min:1'],
-            'tanggal' => ['required', 'date'],
-            'kegiatan' => ['required', 'string'],
-            'catatan' => ['nullable', 'string'],
+            'kp_group_id' => ['required', 'exists:kp_group,id'],
+            'date' => ['required', 'date'],
+            'attachment' => ['nullable', 'file', 'max:10240'],
+            'activity' => ['required', 'string'],
+            'evidence_photo' => ['nullable', 'file', 'max:5120'],
             'status' => ['sometimes', 'in:draft,submitted,approved,revision'],
         ];
     }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -88,10 +88,12 @@ const AdminKelompokView = () => {
     const [search, setSearch] = useState('');
     const [selectedData, setSelectedData] = useState(null);
     const [showRemove, setShowRemove] = useState(false);
-
-    // API
-    const { data: groupsRaw, isLoading } = useGetAssignedGroupsQuery();
+    const { data: groupsRaw, isLoading, refetch } = useGetAssignedGroupsQuery();
     const [removeSupervisor, { isLoading: isRemoving }] = useRemoveSupervisorMutation();
+
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
 
     // Process data
     const groups = useMemo(() =>
@@ -279,7 +281,11 @@ const DosenKelompokView = () => {
     const [selectedData, setSelectedData] = useState(null);
 
     // API
-    const { data: groupsRaw, isLoading } = useGetMyAssignedGroupsQuery();
+    const { data: groupsRaw, isLoading, refetch } = useGetMyAssignedGroupsQuery();
+
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
 
     // Process data
     const groups = useMemo(() =>

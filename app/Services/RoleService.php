@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleService
 {
@@ -31,6 +32,8 @@ class RoleService
                 $role->syncPermissions($data['permissions']);
             }
 
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
             return $role->load('permissions');
         });
     }
@@ -49,6 +52,8 @@ class RoleService
                 $role->syncPermissions($data['permissions']);
             }
 
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
             return $role->load('permissions');
         });
     }
@@ -57,6 +62,8 @@ class RoleService
     {
         $role = Role::findOrFail($id);
         $role->delete();
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return true;
     }

@@ -112,4 +112,32 @@ class KpGroupController extends Controller
         $this->kpGroupService->delete($id);
         return response()->json(['message' => 'Deleted']);
     }
+
+    public function acceptInvitation(int $id)
+    {
+        $user = request()->user();
+        $student = $user->student;
+
+        if (!$student) {
+            abort(403, 'Data mahasiswa tidak ditemukan.');
+        }
+
+        $member = $this->kpGroupService->acceptInvitation($id, $student->id);
+
+        return response()->json(new KpGroupResource($member->kpGroup));
+    }
+
+    public function declineInvitation(int $id)
+    {
+        $user = request()->user();
+        $student = $user->student;
+
+        if (!$student) {
+            abort(403, 'Data mahasiswa tidak ditemukan.');
+        }
+
+        $this->kpGroupService->declineInvitation($id, $student->id);
+
+        return response()->json(['message' => 'Invitation declined']);
+    }
 }
