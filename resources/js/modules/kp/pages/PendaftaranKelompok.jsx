@@ -636,10 +636,9 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
 
 // ─── Status badge label ───────────────────────────────────────────────────────
 const STATUS_LABEL = {
-    draft: 'Draft', diajukan: 'Diajukan', ditolak: 'Ditolak',
-    disetujui: 'Disetujui', berjalan: 'Berjalan',
-    laporan_masuk: 'Laporan Masuk', revisi_laporan: 'Revisi Laporan',
-    dinilai: 'Dinilai', selesai: 'Selesai',
+    draft: 'Draft', submitted: 'Diajukan', rejected: 'Ditolak',
+    approved: 'Disetujui', ongoing: 'Berjalan',
+    grading: 'Dinilai', finished: 'Selesai',
 };
 
 // ─── Kartu undangan: tampil di halaman mahasiswa yang diundang ────────────────
@@ -743,7 +742,7 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
             </div>
 
             {/* Catatan penolakan */}
-            {group.status === 'ditolak' && group.rejection_note && (
+            {group.status === 'rejected' && group.rejection_note && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800 flex gap-2">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
                     <div>
@@ -939,6 +938,11 @@ const PendaftaranKelompok = () => {
                 anggota_ids:        form.anggota_ids,
             };
             
+            // Jika mengedit kelompok yang ditolak, otomatis reset ke submitted
+            if (editing && editing.status === 'rejected') {
+                payload.status = 'submitted';
+            }
+            
             let savedGroup;
             if (editing) {
                 await updateKpGroup({ id: editing.id, ...payload }).unwrap();
@@ -1023,6 +1027,17 @@ const PendaftaranKelompok = () => {
                             </div>
                         </div>
 
+                        {/* Catatan penolakan */}
+                        {currentGroup.status === 'rejected' && currentGroup.rejection_note && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800 flex gap-2">
+                                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
+                                <div>
+                                    <p className="font-semibold mb-1">Catatan Penolakan:</p>
+                                    <p>{currentGroup.rejection_note}</p>
+                                </div>
+                            </div>
+                        )}
+
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 mb-3">Anggota Kelompok ({currentGroup.members?.length || 0} orang)</h3>
                             <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -1058,9 +1073,9 @@ const PendaftaranKelompok = () => {
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                            {currentGroup.status === 'draft' && hasKelompokSebagaiKetua && (
+                            {(currentGroup.status === 'draft' || currentGroup.status === 'rejected') && hasKelompokSebagaiKetua && (
                                 <Button variant="primary" icon={Pencil} onClick={() => openEdit(currentGroup)}>
-                                    Edit Pendaftaran
+                                    {currentGroup.status === 'rejected' ? 'Ajukan Ulang Pendaftaran' : 'Edit Pendaftaran'}
                                 </Button>
                             )}
                         </div>

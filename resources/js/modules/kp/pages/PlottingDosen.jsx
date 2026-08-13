@@ -22,20 +22,18 @@ import {
 
 const STATUS_LABEL = {
     draft: 'Draft',
-    diajukan: 'Menunggu Validasi',
-    ditolak: 'Ditolak',
-    disetujui: 'Disetujui',
-    berjalan: 'Berjalan',
-    laporan_masuk: 'Laporan Masuk',
-    revisi_laporan: 'Revisi Laporan',
-    dinilai: 'Dinilai',
-    selesai: 'Selesai',
+    submitted: 'Menunggu Validasi',
+    rejected: 'Ditolak',
+    approved: 'Disetujui',
+    ongoing: 'Berjalan',
+    grading: 'Dinilai',
+    finished: 'Selesai',
 };
 
 const getStatusBadge = (status) => {
     const config = {
-        draft: 'gray', diajukan: 'blue', ditolak: 'red',
-        disetujui: 'emerald', berjalan: 'yellow',
+        draft: 'gray', submitted: 'blue', rejected: 'red',
+        approved: 'emerald', ongoing: 'yellow', grading: 'purple', finished: 'green',
     };
     return <Badge status={config[status] || 'gray'}>{STATUS_LABEL[status] || status}</Badge>;
 };

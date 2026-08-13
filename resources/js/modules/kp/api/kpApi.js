@@ -114,6 +114,12 @@ export const kpApi = createApi({
                     const { id: _, ...rest } = arg;
                     body = rest;
                 }
+
+                if (body instanceof FormData) {
+                    body.append('_method', 'PUT');
+                    return { url: `/logbook/${id}`, method: 'POST', body };
+                }
+
                 return { url: `/logbook/${id}`, method: 'PUT', body };
             },
             invalidatesTags: ['Logbook'],
@@ -121,6 +127,78 @@ export const kpApi = createApi({
         deleteLogbook: builder.mutation({
             query: (id) => ({ url: `/logbook/${id}`, method: 'DELETE' }),
             invalidatesTags: ['Logbook'],
+        }),
+
+        // ── Report ───────────────────────────────────────────────────────────────
+        getReport: builder.query({
+            query: (groupId) => groupId ? `/report?group_id=${groupId}` : '/report',
+            providesTags: ['Report'],
+        }),
+        createReport: builder.mutation({
+            query: (body) => ({ url: '/report', method: 'POST', body }),
+            invalidatesTags: ['Report'],
+        }),
+        updateReport: builder.mutation({
+            query: (arg) => {
+                const id = arg.id;
+                let body = arg.body;
+                if (!body) {
+                    const { id: _, ...rest } = arg;
+                    body = rest;
+                }
+
+                if (body instanceof FormData) {
+                    body.append('_method', 'PUT');
+                    return { url: `/report/${id}`, method: 'POST', body };
+                }
+
+                return { url: `/report/${id}`, method: 'PUT', body };
+            },
+            invalidatesTags: ['Report'],
+        }),
+        deleteReport: builder.mutation({
+            query: (id) => ({ url: `/report/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['Report'],
+        }),
+
+        // ── Kp Grade ─────────────────────────────────────────────────────────────
+        getKpGrade: builder.query({
+            query: (groupId) => groupId ? `/kp-grade?group_id=${groupId}` : '/kp-grade',
+            providesTags: ['KpGrade'],
+        }),
+        createKpGrade: builder.mutation({
+            query: (body) => ({ url: '/kp-grade', method: 'POST', body }),
+            invalidatesTags: ['KpGrade'],
+        }),
+        updateKpGrade: builder.mutation({
+            query: (arg) => {
+                const id = arg.id;
+                let body = arg.body;
+                if (!body) {
+                    const { id: _, ...rest } = arg;
+                    body = rest;
+                }
+                return { url: `/kp-grade/${id}`, method: 'PUT', body };
+            },
+            invalidatesTags: ['KpGrade'],
+        }),
+        deleteKpGrade: builder.mutation({
+            query: (id) => ({ url: `/kp-grade/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['KpGrade'],
+        }),
+        createGroupGrade: builder.mutation({
+            query: (body) => ({ url: '/kp-grade/group', method: 'POST', body }),
+            invalidatesTags: ['KpGrade', 'KpGroup'],
+        }),
+        getSupervisedGroups: builder.query({
+            query: () => '/kp-grade/supervised-groups',
+            providesTags: ['KpGrade'],
+        }),
+
+        // ── Evaluation Criteria ──────────────────────────────────────────────────
+        getEvaluationCriteria: builder.query({
+            query: () => '/evaluation-criteria',
+            providesTags: ['EvaluationCriteria'],
         }),
 
         // ── Verifikasi Pendaftaran ─────────────────────────────────────────────
@@ -209,6 +287,17 @@ export const {
     useCreateLogbookMutation,
     useUpdateLogbookMutation,
     useDeleteLogbookMutation,
+    useGetReportQuery,
+    useCreateReportMutation,
+    useUpdateReportMutation,
+    useDeleteReportMutation,
+    useGetKpGradeQuery,
+    useCreateKpGradeMutation,
+    useUpdateKpGradeMutation,
+    useDeleteKpGradeMutation,
+    useCreateGroupGradeMutation,
+    useGetSupervisedGroupsQuery,
+    useGetEvaluationCriteriaQuery,
     useGetVerifikasiQuery,
     useUpdateVerifikasiMutation,
     useGetUnassignedGroupsQuery,

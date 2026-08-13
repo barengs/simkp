@@ -14,7 +14,7 @@ class UpdateVerifikasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'in:draft,menunggu_validasi,disetujui,ditolak,plotting,selesai'],
+            'status' => ['required', 'in:draft,submitted,approved,rejected,ongoing,grading,finished'],
             'dosen_pembimbing_id' => ['nullable', 'exists:dosen,id'],
             'dosen_penguji_id' => ['nullable', 'exists:dosen,id'],
         ];

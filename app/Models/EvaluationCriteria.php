@@ -9,5 +9,7 @@ class EvaluationCriteria extends Model
 {
     use HasFactory;
 
+    protected $table = 'evaluation_criteria';
+
     protected $fillable = ['kode', 'nama', 'deskripsi', 'bobot'];
 }

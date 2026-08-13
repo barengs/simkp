@@ -83,7 +83,7 @@ class LogbookController extends Controller
         $approvedGroup = $student->kpGroupMembers()
             ->where('status', 'active')
             ->whereHas('kpGroup', function ($q) {
-                $q->where('status', 'disetujui');
+                $q->where('status', 'approved');
             })
             ->first();
 

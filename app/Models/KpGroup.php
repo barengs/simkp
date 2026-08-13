@@ -59,4 +59,9 @@ class KpGroup extends Model
     {
         return $this->hasMany(KpDocument::class);
     }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

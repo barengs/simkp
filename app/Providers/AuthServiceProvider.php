@@ -6,14 +6,20 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use App\Models\KpGroup;
 use App\Models\Logbook;
+use App\Models\Report;
+use App\Models\KpGrade;
 use App\Policies\KpGroupPolicy;
 use App\Policies\LogbookPolicy;
+use App\Policies\ReportPolicy;
+use App\Policies\KpGradePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
-        KelompokKp::class => KelompokKpPolicy::class,
+        KpGroup::class => KpGroupPolicy::class,
         Logbook::class => LogbookPolicy::class,
+        Report::class => ReportPolicy::class,
+        KpGrade::class => KpGradePolicy::class,
     ];
 
     public function boot(): void

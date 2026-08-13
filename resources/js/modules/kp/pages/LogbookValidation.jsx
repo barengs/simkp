@@ -16,22 +16,20 @@ import Textarea from '../../../components/ui/Textarea';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import {
-    FileText, Search, Eye, Check, X, AlertCircle,
+    FileText, Search, Eye, Check, AlertCircle,
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-    draft: { label: 'Draft', color: 'gray' },
-    submitted: { label: 'Menunggu Validasi', color: 'yellow' },
+    pending: { label: 'Menunggu Validasi', color: 'yellow' },
     approved: { label: 'Disetujui', color: 'green' },
-    revision: { label: 'Perlu Revisi', color: 'red' },
 };
 
 const getStatusBadge = (status) => {
-    const config = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
+    const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
     return <Badge status={config.color}>{config.label}</Badge>;
 };
 
-const ActionModal = ({ isOpen, onClose, onConfirm, submitting, type }) => {
+const ActionModal = ({ isOpen, onClose, onConfirm, submitting }) => {
     const [message, setMessage] = useState('');
 
     const handleConfirm = () => {
@@ -44,37 +42,27 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting, type }) => {
         onClose();
     };
 
-    const isApprove = type === 'approve';
-
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title={isApprove ? 'Setujui Logbook' : 'Kembalikan untuk Revisi'} size="md">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Setujui Logbook" size="md">
             <div className="space-y-4">
-                <div className={`rounded-lg p-3 text-sm flex gap-2 ${isApprove ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+                <div className="rounded-lg p-3 text-sm flex gap-2 bg-green-50 border border-green-200 text-green-800">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>
-                        {isApprove
-                            ? 'Konfirmasi bahwa logbook ini telah divalidasi dan disetujui.'
-                            : 'Berikan catatan revisi yang jelas untuk mahasiswa.'}
-                    </span>
+                    <span>Konfirmasi bahwa logbook ini telah divalidasi dan disetujui.</span>
                 </div>
 
                 <Textarea
-                    label={isApprove ? 'Pesan Konfirmasi' : 'Catatan Revisi'}
+                    label="Pesan Konfirmasi"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder={isApprove ? 'Opsional: tambahkan pesan konfirmasi...' : 'Jelaskan apa yang perlu diperbaiki...'}
+                    placeholder="Opsional: tambahkan pesan konfirmasi..."
                     rows={4}
                 />
             </div>
 
             <div className="flex justify-end gap-3 pt-6">
                 <Button variant="secondary" onClick={handleClose}>Batal</Button>
-                <Button
-                    variant={isApprove ? 'primary' : 'danger'}
-                    onClick={handleConfirm}
-                    loading={submitting}
-                >
-                    {isApprove ? 'Setujui' : 'Kirim Revisi'}
+                <Button variant="primary" onClick={handleConfirm} loading={submitting}>
+                    Setujui
                 </Button>
             </div>
         </Modal>
@@ -84,9 +72,8 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting, type }) => {
 const LogbookValidation = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
-    const [filterStatus, setFilterStatus] = useState('submitted');
+    const [filterStatus, setFilterStatus] = useState('pending');
     const [showAction, setShowAction] = useState(false);
-    const [actionType, setActionType] = useState('approve');
     const [selectedLogbook, setSelectedLogbook] = useState(null);
 
     const { data: logbooksRaw, isLoading, refetch } = useGetLogbookQuery();
@@ -111,9 +98,8 @@ const LogbookValidation = () => {
 
     const stats = useMemo(() => ({
         total: logbooks.length,
-        submitted: logbooks.filter(l => l.status === 'submitted').length,
+        pending: logbooks.filter(l => l.status === 'pending').length,
         approved: logbooks.filter(l => l.status === 'approved').length,
-        revision: logbooks.filter(l => l.status === 'revision').length,
     }), [logbooks]);
 
     const handleRowClick = (data) => {
@@ -122,9 +108,8 @@ const LogbookValidation = () => {
         }
     };
 
-    const openAction = (logbook, type) => {
+    const openAction = (logbook) => {
         setSelectedLogbook(logbook);
-        setActionType(type);
         setShowAction(true);
     };
 
@@ -133,17 +118,15 @@ const LogbookValidation = () => {
         try {
             const payload = {
                 id: selectedLogbook.id,
-                status: actionType === 'approve' ? 'approved' : 'revision',
+                status: 'approved',
             };
 
             if (message) {
-                payload.note = message;
+                payload.rejection_note = message;
             }
 
             await updateLogbook(payload).unwrap();
-            handleApiSuccess(
-                actionType === 'approve' ? 'Logbook disetujui' : 'Logbook dikembalikan untuk revisi'
-            );
+            handleApiSuccess('Logbook disetujui');
             setShowAction(false);
             setSelectedLogbook(null);
             refetch();
@@ -187,7 +170,7 @@ const LogbookValidation = () => {
         {
             name: 'Status',
             selector: row => row.status,
-            width: '150px',
+            width: '180px',
             center: true,
             cell: row => getStatusBadge(row.status),
         },
@@ -197,15 +180,10 @@ const LogbookValidation = () => {
             center: true,
             cell: row => (
                 <div className="flex items-center justify-center gap-2">
-                    {row.status === 'submitted' ? (
-                        <>
-                            <Button size="sm" variant="primary" icon={Check} onClick={(e) => { e.stopPropagation(); openAction(row, 'approve'); }}>
-                                Setujui
-                            </Button>
-                            <Button size="sm" variant="danger" icon={X} onClick={(e) => { e.stopPropagation(); openAction(row, 'reject'); }}>
-                                Revisi
-                            </Button>
-                        </>
+                    {row.status === 'pending' ? (
+                        <Button size="sm" variant="primary" icon={Check} onClick={(e) => { e.stopPropagation(); openAction(row); }}>
+                            Setujui
+                        </Button>
                     ) : (
                         <span className="text-xs text-gray-400">Tidak ada aksi</span>
                     )}
@@ -233,19 +211,13 @@ const LogbookValidation = () => {
                 <Card className="bg-yellow-50 border-yellow-200">
                     <div className="p-4">
                         <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.submitted}</p>
+                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.pending}</p>
                     </div>
                 </Card>
                 <Card className="bg-green-50 border-green-200">
                     <div className="p-4">
                         <p className="text-xs text-green-700 uppercase tracking-wide">Disetujui</p>
                         <p className="text-2xl font-bold text-green-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
-                <Card className="bg-red-50 border-red-200">
-                    <div className="p-4">
-                        <p className="text-xs text-red-700 uppercase tracking-wide">Revisi</p>
-                        <p className="text-2xl font-bold text-red-900 mt-1">{stats.revision}</p>
                     </div>
                 </Card>
             </div>
@@ -308,7 +280,6 @@ const LogbookValidation = () => {
                     }}
                     onConfirm={confirmAction}
                     submitting={isUpdating}
-                    type={actionType}
                 />
             )}
         </div>

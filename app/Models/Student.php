@@ -49,4 +49,9 @@ class Student extends Model
             ->withPivot(['role', 'status', 'join_date'])
             ->withTimestamps();
     }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'student_id');
+    }
 }

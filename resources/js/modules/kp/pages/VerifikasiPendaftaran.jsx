@@ -26,9 +26,9 @@ import {
 // ─── Status configuration ─────────────────────────────────────────────────────
 const STATUS_CONFIG = {
     draft: { label: 'Draft', color: 'gray' },
-    diajukan: { label: 'Menunggu Validasi', color: 'yellow' },
-    ditolak: { label: 'Ditolak', color: 'red' },
-    disetujui: { label: 'Disetujui', color: 'emerald' },
+    submitted: { label: 'Menunggu Validasi', color: 'yellow' },
+    rejected: { label: 'Ditolak', color: 'red' },
+    approved: { label: 'Disetujui', color: 'emerald' },
 };
 
 const getStatusBadge = (status) => {
@@ -242,7 +242,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
-                {data.status === 'diajukan' && (
+                {data.status === 'submitted' && (
                     <>
                         <Button variant="secondary" onClick={onClose}>
                             Tutup
@@ -265,7 +265,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                         </Button>
                     </>
                 )}
-                {data.status === 'disetujui' && (
+                {data.status === 'approved' && (
                     <>
                         <Button variant="secondary" onClick={onClose}>
                             Tutup
@@ -520,9 +520,9 @@ const VerifikasiPendaftaran = () => {
     // Stats
     const stats = useMemo(() => ({
         total: verifikasi.length,
-        diajukan: verifikasi.filter(v => v.status === 'diajukan').length,
-        disetujui: verifikasi.filter(v => v.status === 'disetujui').length,
-        ditolak: verifikasi.filter(v => v.status === 'ditolak').length,
+        submitted: verifikasi.filter(v => v.status === 'submitted').length,
+        approved: verifikasi.filter(v => v.status === 'approved').length,
+        rejected: verifikasi.filter(v => v.status === 'rejected').length,
     }), [verifikasi]);
 
     // Handlers
@@ -533,7 +533,7 @@ const VerifikasiPendaftaran = () => {
 
     const handleReject = (reason) => {
         if (!reason.trim()) return;
-        submitVerification(selectedData.id, 'ditolak', reason)
+        submitVerification(selectedData.id, 'rejected', reason)
             .then(() => {
                 setShowReject(false);
                 setShowDetail(false);
@@ -543,7 +543,7 @@ const VerifikasiPendaftaran = () => {
     };
 
     const handleApprove = (notes) => {
-        submitVerification(selectedData.id, 'disetujui', notes)
+        submitVerification(selectedData.id, 'approved', notes)
             .then(() => {
                 setShowApprove(false);
                 setShowDetail(false);
@@ -559,7 +559,7 @@ const VerifikasiPendaftaran = () => {
     const submitVerification = async (id, status, notes) => {
         try {
             await updateVerifikasi({ id, status, rejection_note: notes }).unwrap();
-            handleApiSuccess(status === 'disetujui'
+            handleApiSuccess(status === 'approved'
                 ? 'Pendaftaran berhasil disetujui'
                 : 'Pendaftaran ditolak');
         } catch (err) {
@@ -646,7 +646,7 @@ const VerifikasiPendaftaran = () => {
                         icon={Eye}
                         onClick={() => handleView(row)}
                     />
-                    {row.status === 'diajukan' && (
+                    {row.status === 'submitted' && (
                         <>
                             <Button
                                 size="sm"
@@ -668,7 +668,7 @@ const VerifikasiPendaftaran = () => {
                             />
                         </>
                     )}
-                    {row.status === 'disetujui' && (
+                    {row.status === 'approved' && (
                         <Button
                             size="sm"
                             variant="primary"
@@ -705,19 +705,19 @@ const VerifikasiPendaftaran = () => {
                 <Card className="bg-yellow-50 border-yellow-200">
                     <div className="p-4">
                         <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu Validasi</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.diajukan}</p>
+                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.submitted}</p>
                     </div>
                 </Card>
                 <Card className="bg-emerald-50 border-emerald-200">
                     <div className="p-4">
                         <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.disetujui}</p>
+                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
                     </div>
                 </Card>
                 <Card className="bg-red-50 border-red-200">
                     <div className="p-4">
                         <p className="text-xs text-red-700 uppercase tracking-wide">Ditolak</p>
-                        <p className="text-2xl font-bold text-red-900 mt-1">{stats.ditolak}</p>
+                        <p className="text-2xl font-bold text-red-900 mt-1">{stats.rejected}</p>
                     </div>
                 </Card>
             </div>

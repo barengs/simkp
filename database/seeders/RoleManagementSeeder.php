@@ -26,6 +26,7 @@ class RoleManagementSeeder extends Seeder
             'kp.plotting-dosen',
             'kp.logbook.input',
             'kp.logbook.approve',
+            'kp.laporan.input',
             'kp.laporan.approve',
             'kp.nilai.input',
             'ta.pengajuan.create',
@@ -73,6 +74,7 @@ class RoleManagementSeeder extends Seeder
             'kp.kelompok.create',
             'kp.kelompok.view',
             'kp.logbook.input',
+            'kp.laporan.input',
             'ta.pengajuan.create',
             'repository.view',
         ]);

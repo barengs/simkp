@@ -20,16 +20,14 @@ import {
 } from 'lucide-react';
 
 const STATUS_LABEL = {
-    draft: 'Draft', diajukan: 'Menunggu Validasi', ditolak: 'Ditolak',
-    disetujui: 'Disetujui', berjalan: 'Berjalan', laporan_masuk: 'Laporan Masuk',
-    revisi_laporan: 'Revisi Laporan', dinilai: 'Dinilai', selesai: 'Selesai',
+    draft: 'Draft', submitted: 'Menunggu Validasi', rejected: 'Ditolak',
+    approved: 'Disetujui', ongoing: 'Berjalan', grading: 'Dinilai', finished: 'Selesai',
 };
 
 const getStatusBadge = (status) => {
     const config = {
-        draft: 'gray', diajukan: 'blue', ditolak: 'red',
-        disetujui: 'emerald', berjalan: 'yellow', laporan_masuk: 'purple',
-        revisi_laporan: 'orange', dinilai: 'teal', selesai: 'green',
+        draft: 'gray', submitted: 'blue', rejected: 'red',
+        approved: 'emerald', ongoing: 'yellow', grading: 'purple', finished: 'green',
     };
     return <Badge status={config[status] || 'gray'}>{STATUS_LABEL[status] || status}</Badge>;
 };
@@ -112,8 +110,8 @@ const AdminKelompokView = () => {
     // Stats
     const stats = useMemo(() => ({
         total: groups.length,
-        berjalan: groups.filter(g => g.status === 'berjalan').length,
-        disetujui: groups.filter(g => g.status === 'disetujui').length,
+        ongoing: groups.filter(g => g.status === 'ongoing').length,
+        approved: groups.filter(g => g.status === 'approved').length,
     }), [groups]);
 
     // Handlers
@@ -220,13 +218,13 @@ const AdminKelompokView = () => {
                 <Card className="bg-emerald-50 border-emerald-200">
                     <div className="p-4">
                         <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.disetujui}</p>
+                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
                     </div>
                 </Card>
                 <Card className="bg-yellow-50 border-yellow-200">
                     <div className="p-4">
                         <p className="text-xs text-yellow-700 uppercase tracking-wide">Berjalan</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.berjalan}</p>
+                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.ongoing}</p>
                     </div>
                 </Card>
             </div>
@@ -303,8 +301,8 @@ const DosenKelompokView = () => {
     // Stats
     const stats = useMemo(() => ({
         total: groups.length,
-        berjalan: groups.filter(g => g.status === 'berjalan').length,
-        disetujui: groups.filter(g => g.status === 'disetujui').length,
+        ongoing: groups.filter(g => g.status === 'ongoing').length,
+        approved: groups.filter(g => g.status === 'approved').length,
     }), [groups]);
 
     // Handlers
@@ -342,7 +340,7 @@ const DosenKelompokView = () => {
         {
             name: 'Anggota',
             selector: r => r.members_count || r.members?.length || 0,
-            width: '90px',
+            width: '190px',
             center: true,
         },
         {
@@ -354,7 +352,7 @@ const DosenKelompokView = () => {
         },
         {
             name: 'Aksi',
-            width: '80px',
+            width: '120px',
             center: true,
             cell: r => (
                 <Button size="sm" variant="secondary" icon={Eye} onClick={() => handleView(r)}>
@@ -377,13 +375,13 @@ const DosenKelompokView = () => {
                 <Card className="bg-emerald-50 border-emerald-200">
                     <div className="p-4">
                         <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.disetujui}</p>
+                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
                     </div>
                 </Card>
                 <Card className="bg-yellow-50 border-yellow-200">
                     <div className="p-4">
                         <p className="text-xs text-yellow-700 uppercase tracking-wide">Berjalan</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.berjalan}</p>
+                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.ongoing}</p>
                     </div>
                 </Card>
             </div>

@@ -60,7 +60,7 @@ class KpGroupService
                 'kp_company_id'      => $data['kp_company_id'],
                 'kp_theme_id'        => $data['kp_theme_id'],
                 'academic_period_id' => $data['academic_period_id'],
-                'status'             => 'diajukan', // Langsung diajukan, bukan draft
+                'status'             => 'submitted', // Langsung diajukan, bukan draft
                 'description'        => $data['description'] ?? null,
             ]);
 
@@ -101,6 +101,12 @@ class KpGroupService
             // Handle status update (for verifikasi)
             if (isset($data['status'])) {
                 $kelompok->status = $data['status'];
+
+                if ($data['status'] === 'approved') {
+                    KpGroupMember::where('kp_group_id', $id)
+                        ->where('status', 'inactive')
+                        ->update(['status' => 'active']);
+                }
             }
 
             // Handle rejection note (for verifikasi)

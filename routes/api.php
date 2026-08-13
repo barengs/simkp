@@ -88,6 +88,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('report', ReportController::class);
     Route::apiResource('exam-schedule', ExamScheduleController::class);
     Route::apiResource('evaluation-criteria', EvaluationCriteriaController::class);
+    Route::post('/kp-grade/group', [KpGradeController::class, 'storeGroupGrade']);
+    Route::get('/kp-grade/supervised-groups', [KpGradeController::class, 'getSupervisedGroups']);
     Route::apiResource('kp-grade', KpGradeController::class);
     Route::apiResource('exam-grade', ExamGradeController::class);
     Route::apiResource('notification', NotificationController::class);

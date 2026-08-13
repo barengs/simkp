@@ -57,10 +57,12 @@ class RolePermissionSeeder extends Seeder
             'kp.logbook.approve',  // Dosen (jika pembimbing kelompok): approve logbook
 
             // ── Modul KP — Laporan ───────────────────────────────────────────
+            'kp.laporan.input',    // Mahasiswa: ajukan laporan KP
             'kp.laporan.approve',  // Dosen (jika pembimbing kelompok): approve laporan KP
 
             // ── Modul KP — Nilai ─────────────────────────────────────────────
             'kp.nilai.input',      // Dosen (jika pembimbing kelompok): input nilai KP
+            'kp.nilai.view',       // Mahasiswa: lihat nilai KP sendiri
 
             // ── Modul TA — Pengajuan & Verifikasi ───────────────────────────
             'ta.pengajuan.create',   // Mahasiswa: ajukan judul TA
@@ -130,6 +132,8 @@ class RolePermissionSeeder extends Seeder
             'kp.kelompok.create',
             'kp.kelompok.view',
             'kp.logbook.input',
+            'kp.laporan.input',
+            'kp.nilai.view',
             'ta.pengajuan.create',
             'repository.view',
         ]);

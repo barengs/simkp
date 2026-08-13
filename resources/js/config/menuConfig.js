@@ -60,6 +60,24 @@ export const menuConfig = [
         icon: ClipboardList,
     },
     {
+        label: 'Laporan KP',
+        path: '/kp/laporan',
+        permission: 'kp.kelompok.create',
+        icon: FileText,
+    },
+    {
+        label: 'Validasi Laporan',
+        path: '/kp/laporan/validasi',
+        permission: 'kp.laporan.approve',
+        icon: ClipboardList,
+    },
+    {
+        label: 'Nilai KP',
+        path: '/kp/nilai',
+        permission: 'kp.nilai.input',
+        icon: CheckCircle,
+    },
+    {
         label: 'Manajemen Pengguna',
         path: '/users',
         permission: 'pengaturan.manage',

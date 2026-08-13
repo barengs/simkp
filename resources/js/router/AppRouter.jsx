@@ -18,6 +18,10 @@ import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
 import Logbook from '../modules/kp/pages/Logbook';
 import LogbookValidation from '../modules/kp/pages/LogbookValidation';
+import Laporan from '../modules/kp/pages/Laporan';
+import ValidasiLaporan from '../modules/kp/pages/ValidasiLaporan';
+import Nilai from '../modules/kp/pages/Nilai';
+import NilaiSaya from '../modules/kp/pages/NilaiSaya';
 import DaftarKelompok from '../modules/kp/pages/DaftarKelompok';
 import DetailKelompok from '../modules/kp/pages/DetailKelompok';
 import RoleManagement from '../modules/role-management/pages/RoleManagement';
@@ -96,6 +100,26 @@ function AppRouter() {
                 <Route path="/kp/logbook/validasi" element={
                     <ProtectedRoute permission="kp.logbook.approve">
                         <LogbookValidation />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/laporan" element={
+                    <ProtectedRoute permission="kp.kelompok.create">
+                        <Laporan />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/laporan/validasi" element={
+                    <ProtectedRoute permission="kp.laporan.approve">
+                        <ValidasiLaporan />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/nilai" element={
+                    <ProtectedRoute permission="kp.nilai.input">
+                        <Nilai />
+                    </ProtectedRoute>
+                } />
+                <Route path="/kp/nilai-saya" element={
+                    <ProtectedRoute permission="kp.nilai.view">
+                        <NilaiSaya />
                     </ProtectedRoute>
                 } />
 

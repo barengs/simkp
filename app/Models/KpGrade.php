@@ -9,15 +9,31 @@ class KpGrade extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kelompok_kp_id', 'dosen_id', 'nilai_angka', 'nilai_huruf', 'catatan'];
+    protected $table = 'kp_grade';
 
-    public function kelompokKp()
+    protected $fillable = [
+        'kp_group_member_id',
+        'evaluation_criteria_id',
+        'score_field',
+        'score_report',
+        'score_seminar',
+        'final_grade',
+        'notes',
+    ];
+
+    protected $casts = [
+        'score_field' => 'decimal:2',
+        'score_report' => 'decimal:2',
+        'score_seminar' => 'decimal:2',
+    ];
+
+    public function kpGroupMember()
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(KpGroupMember::class);
     }
 
-    public function dosen()
+    public function evaluationCriteria()
     {
-        return $this->belongsTo(Dosen::class);
+        return $this->belongsTo(EvaluationCriteria::class);
     }
 }

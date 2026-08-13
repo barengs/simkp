@@ -21,10 +21,8 @@ import {
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-    draft: { label: 'Draft', color: 'gray' },
-    submitted: { label: 'Menunggu Validasi', color: 'yellow' },
+    pending: { label: 'Menunggu Validasi', color: 'yellow' },
     approved: { label: 'Disetujui', color: 'green' },
-    revision: { label: 'Perlu Revisi', color: 'red' },
 };
 
 const getStatusBadge = (status) => {
@@ -60,7 +58,7 @@ const Logbook = () => {
     const activeKpGroupId = useMemo(() => {
         const members = authUser?.student?.kp_group_members || [];
         const member = members.find(
-            m => m.member_status === 'active' && m.group_status === 'disetujui' && m.group_supervisor !== null
+            m => m.member_status === 'active' && m.group_status === 'approved' && m.group_supervisor !== null
         );
         return member?.kp_group_id || null;
     }, [authUser]);
@@ -83,12 +81,12 @@ const Logbook = () => {
 
         const members = authUser.student.kp_group_members || [];
         const hasActiveApproved = members.some(
-            m => m.member_status === 'active' && m.group_status === 'disetujui' && m.group_supervisor !== null
+            m => m.member_status === 'active' && m.group_status === 'approved' && m.group_supervisor !== null
         );
 
         if (hasActiveApproved) {
             setIsRegistered('approved');
-        } else if (members.some(m => m.member_status === 'active' && m.group_status === 'disetujui')) {
+        } else if (members.some(m => m.member_status === 'active' && m.group_status === 'approved')) {
             setIsRegistered('no_supervisor');
         } else if (members.length > 0) {
             setIsRegistered('pending');
@@ -111,9 +109,8 @@ const Logbook = () => {
 
     const stats = useMemo(() => ({
         total: logbooks.length,
-        submitted: logbooks.filter(l => l.status === 'submitted').length,
+        pending: logbooks.filter(l => l.status === 'pending').length,
         approved: logbooks.filter(l => l.status === 'approved').length,
-        revision: logbooks.filter(l => l.status === 'revision').length,
     }), [logbooks]);
 
     const handleDelete = async (id) => {
@@ -174,7 +171,7 @@ const Logbook = () => {
             center: true,
             cell: r => (
                 <div className="flex items-center justify-center gap-2">
-                    {(r.status === 'draft' || r.status === 'revision' || r.status === 'submitted') && authUser?.student?.id === r.student_id && (
+                    {r.status === 'pending' && authUser?.student?.id === r.student_id && (
                         <>
                             <Button size="sm" variant="secondary" icon={Pencil} onClick={() => handleEdit(r)} />
                             <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleDelete(r.id)} />
@@ -247,19 +244,13 @@ const Logbook = () => {
                     <Card className="bg-yellow-50 border-yellow-200">
                         <div className="p-4">
                             <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu</p>
-                            <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.submitted}</p>
+                            <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.pending}</p>
                         </div>
                     </Card>
                     <Card className="bg-green-50 border-green-200">
                         <div className="p-4">
                             <p className="text-xs text-green-700 uppercase tracking-wide">Disetujui</p>
                             <p className="text-2xl font-bold text-green-900 mt-1">{stats.approved}</p>
-                        </div>
-                    </Card>
-                    <Card className="bg-red-50 border-red-200">
-                        <div className="p-4">
-                            <p className="text-xs text-red-700 uppercase tracking-wide">Revisi</p>
-                            <p className="text-2xl font-bold text-red-900 mt-1">{stats.revision}</p>
                         </div>
                     </Card>
                 </div>
@@ -459,7 +450,7 @@ const LogbookModal = ({ isOpen, onClose, onSubmit, kpGroupId }) => {
             formData.append('kp_group_id', String(kpGroupId));
             formData.append('date', form.date);
             formData.append('activity', form.activity);
-            formData.append('status', 'submitted');
+            formData.append('status', 'pending');
             if (form.attachment) {
                 formData.append('attachment', form.attachment);
             }
@@ -576,7 +567,7 @@ const LogbookEditModal = ({ isOpen, onClose, onSubmit, logbook, kpGroupId }) => 
             const formData = new FormData();
             formData.append('date', form.date);
             formData.append('activity', form.activity);
-            formData.append('status', 'submitted');
+            formData.append('status', 'pending');
             if (form.attachment) {
                 formData.append('attachment', form.attachment);
             }

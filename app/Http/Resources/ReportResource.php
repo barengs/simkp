@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class LogbookResource extends JsonResource
+class ReportResource extends JsonResource
 {
     public function toArray($request): array
     {
@@ -12,11 +12,11 @@ class LogbookResource extends JsonResource
             'id' => $this->id,
             'kp_group_id' => $this->kp_group_id,
             'student_id' => $this->student_id,
-            'date' => $this->date,
-            'attachment' => $this->attachment ? '/storage/' . ltrim($this->attachment, '/') : null,
-            'activity' => $this->activity,
-            'evidence_photo' => $this->evidence_photo ? '/storage/' . ltrim($this->evidence_photo, '/') : null,
             'status' => $this->status,
+            'rejection_note' => $this->rejection_note,
+            'title' => $this->title,
+            'description' => $this->description,
+            'file_url' => $this->file_url ? '/storage/' . ltrim($this->file_url, '/') : null,
             'kp_group' => $this->whenLoaded('kpGroup'),
             'student' => $this->whenLoaded('student'),
             'created_at' => $this->created_at,
@@ -24,4 +24,3 @@ class LogbookResource extends JsonResource
         ];
     }
 }
-

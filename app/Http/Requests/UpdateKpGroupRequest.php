@@ -20,6 +20,7 @@ class UpdateKpGroupRequest extends FormRequest
             'description'        => ['nullable', 'string', 'max:1000'],
             'anggota_ids'        => ['nullable', 'array'],
             'anggota_ids.*'      => ['integer', 'exists:student,id'],
+            'status'             => ['sometimes', 'in:draft,submitted,approved,rejected,ongoing,grading,finished'],
         ];
     }
 }

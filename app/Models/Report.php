@@ -9,15 +9,21 @@ class Report extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kelompok_kp_id', 'laporable_type', 'laporable_id', 'nama_file', 'path_file', 'catatan', 'status'];
+    protected $table = 'report';
 
-    public function kelompokKp()
+    protected $fillable = ['kp_group_id', 'student_id', 'status', 'rejection_note', 'title', 'description', 'file_url'];
+
+    protected $casts = [
+        'status' => 'string',
+    ];
+
+    public function kpGroup()
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(KpGroup::class);
     }
 
-    public function laporable()
+    public function student()
     {
-        return $this->morphTo();
+        return $this->belongsTo(Student::class);
     }
 }

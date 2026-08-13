@@ -19,7 +19,7 @@ class StoreLogbookRequest extends FormRequest
             'attachment' => ['nullable', 'file', 'max:10240'],
             'activity' => ['required', 'string'],
             'evidence_photo' => ['nullable', 'file', 'max:5120'],
-            'status' => ['sometimes', 'in:draft,submitted,approved,revision'],
+            'status' => ['sometimes', 'in:pending,approved'],
         ];
     }
 }

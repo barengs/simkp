@@ -50,7 +50,7 @@ class PlottingDosenController extends Controller
             'kpCompany',
             'members.student.user',
         ])
-        ->where('status', 'disetujui')
+        ->where('status', 'approved')
         ->whereDoesntHave('members', function ($query) {
             $query->whereNotNull('supervisor_lecturer_id');
         })
@@ -128,7 +128,7 @@ class PlottingDosenController extends Controller
             'members.student.user',
             'members.supervisor.user',
         ])
-        ->where('status', 'disetujui')
+        ->where('status', 'approved')
         ->whereHas('members', function ($query) {
             $query->whereNotNull('supervisor_lecturer_id');
         })
@@ -180,7 +180,7 @@ class PlottingDosenController extends Controller
         ->whereHas('members', function ($query) use ($lecturer) {
             $query->where('supervisor_lecturer_id', $lecturer->id);
         })
-        ->where('status', 'disetujui')
+        ->where('status', 'approved')
         ->orderBy('created_at', 'desc')
         ->get();
 

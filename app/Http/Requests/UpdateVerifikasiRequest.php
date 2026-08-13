@@ -14,8 +14,8 @@ class UpdateVerifikasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => 'sometimes|required|string|in:diajukan,ditolak,disetujui',
-            'rejection_note' => 'nullable|required_if:status,ditolak|string|max:1000',
+            'status' => 'sometimes|required|string|in:submitted,rejected,approved',
+            'rejection_note' => 'nullable|required_if:status,rejected|string|max:1000',
         ];
     }
 

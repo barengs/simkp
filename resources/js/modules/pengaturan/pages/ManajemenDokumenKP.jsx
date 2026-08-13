@@ -153,7 +153,7 @@ const ManajemenDokumenKP = () => {
             width: '100px',
             center: true,
             cell: r => (
-                <Badge status={r.is_required ? 'disetujui' : 'draft'}>
+                <Badge status={r.is_required ? 'approved' : 'draft'}>
                     {r.is_required ? 'Ya' : 'Tidak'}
                 </Badge>
             ),

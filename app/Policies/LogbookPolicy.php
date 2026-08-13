@@ -38,14 +38,24 @@ class LogbookPolicy
         }
 
         if ($user->hasRole('mahasiswa')) {
-            return $logbook->student_id === $user->student?->id;
+            return $logbook->student_id === $user->student?->id
+                && $logbook->status === 'pending';
         }
 
         return false;
     }
 
-    public function delete(User $user)
+    public function delete(User $user, Logbook $logbook)
     {
-        return $user->hasAnyRole(['admin', 'koordinator']);
+        if ($user->hasAnyRole(['admin', 'koordinator'])) {
+            return true;
+        }
+
+        if ($user->hasRole('mahasiswa')) {
+            return $logbook->student_id === $user->student?->id
+                && $logbook->status === 'pending';
+        }
+
+        return false;
     }
 }
