@@ -10,12 +10,13 @@ return new class extends Migration
     {
         Schema::create('report', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->text('content')->nullable();
             $table->foreignId('kp_group_id')->nullable()->constrained('kp_group')->nullOnDelete();
             $table->foreignId('student_id')->nullable()->constrained('student')->nullOnDelete();
-            $table->date('report_date')->nullable();
-            $table->string('status')->default('draft');
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->string('file_url')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('rejection_note')->nullable();
             $table->timestamps();
         });
     }

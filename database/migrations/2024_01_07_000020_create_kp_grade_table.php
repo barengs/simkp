@@ -12,8 +12,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kp_group_member_id')->constrained('kp_group_member')->cascadeOnDelete();
             $table->foreignId('evaluation_criteria_id')->nullable()->constrained('evaluation_criteria')->nullOnDelete();
-            $table->decimal('score', 5, 2)->default(0);
-            $table->text('feedback')->nullable();
+            $table->decimal('score_field', 5, 2)->nullable();
+            $table->decimal('score_report', 5, 2)->nullable();
+            $table->decimal('score_seminar', 5, 2)->nullable();
+            $table->string('final_grade', 2)->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

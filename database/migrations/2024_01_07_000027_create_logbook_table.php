@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('attachment')->nullable();
             $table->string('evidence_photo')->nullable();
             $table->text('activity');
-            $table->enum('status', ['draft', 'submitted', 'approved', 'revision'])
-                ->default('draft');
+            $table->enum('status', ['pending', 'approved'])->default('pending');
+            $table->text('rejection_note')->nullable();
             $table->timestamps();
         });
     }
