@@ -14,6 +14,8 @@ class KpGroup extends Model
     protected $fillable = [
         'name',
         'code',
+        'start_date',
+        'end_date',
         'kp_company_id',
         'kp_theme_id',
         'academic_period_id',

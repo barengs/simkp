@@ -150,7 +150,7 @@ const ManajemenDokumenKP = () => {
         {
             name: 'Wajib',
             selector: r => r.is_required,
-            width: '100px',
+            width: '290px',
             center: true,
             cell: r => (
                 <Badge status={r.is_required ? 'approved' : 'draft'}>
@@ -160,7 +160,7 @@ const ManajemenDokumenKP = () => {
         },
         {
             name: 'Aksi',
-            width: '140px',
+            width: '240px',
             cell: r => (
                 <div className="flex gap-2">
                     <Button
@@ -176,7 +176,9 @@ const ManajemenDokumenKP = () => {
                         variant="danger"
                         icon={Trash2}
                         onClick={() => setShowDeleteConfirm(r.id)}
-                    />
+                    >
+                        Hapus
+                    </Button>
                 </div>
             ),
         },

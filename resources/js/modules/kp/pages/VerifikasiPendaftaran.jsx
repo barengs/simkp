@@ -621,7 +621,7 @@ const VerifikasiPendaftaran = () => {
             name: 'Status',
             selector: row => row.status,
             sortable: true,
-            width: '140px',
+            width: '200px',
             center: true,
             cell: row => getStatusBadge(row.status),
         },
@@ -636,7 +636,7 @@ const VerifikasiPendaftaran = () => {
         },
         {
             name: 'Aksi',
-            width: '140px',
+            width: '200px',
             center: true,
             cell: row => (
                 <div className="flex gap-1">

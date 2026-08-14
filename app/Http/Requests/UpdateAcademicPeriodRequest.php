@@ -19,6 +19,7 @@ class UpdateAcademicPeriodRequest extends FormRequest
             'code' => ['required', 'string', 'max:20', 'unique:academic_period,code,' . $id],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'total_members' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

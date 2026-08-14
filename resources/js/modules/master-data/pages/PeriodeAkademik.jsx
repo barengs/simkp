@@ -27,6 +27,7 @@ const PeriodeAkademik = () => {
         code: '',
         start_date: '',
         end_date: '',
+        total_members: '',
         is_active: false,
     });
     const [errors, setErrors] = useState({});
@@ -40,7 +41,7 @@ const PeriodeAkademik = () => {
 
     const openCreate = () => {
         setEditing(null);
-        setForm({ name: '', code: '', start_date: '', end_date: '', is_active: false });
+        setForm({ name: '', code: '', start_date: '', end_date: '', total_members: '', is_active: false });
         setErrors({});
         setShowModal(true);
     };
@@ -52,6 +53,7 @@ const PeriodeAkademik = () => {
             code: item.code || '',
             start_date: item.start_date ? String(item.start_date).substring(0, 10) : '',
             end_date: item.end_date ? String(item.end_date).substring(0, 10) : '',
+            total_members: item.total_members ?? '',
             is_active: !!item.is_active,
         });
         setErrors({});
@@ -67,6 +69,7 @@ const PeriodeAkademik = () => {
                 code: form.code,
                 start_date: form.start_date,
                 end_date: form.end_date,
+                total_members: form.total_members ? Number(form.total_members) : null,
                 is_active: form.is_active,
             };
             if (editing) {
@@ -99,6 +102,7 @@ const PeriodeAkademik = () => {
         { name: 'Kode', selector: (row) => row.code || '-', sortable: true },
         { name: 'Tanggal Mulai', selector: (row) => row.start_date || '-', sortable: true },
         { name: 'Tanggal Selesai', selector: (row) => row.end_date || '-', sortable: true },
+        { name: 'Total Anggota', selector: (row) => row.total_members ?? '-', sortable: true, width: '140px', center: true },
         {
             name: 'Status',
             cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
@@ -144,6 +148,7 @@ const PeriodeAkademik = () => {
                         <Input label="Tanggal Mulai" required type="date" name="start_date" value={form.start_date} onChange={handleInputChange} error={errors.start_date} />
                         <Input label="Tanggal Selesai" required type="date" name="end_date" value={form.end_date} onChange={handleInputChange} error={errors.end_date} />
                     </div>
+                    <Input label="Total Anggota per Kelompok" type="number" min="1" name="total_members" value={form.total_members} onChange={handleInputChange} placeholder="Contoh: 4" error={errors.total_members} />
                     <div className="flex items-center gap-2">
                         <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleInputChange} className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                         <label className="text-sm text-gray-700">Set sebagai periode aktif</label>

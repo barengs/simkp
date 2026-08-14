@@ -57,6 +57,8 @@ class KpGroupService
             $kelompok = KpGroup::create([
                 'name'               => $data['name'] ?? $code,
                 'code'               => $code,
+                'start_date'         => $data['start_date'] ?? null,
+                'end_date'           => $data['end_date'] ?? null,
                 'kp_company_id'      => $data['kp_company_id'],
                 'kp_theme_id'        => $data['kp_theme_id'],
                 'academic_period_id' => $data['academic_period_id'],
@@ -116,6 +118,8 @@ class KpGroupService
 
             // Update other fields only if provided
             $kelompok->update(array_filter([
+                'start_date'         => $data['start_date']         ?? null,
+                'end_date'           => $data['end_date']           ?? null,
                 'kp_company_id'      => $data['kp_company_id']      ?? null,
                 'kp_theme_id'        => $data['kp_theme_id']         ?? null,
                 'academic_period_id' => $data['academic_period_id']  ?? null,

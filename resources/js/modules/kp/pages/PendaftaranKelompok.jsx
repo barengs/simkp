@@ -427,6 +427,16 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
                     </div>
                 ))}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <Input label="Tanggal Mulai KP" type="date" required value={form.start_date}
+                    onChange={e => onChange({ target: { name: 'start_date', value: e.target.value } })}
+                    error={errors.start_date} />
+                <Input label="Tanggal Selesai KP" type="date" required value={form.end_date}
+                    onChange={e => onChange({ target: { name: 'end_date', value: e.target.value } })}
+                    error={errors.end_date} />
+            </div>
+            {errors.dates && <p className="text-xs text-red-600 mt-1">{errors.dates}</p>}
         </div>
     );
 };
@@ -768,7 +778,7 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
 };
 
 // ─── Initial form ─────────────────────────────────────────────────────────────
-const EMPTY = { academic_period_id: '', kp_company_id: '', kp_theme_id: '', anggota_ids: [] };
+const EMPTY = { academic_period_id: '', kp_company_id: '', kp_theme_id: '', start_date: '', end_date: '', anggota_ids: [] };
 
 // ─── Halaman utama ────────────────────────────────────────────────────────────
 const PendaftaranKelompok = () => {
@@ -857,6 +867,8 @@ const PendaftaranKelompok = () => {
             academic_period_id: item.academic_period?.id || '',
             kp_company_id:      item.kp_company?.id      || '',
             kp_theme_id:        item.kp_theme?.id         || '',
+            start_date:         item.start_date           || '',
+            end_date:           item.end_date             || '',
             anggota_ids:        (item.members || [])
                 .filter(m => m.role === 'anggota')
                 .map(m => m.student_id),
@@ -900,9 +912,28 @@ const PendaftaranKelompok = () => {
         const e = {};
         if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
         if (step === 1 && !form.kp_company_id)      e.kp_company_id      = 'Pilih perusahaan tujuan KP';
-        // Catatan: Anggota tidak wajib. Ketua otomatis menjadi anggota. Anggota tambahan opsional.
-        // Step 4 (Dokumen): validasi dapat ditambahkan nanti
-        // Step 5 (Preview): tidak ada validasi khusus
+        if (step === 1 && !form.start_date)         e.start_date         = 'Tanggal mulai KP wajib diisi';
+        if (step === 1 && !form.end_date)           e.end_date           = 'Tanggal selesai KP wajib diisi';
+        if (step === 1 && form.start_date && form.end_date && form.end_date < form.start_date) {
+            e.end_date = 'Tanggal selesai harus sama dengan atau setelah tanggal mulai';
+        }
+        if (step === 1 && form.academic_period_id && form.start_date && form.end_date) {
+            const period = (periodeList || []).find(p => String(p.id) === String(form.academic_period_id));
+            if (period && period.start_date && period.end_date) {
+                if (form.start_date < period.start_date || form.end_date > period.end_date) {
+                    e.dates = `Tanggal KP harus berada dalam rentang periode akademik (${period.start_date} s/d ${period.end_date}).`;
+                }
+            }
+        }
+        if (step === 4) {
+            const requiredDocs = (documentTypes || []).filter(dt => dt.is_required);
+            for (const doc of requiredDocs) {
+                if (!uploads[doc.id]) {
+                    e.documents = 'Semua dokumen wajib belum diunggah.';
+                    break;
+                }
+            }
+        }
         return e;
     };
 
@@ -935,6 +966,8 @@ const PendaftaranKelompok = () => {
                 academic_period_id: Number(form.academic_period_id),
                 kp_company_id:      Number(form.kp_company_id),
                 kp_theme_id:        Number(form.kp_theme_id),
+                start_date:         form.start_date,
+                end_date:           form.end_date,
                 anggota_ids:        form.anggota_ids,
             };
             
