@@ -190,7 +190,7 @@ const AdminKelompokView = () => {
         },
         {
             name: 'Aksi',
-            width: '140px',
+            width: '240px',
             center: true,
             cell: r => (
                 <div className="flex gap-1">

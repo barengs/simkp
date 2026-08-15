@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
     useGetKpGroupsQuery,
@@ -7,6 +7,7 @@ import {
     useProposeKpCompanyMutation,
     useGetDocumentTypesQuery,
     useUploadKpDocumentMutation,
+    useDeleteKpDocumentMutation,
     useAcceptInvitationMutation,
     useDeclineInvitationMutation,
 } from '../api/kpApi';
@@ -95,7 +96,7 @@ const SelectionCard = ({ selected, onClick, children }) => (
 );
 
 // ─── Langkah 1: Pilih Periode & Tempat KP (merged) ────────────────────────────
-const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onPropose }) => {
+const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onPropose, errors }) => {
     const [mode, setMode]       = useState('pilih-perusahaan'); // 'pilih-periode' | 'pilih-perusahaan' | 'daftar'
     const [search, setSearch]   = useState('');
     const [propForm, setPropForm] = useState({ name: '', address: '', contact_person: '', phone_number: '', email: '' });
@@ -220,6 +221,11 @@ const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onP
                 <p className="text-xs text-gray-500 mb-1">Periode yang dipilih:</p>
                 <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <p className="text-sm font-medium text-emerald-900">{selectedPeriode?.name}</p>
+                    {selectedPeriode?.start_date && selectedPeriode?.end_date && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            {new Date(selectedPeriode.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - {new Date(selectedPeriode.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                    )}
                 </div>
             </div>
             <h3 className="text-sm font-semibold text-gray-900 mt-5">Perusahaan Tujuan KP</h3>
@@ -428,24 +434,18 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <Input label="Tanggal Mulai KP" type="date" required value={form.start_date}
-                    onChange={e => onChange({ target: { name: 'start_date', value: e.target.value } })}
-                    error={errors.start_date} />
-                <Input label="Tanggal Selesai KP" type="date" required value={form.end_date}
-                    onChange={e => onChange({ target: { name: 'end_date', value: e.target.value } })}
-                    error={errors.end_date} />
-            </div>
-            {errors.dates && <p className="text-xs text-red-600 mt-1">{errors.dates}</p>}
         </div>
     );
 };
 
-// ─── Langkah 4: Dokumen ───────────────────────────────────────────────────────
-const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, onUploadChange }) => {
+// ─── Langkah 2: Tema KP ───────────────────────────────────────────────────────
+const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existingDocuments = {}, onUploadChange, onRemoveExisting, onReplace }) => {
     const handleFileChange = (documentTypeId, file) => {
         if (file) {
             onUploadChange(prev => ({ ...prev, [documentTypeId]: file }));
+            if (existingDocuments[documentTypeId] && onReplace) {
+                onReplace(documentTypeId);
+            }
         } else {
             onUploadChange(prev => {
                 const updated = { ...prev };
@@ -455,8 +455,77 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, onUplo
         }
     };
 
+    const handleRemoveExisting = (documentTypeId) => {
+        if (onRemoveExisting) {
+            onRemoveExisting(documentTypeId);
+        }
+    };
+
     const requiredDocs = (documentTypes || []).filter(dt => dt.is_required);
     const optionalDocs = (documentTypes || []).filter(dt => !dt.is_required);
+
+    const renderDocumentUpload = (doc) => {
+        const existingDoc = existingDocuments[doc.id];
+        const uploadedFile = uploads[doc.id];
+        const hasDocument = existingDoc || uploadedFile;
+
+        return (
+            <div className="mt-3">
+                <label className={`flex items-center justify-center w-full px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                    hasDocument
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                    <div className="text-center">
+                        <FileText className={`w-5 h-5 mx-auto mb-1 ${hasDocument ? 'text-emerald-500' : 'text-gray-400'}`} />
+                        {uploadedFile ? (
+                            <div>
+                                <p className="text-sm text-emerald-600 font-medium">{uploadedFile.name}</p>
+                                <p className="text-xs text-gray-500">
+                                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                            </div>
+                        ) : existingDoc ? (
+                            <div>
+                                <p className="text-sm text-emerald-600 font-medium">{existingDoc.title || 'Dokumen tersimpan'}</p>
+                                {existingDoc.file_url && (
+                                    <a href={existingDoc.file_url} target="_blank" rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:text-blue-800 underline">
+                                        Lihat dokumen
+                                    </a>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-gray-600">Klik untuk unggah atau seret berkas</p>
+                                <p className="text-xs text-gray-500 mt-0.5">PDF, DOC, DOCX (Max 10 MB)</p>
+                            </>
+                        )}
+                    </div>
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={e => handleFileChange(doc.id, e.target.files?.[0])}
+                    />
+                </label>
+                {hasDocument && (
+                    <button type="button"
+                        onClick={() => {
+                            if (uploadedFile) {
+                                handleFileChange(doc.id, null);
+                            } else if (existingDoc) {
+                                handleRemoveExisting(doc.id);
+                            }
+                        }}
+                        className="mt-2 text-xs text-red-600 hover:text-red-800 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        Hapus dokumen
+                    </button>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6">
@@ -487,32 +556,7 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, onUplo
                                                 Wajib
                                             </span>
                                         </div>
-                                        <div className="mt-3">
-                                            <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
-                                                <div className="text-center">
-                                                    <FileText className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                                                    {uploads[doc.id] ? (
-                                                        <div>
-                                                            <p className="text-sm text-emerald-600 font-medium">{uploads[doc.id].name}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {(uploads[doc.id].size / 1024 / 1024).toFixed(2)} MB
-                                                            </p>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <p className="text-sm text-gray-600">Klik untuk unggah atau seret berkas</p>
-                                                            <p className="text-xs text-gray-500 mt-0.5">PDF, DOC, DOCX (Max 10 MB)</p>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept=".pdf,.doc,.docx"
-                                                    onChange={e => handleFileChange(doc.id, e.target.files?.[0])}
-                                                />
-                                            </label>
-                                        </div>
+                                        {renderDocumentUpload(doc)}
                                     </div>
                                 ))}
                             </div>
@@ -537,32 +581,7 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, onUplo
                                                 Opsional
                                             </span>
                                         </div>
-                                        <div className="mt-3">
-                                            <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors">
-                                                <div className="text-center">
-                                                    <FileText className="w-5 h-5 text-gray-300 mx-auto mb-1" />
-                                                    {uploads[doc.id] ? (
-                                                        <div>
-                                                            <p className="text-sm text-emerald-600 font-medium">{uploads[doc.id].name}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {(uploads[doc.id].size / 1024 / 1024).toFixed(2)} MB
-                                                            </p>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <p className="text-sm text-gray-500">Klik untuk unggah atau seret berkas</p>
-                                                            <p className="text-xs text-gray-400 mt-0.5">PDF, DOC, DOCX (Max 10 MB)</p>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept=".pdf,.doc,.docx"
-                                                    onChange={e => handleFileChange(doc.id, e.target.files?.[0])}
-                                                />
-                                            </label>
-                                        </div>
+                                        {renderDocumentUpload(doc)}
                                     </div>
                                 ))}
                             </div>
@@ -601,6 +620,12 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
                 <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 px-4">
                     <Row label="Periode Akademik" value={periode ? `${periode.name} (${periode.code})` : null} />
                     <Row label="Perusahaan Tujuan KP" value={perusahaan?.name} />
+                    {periode?.start_date && periode?.end_date && (
+                        <Row 
+                            label="Rentang KP" 
+                            value={`${new Date(periode.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - ${new Date(periode.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`} 
+                        />
+                    )}
                 </div>
             </div>
 
@@ -796,6 +821,7 @@ const PendaftaranKelompok = () => {
     const [updateKpGroup]                = useUpdateKpGroupMutation();
     const [proposeKpCompany]             = useProposeKpCompanyMutation();
     const [uploadKpDocument]             = useUploadKpDocumentMutation();
+    const [deleteKpDocument]             = useDeleteKpDocumentMutation();
     const [acceptInvitation]             = useAcceptInvitationMutation();
     const [declineInvitation]            = useDeclineInvitationMutation();
 
@@ -844,6 +870,8 @@ const PendaftaranKelompok = () => {
     const [completedSteps, setCompleted]  = useState([]);
     const [form, setForm]                 = useState(EMPTY);
     const [uploads, setUploads]           = useState({}); // { document_type_id: File }
+    const [existingDocuments, setExistingDocuments] = useState({}); // { document_type_id: { id, title, file_url, ... } }
+    const [removedDocumentIds, setRemovedDocumentIds] = useState([]); // document IDs to delete
     const [errors, setErrors]             = useState({});
     const [submitting, setSubmitting]     = useState(false);
     const [showConfirm, setShowConfirm]   = useState(false);
@@ -854,13 +882,32 @@ const PendaftaranKelompok = () => {
         return (p?.total_members ?? 3) - 1; // -1 karena ketua tidak dimasukkan ke anggota_ids
     }, [periodeList, form.academic_period_id]);
 
+    useEffect(() => {
+        if (form.academic_period_id) {
+            const period = (periodeList || []).find(p => String(p.id) === String(form.academic_period_id));
+            if (period?.start_date && period?.end_date) {
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '';
+                    const d = new Date(dateStr);
+                    if (isNaN(d.getTime())) return '';
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                };
+                setForm(prev => ({
+                    ...prev,
+                    start_date: formatDate(period.start_date),
+                    end_date: formatDate(period.end_date),
+                }));
+            }
+        }
+    }, [form.academic_period_id, periodeList]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    // Edit kelompok yang masih draft
+    // Edit kelompok yang masih draft atau ditolak
     const openEdit = (item) => {
         setEditing(item);
         setForm({
@@ -873,6 +920,14 @@ const PendaftaranKelompok = () => {
                 .filter(m => m.role === 'anggota')
                 .map(m => m.student_id),
         });
+        const existing = {};
+        (item.kp_documents || []).forEach(doc => {
+            if (doc.document_type?.id) {
+                existing[doc.document_type.id] = doc;
+            }
+        });
+        setExistingDocuments(existing);
+        setUploads({});
         setErrors({});
         setStep(1);
         setCompleted([1, 2, 3, 4]); // Mark first 4 steps as completed, move to step 1
@@ -882,9 +937,32 @@ const PendaftaranKelompok = () => {
     const resetWizard = () => {
         setEditing(null);
         setForm(EMPTY);
+        setUploads({});
+        setExistingDocuments({});
+        setRemovedDocumentIds([]);
         setErrors({});
         setStep(1);
         setCompleted([]);
+    };
+
+    const handleRemoveExistingDocument = (documentTypeId) => {
+        const existingDoc = existingDocuments[documentTypeId];
+        if (existingDoc?.id) {
+            setRemovedDocumentIds(prev => [...prev, existingDoc.id]);
+        }
+        setExistingDocuments(prev => {
+            const updated = { ...prev };
+            delete updated[documentTypeId];
+            return updated;
+        });
+    };
+
+    const handleReplaceDocument = (documentTypeId) => {
+        setExistingDocuments(prev => {
+            const updated = { ...prev };
+            delete updated[documentTypeId];
+            return updated;
+        });
     };
 
     const handleAcceptInvitation = async (groupId) => {
@@ -912,23 +990,10 @@ const PendaftaranKelompok = () => {
         const e = {};
         if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
         if (step === 1 && !form.kp_company_id)      e.kp_company_id      = 'Pilih perusahaan tujuan KP';
-        if (step === 1 && !form.start_date)         e.start_date         = 'Tanggal mulai KP wajib diisi';
-        if (step === 1 && !form.end_date)           e.end_date           = 'Tanggal selesai KP wajib diisi';
-        if (step === 1 && form.start_date && form.end_date && form.end_date < form.start_date) {
-            e.end_date = 'Tanggal selesai harus sama dengan atau setelah tanggal mulai';
-        }
-        if (step === 1 && form.academic_period_id && form.start_date && form.end_date) {
-            const period = (periodeList || []).find(p => String(p.id) === String(form.academic_period_id));
-            if (period && period.start_date && period.end_date) {
-                if (form.start_date < period.start_date || form.end_date > period.end_date) {
-                    e.dates = `Tanggal KP harus berada dalam rentang periode akademik (${period.start_date} s/d ${period.end_date}).`;
-                }
-            }
-        }
         if (step === 4) {
             const requiredDocs = (documentTypes || []).filter(dt => dt.is_required);
             for (const doc of requiredDocs) {
-                if (!uploads[doc.id]) {
+                if (!uploads[doc.id] && !existingDocuments[doc.id]) {
                     e.documents = 'Semua dokumen wajib belum diunggah.';
                     break;
                 }
@@ -984,6 +1049,15 @@ const PendaftaranKelompok = () => {
             } else {
                 savedGroup = await createKpGroup(payload).unwrap();
                 handleApiSuccess('Pendaftaran kelompok berhasil dikirim');
+            }
+            
+            // Hapus dokumen yang dihapus saat edit
+            for (const docId of removedDocumentIds) {
+                try {
+                    await deleteKpDocument(docId).unwrap();
+                } catch (err) {
+                    console.error('Gagal menghapus dokumen:', docId, err);
+                }
             }
             
             // Upload dokumen setelah kelompok berhasil disimpan
@@ -1144,7 +1218,7 @@ const PendaftaranKelompok = () => {
                         <div className="min-h-[280px]">
                             {currentStep === 1 && (
                                 <Step1PeriodeTempatKP 
-                                    form={form} onChange={handleChange}
+                                    form={form} onChange={handleChange} errors={errors}
                                     periodeList={periodeList} perusahaanList={perusahaanList} 
                                     onPropose={handlePropose}
                                 />
@@ -1165,7 +1239,10 @@ const PendaftaranKelompok = () => {
                                     onChange={handleChange} 
                                     documentTypes={documentTypes}
                                     uploads={uploads}
+                                    existingDocuments={existingDocuments}
                                     onUploadChange={setUploads}
+                                    onRemoveExisting={handleRemoveExistingDocument}
+                                    onReplace={handleReplaceDocument}
                                 />
                             )}
                             {currentStep === 5 && (

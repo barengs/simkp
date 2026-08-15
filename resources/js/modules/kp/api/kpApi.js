@@ -33,7 +33,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const kpApi = createApi({
     reducerPath: 'kpApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument'],
+    tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument', 'KpGrade', 'EvaluationCriteria', 'Plotting'],
     keepUnusedDataFor: 300,
     endpoints: (builder) => ({
 

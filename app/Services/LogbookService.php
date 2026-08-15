@@ -20,7 +20,7 @@ class LogbookService
 
     public function getByKpGroup(int $kpGroupId): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.members.student.user'])
+        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.kpCompany', 'kpGroup.members.student.user'])
             ->where('kp_group_id', $kpGroupId)
             ->orderBy('date')
             ->get();
@@ -28,7 +28,7 @@ class LogbookService
 
     public function getByKpGroupIds(array $kpGroupIds): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.members.student.user'])
+        return Logbook::with(['student.user', 'kpGroup.academicPeriod', 'kpGroup.kpCompany', 'kpGroup.members.student.user'])
             ->whereIn('kp_group_id', $kpGroupIds)
             ->orderBy('date')
             ->get();

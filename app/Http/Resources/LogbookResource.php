@@ -18,6 +18,9 @@ class LogbookResource extends JsonResource
             'evidence_photo' => $this->evidence_photo ? '/storage/' . ltrim($this->evidence_photo, '/') : null,
             'status' => $this->status,
             'kp_group' => $this->whenLoaded('kpGroup'),
+            'kp_company' => $this->whenLoaded('kpGroup') && $this->kpGroup->relationLoaded('kpCompany')
+                ? $this->kpGroup->kpCompany
+                : null,
             'student' => $this->whenLoaded('student'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

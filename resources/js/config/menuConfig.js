@@ -13,6 +13,7 @@ import {
     Settings,
     Shield,
     UsersRound,
+    Award,
 } from 'lucide-react';
 
 export const menuConfig = [
@@ -76,6 +77,12 @@ export const menuConfig = [
         path: '/kp/nilai',
         permission: 'kp.nilai.input',
         icon: CheckCircle,
+    },
+    {
+        label: 'Nilai Saya',
+        path: '/kp/nilai-saya',
+        permission: 'kp.nilai.view',
+        icon: Award,
     },
     {
         label: 'Manajemen Pengguna',

@@ -61,14 +61,48 @@ class KpGradeService
 
     public function create(array $data): KpGrade
     {
-        return KpGrade::create($data);
+        $grade = KpGrade::create($data);
+        $this->updateGroupStatusIfFinished($grade);
+        return $grade;
     }
 
     public function update(int $id, array $data): KpGrade
     {
         $grade = KpGrade::findOrFail($id);
         $grade->update($data);
-        return $grade->fresh(['kpGroupMember.student.user', 'evaluationCriteria']);
+        $updated = $grade->fresh(['kpGroupMember.student.user', 'evaluationCriteria']);
+        $this->updateGroupStatusIfFinished($updated);
+        return $updated;
+    }
+
+    private function updateGroupStatusIfFinished(?KpGrade $grade): void
+    {
+        if (!$grade || !$grade->kp_group_member_id) {
+            return;
+        }
+
+        $member = KpGroupMember::find($grade->kp_group_member_id);
+        if (!$member) {
+            return;
+        }
+
+        $kpGroupId = $member->kp_group_id;
+        $totalActiveMembers = KpGroupMember::where('kp_group_id', $kpGroupId)
+            ->where('status', 'active')
+            ->count();
+
+        if ($totalActiveMembers === 0) {
+            return;
+        }
+
+        $gradedCount = KpGrade::whereHas('kpGroupMember', fn ($q) => $q->where('kp_group_id', $kpGroupId))
+            ->whereNotNull('final_grade')
+            ->distinct('kp_group_member_id')
+            ->count('kp_group_member_id');
+
+        if ($gradedCount >= $totalActiveMembers) {
+            \App\Models\KpGroup::where('id', $kpGroupId)->update(['status' => 'finished']);
+        }
     }
 
     public function delete(int $id): bool

@@ -60,7 +60,12 @@ class StoreKpGroupRequest extends FormRequest
                 return;
             }
 
-            if ($startDate < $period->start_date || $endDate > $period->end_date) {
+            $start = \Carbon\Carbon::parse($startDate);
+            $end = \Carbon\Carbon::parse($endDate);
+            $periodStart = \Carbon\Carbon::parse($period->start_date);
+            $periodEnd = \Carbon\Carbon::parse($period->end_date);
+
+            if ($start->lt($periodStart) || $end->gt($periodEnd)) {
                 $validator->errors()->add(
                     'dates',
                     "Tanggal KP harus berada dalam rentang periode akademik ({$period->start_date} s/d {$period->end_date})."

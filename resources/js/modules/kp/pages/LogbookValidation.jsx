@@ -163,7 +163,7 @@ const LogbookValidation = () => {
         },
         {
             name: 'Perusahaan',
-            selector: row => row.kp_group?.kp_company?.name || '-',
+            selector: row => row?.kp_company?.name || '-',
             sortable: true,
             wrap: true,
         },

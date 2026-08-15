@@ -55,10 +55,12 @@ const Logbook = () => {
     const [filterStatus, setFilterStatus] = useState('');
     const [isRegistered, setIsRegistered] = useState(null);
 
+    const approvedStatuses = ['approved', 'grading', 'finished'];
+
     const activeKpGroupId = useMemo(() => {
         const members = authUser?.student?.kp_group_members || [];
         const member = members.find(
-            m => m.member_status === 'active' && m.group_status === 'approved' && m.group_supervisor !== null
+            m => m.member_status === 'active' && approvedStatuses.includes(m.group_status) && m.group_supervisor !== null
         );
         return member?.kp_group_id || null;
     }, [authUser]);
@@ -80,13 +82,14 @@ const Logbook = () => {
         }
 
         const members = authUser.student.kp_group_members || [];
+        const approvedStatuses = ['approved', 'grading', 'finished'];
         const hasActiveApproved = members.some(
-            m => m.member_status === 'active' && m.group_status === 'approved' && m.group_supervisor !== null
+            m => m.member_status === 'active' && approvedStatuses.includes(m.group_status) && m.group_supervisor !== null
         );
 
         if (hasActiveApproved) {
             setIsRegistered('approved');
-        } else if (members.some(m => m.member_status === 'active' && m.group_status === 'approved')) {
+        } else if (members.some(m => m.member_status === 'active' && approvedStatuses.includes(m.group_status))) {
             setIsRegistered('no_supervisor');
         } else if (members.length > 0) {
             setIsRegistered('pending');

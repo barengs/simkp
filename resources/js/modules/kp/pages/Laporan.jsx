@@ -35,10 +35,12 @@ const Laporan = () => {
     const [createReport, { isLoading: isCreating }] = useCreateReportMutation();
     const [updateReport, { isLoading: isUpdating }] = useUpdateReportMutation();
 
+    const approvedStatuses = ['approved', 'grading', 'finished'];
+
     const activeKpGroupId = useMemo(() => {
         const members = authUser?.student?.kp_group_members || [];
         const member = members.find(
-            m => m.member_status === 'active' && m.group_status === 'approved'
+            m => m.member_status === 'active' && approvedStatuses.includes(m.group_status)
         );
         return member?.kp_group_id || null;
     }, [authUser]);
@@ -46,7 +48,7 @@ const Laporan = () => {
     const activeKpGroupIdWithSupervisor = useMemo(() => {
         const members = authUser?.student?.kp_group_members || [];
         const member = members.find(
-            m => m.member_status === 'active' && m.group_status === 'approved' && m.group_supervisor !== null
+            m => m.member_status === 'active' && approvedStatuses.includes(m.group_status) && m.group_supervisor !== null
         );
         return member?.kp_group_id || null;
     }, [authUser]);
@@ -77,8 +79,9 @@ const Laporan = () => {
         }
 
         const members = authUser.student.kp_group_members || [];
+        const approvedStatuses = ['approved', 'grading', 'finished'];
         const hasActiveApproved = members.some(
-            m => m.member_status === 'active' && m.group_status === 'approved'
+            m => m.member_status === 'active' && approvedStatuses.includes(m.group_status)
         );
 
         if (hasActiveApproved) {
@@ -342,24 +345,7 @@ const Laporan = () => {
         }
 
         if (currentReport?.status === 'approved') {
-            return (
-                <Card className="bg-green-50 border-green-200">
-                    <div className="p-8 text-center">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle2 className="w-8 h-8 text-green-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            Laporan Telah Disetujui
-                        </h3>
-                        <p className="text-sm text-gray-500 mb-4">
-                            Laporan KP Anda telah disetujui oleh dosen pembimbing.
-                        </p>
-                        <Button variant="secondary" onClick={resetForm}>
-                            Upload Laporan Baru
-                        </Button>
-                    </div>
-                </Card>
-            );
+            return renderDetail();
         }
 
         if (!currentReport) {
