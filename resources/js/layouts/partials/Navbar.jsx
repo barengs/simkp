@@ -1,13 +1,15 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
-import { Bell, Search, ChevronDown, LogOut, Settings } from 'lucide-react';
+import { Bell, Search, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { menuConfig } from '../../config/menuConfig';
 
 const Navbar = ({ onToggleSidebar }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
   const toggleDropdown = (id) => {
@@ -20,6 +22,35 @@ const Navbar = ({ onToggleSidebar }) => {
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
+  };
+
+  const currentPath = location.pathname;
+  const currentMenuItem = menuConfig.find(item => {
+    if (item.children) {
+      return item.children.some(child => currentPath.startsWith(child.path));
+    }
+    return currentPath.startsWith(item.path);
+  });
+
+  const getPageTitle = () => {
+    if (currentMenuItem?.children) {
+      const child = currentMenuItem.children.find(child => currentPath.startsWith(child.path));
+      return child?.label || currentMenuItem.label;
+    }
+    return currentMenuItem?.label || 'Dashboard';
+  };
+
+  const getBreadcrumb = () => {
+    if (currentMenuItem?.children) {
+      const child = currentMenuItem.children.find(child => currentPath.startsWith(child.path));
+      if (child) {
+        return `${currentMenuItem.label} / ${child.label}`;
+      }
+    }
+    if (currentMenuItem && currentMenuItem.path !== '/dashboard' && currentMenuItem.path !== '/') {
+      return `Home / ${currentMenuItem.label}`;
+    }
+    return 'Home';
   };
 
   return (
@@ -37,34 +68,20 @@ const Navbar = ({ onToggleSidebar }) => {
 
         {/* Page Info */}
         <div className="ml-1">
-          <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight">Dashboard Utama</h1>
+          <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight">{getPageTitle()}</h1>
           <p className="hidden sm:block text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-0.5">
-            Sistem Manajemen Sekolah
+            {getBreadcrumb()}
           </p>
         </div>
       </div>
 
       {/* Header Right Actions */}
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Global Search */}
-        <div className="relative hidden lg:block">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-            <svg data-lucide="search" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            className="w-64 py-2 pl-9 pr-4 text-sm bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder-slate-400"
-            placeholder="Cari menu, guru, atau siswa..."
-          />
-        </div>
-
         {/* Notification Bell Center with Dropdown */}
         <div className="relative">
           <button
             onClick={() => toggleDropdown('notificationDropdown')}
-            className="relative p-2.5 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 transition-all cursor-pointer"
+            className="relative p-2.5 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-emerald-50  transition-all cursor-pointer"
           >
             <svg data-lucide="bell" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 10-12 0v3a2 2 0 01-.6 1.4L4 17h5m4 4a2 2 0 01-4 0" />
@@ -108,7 +125,7 @@ const Navbar = ({ onToggleSidebar }) => {
           >
             <img
               className="w-9 h-9 rounded-full border-2 border-transparent group-hover:border-emerald-500 transition-all duration-200 shadow-sm"
-              src={`https://ui-avatars.com/api/?name=${user?.name?.split(' ')[0] || 'User'}&background=d1fae5&color=065f46&size=64`}
+              src={user?.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=10b981&color=fff&size=64`}
               alt="Avatar"
             />
             <div className="hidden md:block text-left">
@@ -119,35 +136,33 @@ const Navbar = ({ onToggleSidebar }) => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          {/* Profile Dropdown */}
-          <div id="profileDropdown" className="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50">
-              <p className="text-xs text-slate-400 font-medium">Masuk sebagai</p>
-              <p className="text-sm font-bold text-slate-800 truncate">{user?.email}</p>
-            </div>
-            <div className="p-1.5">
-              <a href="#" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                <svg data-lucide="user" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Profil Saya</span>
-              </a>
-              <a href="#" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                <Settings className="w-4 h-4" />
-                <span>Pengaturan Sistem</span>
-              </a>
-              <div className="h-px bg-slate-100 my-1" />
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-rose-600 hover:bg-rose-50 transition-colors"
-              >
-                <svg data-lucide="log-out" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="font-semibold">Keluar</span>
-              </button>
-            </div>
-          </div>
+           {/* Profile Dropdown */}
+           <div id="profileDropdown" className="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+             <div className="p-4 border-b border-slate-100 bg-slate-50">
+               <p className="text-xs text-slate-400 font-medium">Masuk sebagai</p>
+               <p className="text-sm font-bold text-slate-800 truncate">{user?.email}</p>
+             </div>
+             <div className="p-1.5">
+               <Link to="/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                 <User className="w-4 h-4" />
+                 <span>Profil Saya</span>
+               </Link>
+               <Link to="/pengaturan" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                 <Settings className="w-4 h-4" />
+                 <span>Pengaturan Sistem</span>
+               </Link>
+               <div className="h-px bg-slate-100 my-1" />
+               <button
+                 onClick={handleLogout}
+                 className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+               >
+                 <svg data-lucide="log-out" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                 </svg>
+                 <span className="font-semibold">Keluar</span>
+               </button>
+             </div>
+           </div>
         </div>
       </div>
     </header>

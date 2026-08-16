@@ -4,11 +4,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Database } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { menuConfig } from '../../config/menuConfig';
+import { useGetSettingsQuery } from '../../modules/pengaturan/api/pengaturanApi';
 
 const Sidebar = ({ isOpen = true }) => {
   const location = useLocation();
-  const { user, permissions } = useSelector((state) => state.auth);
+  const { user, roles, permissions } = useSelector((state) => state.auth);
   const [openMenus, setOpenMenus] = useState({});
+
+  const { data: settings } = useGetSettingsQuery();
+
+  const appName = settings?.app_name || 'SIM-KPTA';
+  const logoPath = settings?.logo_path || null;
 
   const visibleMenu = menuConfig.filter(
     (item) => !item.permission || permissions.includes(item.permission)
@@ -26,6 +32,10 @@ const Sidebar = ({ isOpen = true }) => {
     }));
   };
 
+  const logoUrl = logoPath
+    ? (logoPath.startsWith('http') ? logoPath : `${window.location.origin}${logoPath}`)
+    : null;
+
   return (
     <aside
       id="sidebar"
@@ -41,12 +51,28 @@ const Sidebar = ({ isOpen = true }) => {
           isOpen ? 'gap-3 px-6' : 'gap-0 px-4 justify-center'
         }`}
       >
-        <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-lg flex-shrink-0 shadow-lg shadow-emerald-500/20">
-          <Database className="w-5 h-5 text-white" />
-        </div>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="h-8 w-auto object-contain flex-shrink-0"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-lg flex-shrink-0 shadow-lg shadow-emerald-500/20">
+            <Database className="w-5 h-5 text-white" />
+          </div>
+        )}
         {isOpen && (
           <span className="text-lg font-bold tracking-tight whitespace-nowrap transition-opacity duration-200">
-            SIM <span className="text-emerald-400">KPTA</span>
+            {appName.includes('SIM') ? (
+              <>
+                {appName.split('SIM')[0]}
+                <span className="text-emerald-400">SIM</span>
+                {appName.split('SIM')[1] || ''}
+              </>
+            ) : (
+              appName
+            )}
           </span>
         )}
       </div>
@@ -144,8 +170,9 @@ const Sidebar = ({ isOpen = true }) => {
       </nav>
 
       {/* Sidebar User Footer */}
-      <div
-        className={`border-t border-emerald-600/60 bg-emerald-950 flex-shrink-0 ${
+      <Link
+        to="/profile"
+        className={`border-t border-emerald-600/60 bg-emerald-950 flex-shrink-0 block ${
           isOpen ? 'p-4' : 'p-2 flex justify-center'
         }`}
       >
@@ -155,10 +182,8 @@ const Sidebar = ({ isOpen = true }) => {
           }`}
         >
           <img
-            className="w-9 h-9 rounded-full border-2 border-emerald-500 shadow-md shadow-emerald-500/20 flex-shrink-0"
-            src={`https://ui-avatars.com/api/?name=${
-              user?.name || 'User'
-            }&background=10b981&color=fff&size=64`}
+            className="w-9 h-9 rounded-full border border-emerald-500 shadow-md shadow-emerald-500/20 flex-shrink-0 object-cover"
+            src={user?.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=10b981&color=fff&size=64`}
             alt="Avatar"
             title={user?.name}
           />
@@ -168,12 +193,12 @@ const Sidebar = ({ isOpen = true }) => {
                 {user?.name}
               </p>
               <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
-                {user?.roles?.[0] || 'User'}
+                {roles?.[0] || 'User'}
               </p>
             </div>
           )}
         </div>
-      </div>
+      </Link>
     </aside>
   );
 };

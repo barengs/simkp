@@ -11,6 +11,33 @@ import { store } from './store/store';
 import { setCredentials } from './store/slices/authSlice';
 import AppRouter from './router/AppRouter';
 import { kpApi } from './modules/kp/api/kpApi';
+import { useGetSettingsQuery } from './modules/pengaturan/api/pengaturanApi';
+import { menuConfig } from './config/menuConfig';
+
+const DocumentTitle = () => {
+    const { data: settings } = useGetSettingsQuery();
+
+    useEffect(() => {
+        const appName = settings?.app_name || 'SIM-KPTA';
+        document.title = appName;
+    }, [settings]);
+
+    useEffect(() => {
+        const faviconPath = settings?.favicon_path;
+        if (faviconPath) {
+            const fullUrl = faviconPath.startsWith('http') ? faviconPath : `${window.location.origin}${faviconPath}`;
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = fullUrl;
+        }
+    }, [settings]);
+
+    return null;
+};
 
 const App = () => {
   const [hydrated, setHydrated] = useState(false);
@@ -28,7 +55,6 @@ const App = () => {
           store.dispatch(kpApi.util.invalidateTags(['Plotting']));
         }
       } catch (err) {
-        // Not authenticated or error - keep isAuthenticated as false
         console.debug('Auth hydration skipped:', err.message);
       } finally {
         setHydrated(true);
@@ -48,6 +74,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
+      <DocumentTitle />
       <AppRouter />
       <ToastContainer
         position="top-right"

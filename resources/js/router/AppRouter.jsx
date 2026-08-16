@@ -13,6 +13,8 @@ import PeriodeAkademik from '../modules/master-data/pages/PeriodeAkademik';
 import TemaKp from '../modules/master-data/pages/TemaKp';
 
 import ManajemenDokumenKP from '../modules/pengaturan/pages/ManajemenDokumenKP';
+import Pengaturan from '../modules/pengaturan/pages/Pengaturan';
+import Profile from '../modules/pengaturan/pages/Profile';
 
 import VerifikasiPendaftaran from '../modules/kp/pages/VerifikasiPendaftaran';
 import PendaftaranKelompok from '../modules/kp/pages/PendaftaranKelompok';
@@ -75,9 +77,19 @@ function AppRouter() {
                 } />
 
                 {/* Pengaturan */}
+                <Route path="/pengaturan" element={
+                    <ProtectedRoute permission="pengaturan.manage">
+                        <Pengaturan />
+                    </ProtectedRoute>
+                } />
                 <Route path="/pengaturan/dokumen-kp" element={
                     <ProtectedRoute permission="master-data.manage">
                         <ManajemenDokumenKP />
+                    </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                    <ProtectedRoute>
+                        <Profile />
                     </ProtectedRoute>
                 } />
 

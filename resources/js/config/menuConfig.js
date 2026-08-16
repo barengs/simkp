@@ -14,6 +14,7 @@ import {
     Shield,
     UsersRound,
     Award,
+    User,
 } from 'lucide-react';
 
 export const menuConfig = [
@@ -102,13 +103,10 @@ export const menuConfig = [
         permission: 'repository.publish',
         icon: Briefcase,
     },
-    {
+        {
         label: 'Pengaturan',
         path: '/pengaturan',
         permission: 'pengaturan.manage',
         icon: Settings,
-        children: [
-            { label: 'Dokumen KP', path: '/pengaturan/dokumen-kp', permission: 'master-data.manage' },
-        ],
     },
 ];

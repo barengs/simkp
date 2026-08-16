@@ -38,14 +38,23 @@ class SettingController extends Controller
         $this->authorizeAction('pengaturan.manage');
 
         $data = $request->validate([
-            'settings' => ['required', 'array'],
+            'app_name'     => ['nullable', 'string', 'max:255'],
+            'logo_path'    => ['nullable', 'image', 'max:2048'],
+            'favicon_path' => ['nullable', 'image', 'max:1024'],
         ]);
 
-        foreach ($data['settings'] as $key => $value) {
-            AppSetting::updateOrCreate(
-                ['key' => $key],
-                ['value' => is_array($value) ? json_encode($value) : $value]
-            );
+        if ($request->has('app_name')) {
+            AppSetting::updateOrCreate(['key' => 'app_name'], ['value' => $data['app_name']]);
+        }
+
+        if ($request->hasFile('logo_path')) {
+            $path = $request->file('logo_path')->store('settings', 'public');
+            AppSetting::updateOrCreate(['key' => 'logo_path'], ['value' => '/storage/' . $path]);
+        }
+
+        if ($request->hasFile('favicon_path')) {
+            $path = $request->file('favicon_path')->store('settings', 'public');
+            AppSetting::updateOrCreate(['key' => 'favicon_path'], ['value' => '/storage/' . $path]);
         }
 
         Cache::forget('pengaturan.public');

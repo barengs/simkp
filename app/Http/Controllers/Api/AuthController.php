@@ -24,7 +24,13 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'profile_picture_url' => $user->profile_picture_url,
+                'phone_number' => $user->phone_number,
                 'lecturer_id' => $user->lecturer?->id,
+                'lecturer' => $user->lecturer ? [
+                    'id' => $user->lecturer->id,
+                    'nidn' => $user->lecturer->nidn,
+                ] : null,
                 'student_id' => $student?->id,
                 'student' => $student ? [
                     'id' => $student->id,

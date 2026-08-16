@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\StatusHistoryController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\KpDocumentController;
 use App\Http\Controllers\Api\PlottingDosenController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,7 @@ Route::get('/setting/public', [SettingController::class, 'public']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
 
     // Settings
     Route::get('/setting', [SettingController::class, 'index']);

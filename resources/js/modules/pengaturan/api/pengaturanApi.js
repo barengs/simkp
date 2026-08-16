@@ -33,7 +33,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const pengaturanApi = createApi({
     reducerPath: 'pengaturanApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['DocumentType'],
+    tagTypes: ['DocumentType', 'Setting', 'Profile'],
     keepUnusedDataFor: 300,
     endpoints: (builder) => ({
         // Tipe Dokumen KP
@@ -57,6 +57,60 @@ export const pengaturanApi = createApi({
             query: (id) => ({ url: `/document-type/${id}`, method: 'DELETE' }),
             invalidatesTags: ['DocumentType'],
         }),
+
+        // Pengaturan Aplikasi
+        getSettings: builder.query({
+            query: () => '/setting',
+            providesTags: ['Setting'],
+        }),
+        updateSettings: builder.mutation({
+            query: (body) => {
+                const formData = body instanceof FormData ? body : new FormData();
+                if (!(body instanceof FormData)) {
+                    Object.entries(body).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            formData.append(key, value);
+                        }
+                    });
+                }
+
+                if (formData instanceof FormData && !formData.has('_method')) {
+                    formData.append('_method', 'PUT');
+                }
+
+                return {
+                    url: '/setting',
+                    method: 'POST',
+                    body: formData,
+                };
+            },
+            invalidatesTags: ['Setting'],
+        }),
+
+        // Profile
+        updateProfile: builder.mutation({
+            query: (arg) => {
+                const body = arg instanceof FormData ? arg : new FormData();
+                if (!(arg instanceof FormData)) {
+                    Object.entries(arg).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            body.append(key, value);
+                        }
+                    });
+                }
+
+                if (body instanceof FormData && !body.has('_method')) {
+                    body.append('_method', 'PUT');
+                }
+
+                return {
+                    url: '/user/profile',
+                    method: 'POST',
+                    body,
+                };
+            },
+            invalidatesTags: ['Profile'],
+        }),
     }),
 });
 
@@ -66,4 +120,7 @@ export const {
     useCreateDocumentTypeMutation,
     useUpdateDocumentTypeMutation,
     useDeleteDocumentTypeMutation,
+    useGetSettingsQuery,
+    useUpdateSettingsMutation,
+    useUpdateProfileMutation,
 } = pengaturanApi;

@@ -153,9 +153,15 @@ const ManajemenDokumenKP = () => {
             width: '290px',
             center: true,
             cell: r => (
-                <Badge status={r.is_required ? 'approved' : 'draft'}>
-                    {r.is_required ? 'Ya' : 'Tidak'}
-                </Badge>
+                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                    <input
+                        type="checkbox"
+                        checked={r.is_required}
+                        onChange={(e) => openEdit({ ...r, is_required: e.target.checked })}
+                        className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
             ),
         },
         {
