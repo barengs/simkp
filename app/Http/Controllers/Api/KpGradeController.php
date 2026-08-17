@@ -90,7 +90,7 @@ class KpGradeController extends Controller
         $gradeId = (int) $id;
 
         if ($gradeId <= 0) {
-            return response()->json(['message' => 'Grade not found'], 404);
+            return response()->json(['message' => 'Data nilai tidak ditemukan'], 404);
         }
 
         $grade = $this->kpGradeService->getById($gradeId);
@@ -118,7 +118,7 @@ class KpGradeController extends Controller
 
         $this->kpGradeService->delete($id);
 
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['message' => 'Data nilai berhasil dihapus']);
     }
 
     public function storeGroupGrade(StoreGroupKpGradeRequest $request)

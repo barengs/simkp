@@ -158,6 +158,6 @@ class ReportController extends Controller
 
         $this->reportService->delete($id);
 
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['message' => 'Data laporan berhasil dihapus']);
     }
 }

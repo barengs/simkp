@@ -33,7 +33,6 @@ class KpCompanySeeder extends Seeder
                 ])] . ' ' . $i,
                 'phone_number' => '021-' . rand(50000000, 99999999),
                 'email' => 'contact' . $i . '@mitra-kp.co.id',
-                'website' => 'https://www.mitra-kp-' . $i . '.co.id',
                 'description' => 'Perusahaan mitra untuk program kerja praktikum mahasiswa. Industri: ' . $industries[array_rand($industries)],
             ]);
         }

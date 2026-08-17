@@ -22,4 +22,17 @@ class UpdateRoleRequest extends FormRequest
             'permissions.*' => ['integer', 'exists:permissions,id'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama role wajib diisi.',
+            'name.max' => 'Nama role maksimal 255 karakter.',
+            'name.unique' => 'Nama role sudah terdaftar.',
+            'description.max' => 'Deskripsi role maksimal 255 karakter.',
+            'permissions.array' => 'Permission harus berupa array.',
+            'permissions.*.integer' => 'Permission harus berupa angka.',
+            'permissions.*.exists' => 'Salah satu permission tidak ditemukan.',
+        ];
+    }
 }

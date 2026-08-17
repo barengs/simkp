@@ -57,9 +57,11 @@ export const masterDataApi = createApi({
             providesTags: ['StudyProgram'],
         }),
 
-        // Lecturer endpoints (dosen -> lecturer)
         getLecturers: builder.query({
-            query: () => '/lecturer',
+            query: (params) => ({
+                url: '/lecturer',
+                params,
+            }),
             providesTags: ['Lecturer'],
         }),
         createLecturer: builder.mutation({
@@ -86,9 +88,11 @@ export const masterDataApi = createApi({
             invalidatesTags: ['Lecturer'],
         }),
 
-        // Student endpoints (mahasiswa -> student)
         getStudents: builder.query({
-            query: () => '/student',
+            query: (params) => ({
+                url: '/student',
+                params,
+            }),
             providesTags: ['Student'],
         }),
         createStudent: builder.mutation({
@@ -115,9 +119,11 @@ export const masterDataApi = createApi({
             invalidatesTags: ['Student'],
         }),
 
-        // KP Company endpoints (perusahaan_kp -> kp_company)
         getKpCompanies: builder.query({
-            query: () => '/kp-company',
+            query: (params) => ({
+                url: '/kp-company',
+                params,
+            }),
             providesTags: ['KpCompany'],
         }),
         createKpCompany: builder.mutation({
@@ -144,9 +150,11 @@ export const masterDataApi = createApi({
             invalidatesTags: ['KpCompany'],
         }),
 
-        // Academic Period endpoints (periode_akademik -> academic_period)
         getAcademicPeriods: builder.query({
-            query: () => '/academic-period',
+            query: (params) => ({
+                url: '/academic-period',
+                params,
+            }),
             providesTags: ['AcademicPeriod'],
         }),
         createAcademicPeriod: builder.mutation({
@@ -173,9 +181,11 @@ export const masterDataApi = createApi({
             invalidatesTags: ['AcademicPeriod'],
         }),
 
-        // KP Theme endpoints (tema_kp -> kp_theme)
         getKpThemes: builder.query({
-            query: () => '/kp-theme',
+            query: (params) => ({
+                url: '/kp-theme',
+                params,
+            }),
             providesTags: ['KpTheme'],
         }),
         createKpTheme: builder.mutation({

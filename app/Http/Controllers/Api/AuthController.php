@@ -76,7 +76,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logged out']);
+        return response()->json(['message' => 'Berhasil logout']);
     }
 
     public function user(Request $request)
@@ -84,7 +84,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json(['message' => 'Tidak terautentikasi'], 401);
         }
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();

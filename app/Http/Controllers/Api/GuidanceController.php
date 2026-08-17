@@ -44,6 +44,6 @@ class GuidanceController extends Controller
     public function destroy(int $id)
     {
         $this->gService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['message' => 'Data bimbingan berhasil dihapus']);
     }
 }

@@ -19,4 +19,14 @@ class StoreKpThemeRequest extends FormRequest
             'is_active' => ['boolean'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'Judul tema KP wajib diisi.',
+            'title.max' => 'Judul tema KP maksimal 255 karakter.',
+            'description.string' => 'Deskripsi harus berupa teks.',
+            'is_active.boolean' => 'Status aktif harus boolean.',
+        ];
+    }
 }

@@ -11,7 +11,56 @@ class LecturerService
 {
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return Lecturer::with('user')->get();
+        return Lecturer::select(['id', 'user_id', 'nip'])
+            ->with(['user' => function ($q) {
+                $q->select(['id', 'name', 'email', 'phone_number', 'profile_picture_url']);
+            }])
+            ->get();
+    }
+
+    public function getPaginated(array $params)
+    {
+        $lecturerTable = (new Lecturer)->getTable();
+        $query = Lecturer::query()
+            ->select(["{$lecturerTable}.id", "{$lecturerTable}.user_id", "{$lecturerTable}.nip"])
+            ->with(['user' => function ($q) {
+                $q->select(['id', 'name', 'email', 'phone_number', 'profile_picture_url']);
+            }]);
+
+        // Search
+        if (!empty($params['search'])) {
+            $search = $params['search'];
+            $query->where(function ($q) use ($search, $lecturerTable) {
+                $q->where("{$lecturerTable}.nip", 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Sorting
+        $sortBy = $params['sort_by'] ?? 'name';
+        $sortDirection = $params['sort_direction'] ?? 'asc';
+        $allowedSorts = ['nip', 'name', 'email'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $lecturerTable = $query->getModel()->getTable();
+            if ($sortBy === 'name' || $sortBy === 'email') {
+                $query->join('users', "{$lecturerTable}.user_id", '=', 'users.id')
+                    ->orderBy("users.{$sortBy}", $sortDirection);
+            } else {
+                $query->orderBy("{$lecturerTable}.{$sortBy}", $sortDirection);
+            }
+        }
+
+        // Check if we want all records for select dropdowns
+        if (isset($params['type']) && $params['type'] === 'options') {
+            return $query->get();
+        }
+
+        $perPage = isset($params['per_page']) ? (int)$params['per_page'] : 10;
+        return $query->paginate($perPage);
     }
 
     public function getById(int $id): Lecturer

@@ -12,7 +12,7 @@ class KpCompany extends Model
 
     protected $table = 'kp_company';
 
-    protected $fillable = ['name', 'address', 'contact_person', 'phone_number', 'email', 'website', 'description'];
+    protected $fillable = ['name', 'address', 'contact_person', 'phone_number', 'email', 'description'];
 
 
 

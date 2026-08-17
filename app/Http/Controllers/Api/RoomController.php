@@ -25,25 +25,41 @@ class RoomController extends Controller
 
     public function store(StoreRoomRequest $request)
     {
-        $r = $this->rService->create($request->validated());
-        return response()->json(new RoomResource($r), 201);
+        try {
+            $r = $this->rService->create($request->validated());
+            return response()->json(new RoomResource($r), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data ruangan.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $r = $this->rService->getById($id);
-        return response()->json(new RoomResource($r));
+        try {
+            $r = $this->rService->getById($id);
+            return response()->json(new RoomResource($r));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data ruangan tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateRoomRequest $request, int $id)
     {
-        $r = $this->rService->update($id, $request->validated());
-        return response()->json(new RoomResource($r));
+        try {
+            $r = $this->rService->update($id, $request->validated());
+            return response()->json(new RoomResource($r));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data ruangan.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->rService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->rService->delete($id);
+            return response()->json(['message' => 'Data ruangan berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data ruangan. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

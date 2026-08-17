@@ -20,53 +20,68 @@ class LecturerController extends Controller
         $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->lecturerService->getAll());
+        $lecturers = $this->lecturerService->getPaginated($request->all());
+        return LecturerResource::collection($lecturers);
     }
 
     public function store(StoreLecturerRequest $request)
     {
-        $validated = $request->validated();
-        
-        // Flatten user data for service
-        $data = [
-            'nip' => $validated['nip'],
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'password' => $validated['password'] ?? 'dosen123',
-        ];
-        
-        $lecturer = $this->lecturerService->create($data);
-        return response()->json(new LecturerResource($lecturer), 201);
+        try {
+            $validated = $request->validated();
+            
+            $data = [
+                'nip' => $validated['nip'],
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'] ?? null,
+                'password' => $validated['password'] ?? 'dosen123',
+            ];
+            
+            $lecturer = $this->lecturerService->create($data);
+            return response()->json(new LecturerResource($lecturer), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data dosen.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $lecturer = $this->lecturerService->getById($id);
-        return response()->json(new LecturerResource($lecturer));
+        try {
+            $lecturer = $this->lecturerService->getById($id);
+            return response()->json(new LecturerResource($lecturer));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data dosen tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateLecturerRequest $request, int $id)
     {
-        $validated = $request->validated();
-        
-        // Flatten user data for service
-        $data = [
-            'nip' => $validated['nip'],
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-        ];
-        
-        $lecturer = $this->lecturerService->update($id, $data);
-        return response()->json(new LecturerResource($lecturer));
+        try {
+            $validated = $request->validated();
+            
+            $data = [
+                'nip' => $validated['nip'],
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'] ?? null,
+            ];
+            
+            $lecturer = $this->lecturerService->update($id, $data);
+            return response()->json(new LecturerResource($lecturer));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data dosen.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->lecturerService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->lecturerService->delete($id);
+            return response()->json(['message' => 'Data dosen berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data dosen. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

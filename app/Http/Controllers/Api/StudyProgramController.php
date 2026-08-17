@@ -27,25 +27,41 @@ class StudyProgramController extends Controller
 
     public function store(StoreStudyProgramRequest $request)
     {
-        $s = $this->sService->create($request->validated());
-        return response()->json(new StudyProgramResource($s), 201);
+        try {
+            $s = $this->sService->create($request->validated());
+            return response()->json(new StudyProgramResource($s), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data program studi.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $s = $this->sService->getById($id);
-        return response()->json(new StudyProgramResource($s));
+        try {
+            $s = $this->sService->getById($id);
+            return response()->json(new StudyProgramResource($s));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data program studi tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateStudyProgramRequest $request, int $id)
     {
-        $s = $this->sService->update($id, $request->validated());
-        return response()->json(new StudyProgramResource($s));
+        try {
+            $s = $this->sService->update($id, $request->validated());
+            return response()->json(new StudyProgramResource($s));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data program studi.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->sService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->sService->delete($id);
+            return response()->json(['message' => 'Data program studi berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data program studi. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

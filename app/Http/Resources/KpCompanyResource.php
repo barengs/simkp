@@ -15,7 +15,6 @@ class KpCompanyResource extends JsonResource
             'contact_person' => $this->contact_person,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
-            'website' => $this->website,
             'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

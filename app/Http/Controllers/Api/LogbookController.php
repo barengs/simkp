@@ -157,6 +157,6 @@ class LogbookController extends Controller
 
         $this->logbookService->delete($id);
 
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['message' => 'Data logbook berhasil dihapus']);
     }
 }

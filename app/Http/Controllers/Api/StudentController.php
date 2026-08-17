@@ -21,57 +21,72 @@ class StudentController extends Controller
         $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return StudentResource::collection($this->studentService->getAll());
+        $students = $this->studentService->getPaginated($request->all());
+        return StudentResource::collection($students);
     }
 
     public function store(StoreStudentRequest $request)
     {
-        $validated = $request->validated();
-        
-        // Prepare data for service
-        $data = [
-            'nim' => $validated['nim'],
-            'study_program_id' => $validated['study_program_id'],
-            'is_active' => $validated['is_active'] ?? true,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-            'password' => $validated['password'] ?? 'mhs123',
-        ];
-        
-        $student = $this->studentService->create($data);
-        return response()->json(new StudentResource($student), 201);
+        try {
+            $validated = $request->validated();
+            
+            $data = [
+                'nim' => $validated['nim'],
+                'study_program_id' => $validated['study_program_id'],
+                'is_active' => $validated['is_active'] ?? true,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'] ?? null,
+                'password' => $validated['password'] ?? 'mhs123',
+            ];
+            
+            $student = $this->studentService->create($data);
+            return response()->json(new StudentResource($student), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data mahasiswa.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $student = $this->studentService->getById($id);
-        return response()->json(new StudentResource($student));
+        try {
+            $student = $this->studentService->getById($id);
+            return response()->json(new StudentResource($student));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data mahasiswa tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateStudentRequest $request, int $id)
     {
-        $validated = $request->validated();
-        
-        // Prepare data for service
-        $data = [
-            'nim' => $validated['nim'],
-            'study_program_id' => $validated['study_program_id'],
-            'is_active' => $validated['is_active'] ?? true,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'] ?? null,
-        ];
-        
-        $student = $this->studentService->update($id, $data);
-        return response()->json(new StudentResource($student));
+        try {
+            $validated = $request->validated();
+            
+            $data = [
+                'nim' => $validated['nim'],
+                'study_program_id' => $validated['study_program_id'],
+                'is_active' => $validated['is_active'] ?? true,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'] ?? null,
+            ];
+            
+            $student = $this->studentService->update($id, $data);
+            return response()->json(new StudentResource($student));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data mahasiswa.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->studentService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->studentService->delete($id);
+            return response()->json(['message' => 'Data mahasiswa berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data mahasiswa. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

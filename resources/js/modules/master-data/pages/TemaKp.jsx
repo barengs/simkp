@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetKpThemesQuery, useCreateKpThemeMutation, useUpdateKpThemeMutation, useDeleteKpThemeMutation } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -13,12 +13,32 @@ import Skeleton from '../../../components/ui/Skeleton';
 import { Lightbulb, Plus, Pencil, Trash2, X, Search } from 'lucide-react';
 
 const TemaKp = () => {
-    const { data: temaList, isLoading } = useGetKpThemesQuery();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('title');
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    const { data: temaList, isLoading } = useGetKpThemesQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+    });
     const [createTema] = useCreateKpThemeMutation();
     const [updateTema] = useUpdateKpThemeMutation();
     const [deleteTema] = useDeleteKpThemeMutation();
 
-    const [searchTerm, setSearchTerm] = useState('');
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -103,33 +123,30 @@ const TemaKp = () => {
     };
 
     const filteredData = useMemo(() => {
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return temaList || [];
-
-        return (temaList || []).filter(item => {
-            const title = String(item.title || '').toLowerCase();
-            const description = String(item.description || '').toLowerCase();
-            return title.includes(keyword) || description.includes(keyword);
-        });
-    }, [temaList, searchTerm]);
+        return temaList?.data || [];
+    }, [temaList]);
 
     const columns = [
         {
             name: 'Nama Tema',
             selector: row => row.title || '-',
             sortable: true,
+            sortField: 'title',
             width: '250px',
         },
         {
             name: 'Deskripsi',
             selector: row => row.description || '-',
             sortable: true,
+            sortField: 'description',
             wrap: true,
         },
         {
             name: 'Status',
             width: '120px',
             cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
+            sortable: true,
+            sortField: 'is_active',
             ignoreRowClick: true,
         },
         {
@@ -243,8 +260,8 @@ const TemaKp = () => {
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
                             {searchTerm
-                                ? `${filteredData.length} hasil ditemukan`
-                                : `${filteredData.length} tema terdaftar`
+                                ? `${temaList?.meta?.total || 0} hasil ditemukan`
+                                : `${temaList?.meta?.total || 0} tema terdaftar`
                             }
                         </p>
                     </div>
@@ -265,6 +282,21 @@ const TemaKp = () => {
                         columns={columns}
                         data={filteredData}
                         pagination
+                        paginationServer
+                        paginationTotalRows={temaList?.meta?.total || 0}
+                        paginationDefaultPage={page}
+                        onChangeRowsPerPage={(currentRowsPerPage) => {
+                            setPerPage(currentRowsPerPage);
+                            setPage(1);
+                        }}
+                        onChangePage={(page) => setPage(page)}
+                        sortServer
+                        onSort={(column, sortDirection) => {
+                            if (column.sortField) {
+                                setSortBy(column.sortField);
+                                setSortDirection(sortDirection);
+                            }
+                        }}
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}

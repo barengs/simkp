@@ -1056,7 +1056,7 @@ const PendaftaranKelompok = () => {
                 try {
                     await deleteKpDocument(docId).unwrap();
                 } catch (err) {
-                    console.error('Gagal menghapus dokumen:', docId, err);
+                    handleApiError(err, 'Gagal menghapus dokumen');
                 }
             }
             

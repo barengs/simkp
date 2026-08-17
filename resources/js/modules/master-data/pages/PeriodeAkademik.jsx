@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetAcademicPeriodsQuery, useCreateAcademicPeriodMutation, useUpdateAcademicPeriodMutation, useDeleteAcademicPeriodMutation } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -13,12 +13,31 @@ import Skeleton from '../../../components/ui/Skeleton';
 import { CalendarDays, Plus, Pencil, Trash2, X, Search } from 'lucide-react';
 
 const PeriodeAkademik = () => {
-    const { data: academicPeriodList, isLoading } = useGetAcademicPeriodsQuery();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    const { data: academicPeriodList, isLoading } = useGetAcademicPeriodsQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+    });
     const [createAcademicPeriod] = useCreateAcademicPeriodMutation();
     const [updateAcademicPeriod] = useUpdateAcademicPeriodMutation();
     const [deleteAcademicPeriod] = useDeleteAcademicPeriodMutation();
 
-    const [searchTerm, setSearchTerm] = useState('');
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -125,24 +144,20 @@ const PeriodeAkademik = () => {
     };
 
     const filteredData = useMemo(() => {
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return academicPeriodList || [];
-
-        return (academicPeriodList || []).filter(item => {
-            const name = String(item.name || '').toLowerCase();
-            return name.includes(keyword);
-        });
-    }, [academicPeriodList, searchTerm]);
+        return academicPeriodList?.data || [];
+    }, [academicPeriodList]);
 
     const columns = [
-        { name: 'Nama Periode', selector: (row) => row.name || '-', sortable: true, width: '220px' },
-        { name: 'Tanggal Mulai', selector: (row) => formatDate(row.start_date), sortable: true, width: '200px' },
-        { name: 'Tanggal Selesai', selector: (row) => formatDate(row.end_date), sortable: true, width: '200px' },
-        { name: 'Total Anggota', selector: (row) => row.total_members ?? '-', sortable: true, width: '190px' },
+        { name: 'Nama Periode', selector: (row) => row.name || '-', sortable: true, sortField: 'name', width: '220px' },
+        { name: 'Tanggal Mulai', selector: (row) => formatDate(row.start_date), sortable: true, sortField: 'start_date', width: '200px' },
+        { name: 'Tanggal Selesai', selector: (row) => formatDate(row.end_date), sortable: true, sortField: 'end_date', width: '200px' },
+        { name: 'Total Anggota', selector: (row) => row.total_members ?? '-', sortable: true, sortField: 'total_members', width: '190px' },
         {
             name: 'Status',
             width: '170px',
             cell: (row) => <Badge status={row.is_active ? 'aktif' : 'tidak_aktif'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,
+            sortable: true,
+            sortField: 'is_active',
             ignoreRowClick: true,
         },
         {
@@ -256,8 +271,8 @@ const PeriodeAkademik = () => {
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
                             {searchTerm
-                                ? `${filteredData.length} hasil ditemukan`
-                                : `${filteredData.length} periode terdaftar`
+                                ? `${academicPeriodList?.meta?.total || 0} hasil ditemukan`
+                                : `${academicPeriodList?.meta?.total || 0} periode terdaftar`
                             }
                         </p>
                     </div>
@@ -278,6 +293,21 @@ const PeriodeAkademik = () => {
                         columns={columns}
                         data={filteredData}
                         pagination
+                        paginationServer
+                        paginationTotalRows={academicPeriodList?.meta?.total || 0}
+                        paginationDefaultPage={page}
+                        onChangeRowsPerPage={(currentRowsPerPage) => {
+                            setPerPage(currentRowsPerPage);
+                            setPage(1);
+                        }}
+                        onChangePage={(page) => setPage(page)}
+                        sortServer
+                        onSort={(column, sortDirection) => {
+                            if (column.sortField) {
+                                setSortBy(column.sortField);
+                                setSortDirection(sortDirection);
+                            }
+                        }}
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}

@@ -24,6 +24,23 @@ class UpdateStudentRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'nim.required' => 'NIM wajib diisi.',
+            'nim.max' => 'NIM maksimal 20 karakter.',
+            'nim.unique' => 'NIM sudah terdaftar.',
+            'is_active.boolean' => 'Status aktif harus boolean.',
+            'study_program_id.required' => 'Program studi wajib dipilih.',
+            'study_program_id.exists' => 'Program studi tidak ditemukan.',
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'name.max' => 'Nama lengkap maksimal 255 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'phone_number.max' => 'No. HP maksimal 20 karakter.',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
         if ($this->has('is_active')) {

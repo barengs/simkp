@@ -35,39 +35,45 @@ class DocumentTypeController extends Controller
      */
     public function store(StoreDocumentTypeRequest $request)
     {
-        $documentType = DocumentType::create($request->validated());
-        return response()->json(new DocumentTypeResource($documentType), 201);
+        try {
+            $documentType = DocumentType::create($request->validated());
+            return response()->json(new DocumentTypeResource($documentType), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data tipe dokumen.'], 500);
+        }
     }
 
-    /**
-     * Tampilkan detail tipe dokumen
-     */
     public function show(DocumentType $documentType)
     {
-        return response()->json(new DocumentTypeResource($documentType));
+        try {
+            return response()->json(new DocumentTypeResource($documentType));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data tipe dokumen tidak ditemukan.'], 404);
+        }
     }
 
-    /**
-     * Update tipe dokumen (admin-only)
-     */
     public function update(UpdateDocumentTypeRequest $request, DocumentType $documentType)
     {
-        $documentType->update($request->validated());
-        return response()->json(new DocumentTypeResource($documentType));
+        try {
+            $documentType->update($request->validated());
+            return response()->json(new DocumentTypeResource($documentType));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data tipe dokumen.'], 500);
+        }
     }
 
-    /**
-     * Hapus tipe dokumen (admin-only)
-     */
     public function destroy(DocumentType $documentType)
     {
-        // Jangan hapus jika sudah ada dokumen yang menggunakan tipe ini
-        if ($documentType->documents()->exists()) {
-            abort(422, 'Tipe dokumen ini sudah digunakan oleh dokumen lain. Tidak dapat dihapus.');
-        }
+        try {
+            if ($documentType->documents()->exists()) {
+                return response()->json(['message' => 'Tipe dokumen ini sudah digunakan oleh dokumen lain. Tidak dapat dihapus.'], 422);
+            }
 
-        $documentType->delete();
-        return response()->json(['message' => 'Tipe dokumen berhasil dihapus']);
+            $documentType->delete();
+            return response()->json(['message' => 'Tipe dokumen berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data tipe dokumen.'], 500);
+        }
     }
 }
 

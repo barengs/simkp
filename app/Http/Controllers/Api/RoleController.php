@@ -25,25 +25,41 @@ class RoleController extends Controller
 
     public function store(StoreRoleRequest $request)
     {
-        $role = $this->roleService->create($request->validated());
-        return response()->json(new RoleResource($role), 201);
+        try {
+            $role = $this->roleService->create($request->validated());
+            return response()->json(new RoleResource($role), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data role.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $role = $this->roleService->getById($id);
-        return response()->json(new RoleResource($role));
+        try {
+            $role = $this->roleService->getById($id);
+            return response()->json(new RoleResource($role));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data role tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateRoleRequest $request, int $id)
     {
-        $role = $this->roleService->update($id, $request->validated());
-        return response()->json(new RoleResource($role));
+        try {
+            $role = $this->roleService->update($id, $request->validated());
+            return response()->json(new RoleResource($role));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data role.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->roleService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->roleService->delete($id);
+            return response()->json(['message' => 'Data role berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data role. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

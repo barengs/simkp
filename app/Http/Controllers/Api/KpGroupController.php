@@ -117,7 +117,7 @@ class KpGroupController extends Controller
         }
 
         $this->kpGroupService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        return response()->json(['message' => 'Data kelompok berhasil dihapus']);
     }
 
     public function acceptInvitation(int $id)
@@ -145,6 +145,6 @@ class KpGroupController extends Controller
 
         $this->kpGroupService->declineInvitation($id, $student->id);
 
-        return response()->json(['message' => 'Invitation declined']);
+        return response()->json(['message' => 'Undangan ditolak']);
     }
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetKpCompaniesQuery, useCreateKpCompanyMutation, useUpdateKpCompanyMutation, useDeleteKpCompanyMutation } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -13,12 +13,31 @@ import Skeleton from '../../../components/ui/Skeleton';
 import { Briefcase, Plus, Search, Pencil, Trash2, X } from 'lucide-react';
 
 const MasterMitra = () => {
-    const { data: companyList, isLoading } = useGetKpCompaniesQuery();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    const { data: companyList, isLoading } = useGetKpCompaniesQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+    });
     const [createCompany] = useCreateKpCompanyMutation();
     const [updateCompany] = useUpdateKpCompanyMutation();
     const [deleteCompany] = useDeleteKpCompanyMutation();
 
-    const [searchTerm, setSearchTerm] = useState('');
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -31,7 +50,6 @@ const MasterMitra = () => {
         contact_person: '',
         phone_number: '',
         email: '',
-        website: '',
         description: '',
     });
     const [errors, setErrors] = useState({});
@@ -45,7 +63,7 @@ const MasterMitra = () => {
 
     const openCreate = () => {
         setEditing(null);
-        setForm({ name: '', address: '', contact_person: '', phone_number: '', email: '', website: '', description: '' });
+        setForm({ name: '', address: '', contact_person: '', phone_number: '', email: '', description: '' });
         setErrors({});
         setShowModal(true);
     };
@@ -58,7 +76,6 @@ const MasterMitra = () => {
             contact_person: company.contact_person || '',
             phone_number: company.phone_number || '',
             email: company.email || '',
-            website: company.website || '',
             description: company.description || '',
         });
         setErrors({});
@@ -110,41 +127,36 @@ const MasterMitra = () => {
     };
 
     const filteredData = useMemo(() => {
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return companyList || [];
-
-        return (companyList || []).filter(item => {
-            const name = String(item.name || '').toLowerCase();
-            const email = String(item.email || '').toLowerCase();
-            const phone = String(item.phone_number || '').toLowerCase();
-            const contact = String(item.contact_person || '').toLowerCase();
-            return name.includes(keyword) || email.includes(keyword) || phone.includes(keyword) || contact.includes(keyword);
-        });
-    }, [companyList, searchTerm]);
+        return companyList?.data || [];
+    }, [companyList]);
 
     const columns = [
         {
             name: 'Nama',
             selector: row => row.name || '-',
             sortable: true,
+            sortField: 'name',
             width: '300px',
         },
         {
             name: 'Contact Person',
             selector: row => row.contact_person || '-',
             sortable: true,
+            sortField: 'contact_person',
             width: '200px',
         },
         {
             name: 'No. HP',
             selector: row => row.phone_number || '-',
             sortable: true,
+            sortField: 'phone_number',
             width: '200px',
         },
         {
             name: 'Email',
             selector: row => row.email || '-',
             sortable: true,
+            sortField: 'email',
             wrap: true,
             width: '290px',
         },
@@ -259,8 +271,8 @@ const MasterMitra = () => {
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
                             {searchTerm
-                                ? `${filteredData.length} hasil ditemukan`
-                                : `${filteredData.length} mitra terdaftar`
+                                ? `${companyList?.meta?.total || 0} hasil ditemukan`
+                                : `${companyList?.meta?.total || 0} mitra terdaftar`
                             }
                         </p>
                     </div>
@@ -281,6 +293,21 @@ const MasterMitra = () => {
                         columns={columns}
                         data={filteredData}
                         pagination
+                        paginationServer
+                        paginationTotalRows={companyList?.meta?.total || 0}
+                        paginationDefaultPage={page}
+                        onChangeRowsPerPage={(currentRowsPerPage) => {
+                            setPerPage(currentRowsPerPage);
+                            setPage(1);
+                        }}
+                        onChangePage={(page) => setPage(page)}
+                        sortServer
+                        onSort={(column, sortDirection) => {
+                            if (column.sortField) {
+                                setSortBy(column.sortField);
+                                setSortDirection(sortDirection);
+                            }
+                        }}
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
@@ -301,10 +328,20 @@ const MasterMitra = () => {
                             error={errors.name}
                         />
                         <Input
+                            label="Email"
+                            type="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleInputChange}
+                            placeholder="contact@mitra.com"
+                        />
+                        
+                        <Input
                             label="Contact Person"
                             name="contact_person"
                             value={form.contact_person}
                             onChange={handleInputChange}
+                            placeholder="Contoh : Budi Santoso"
                         />
                         <Input
                             label="No. HP"
@@ -313,29 +350,27 @@ const MasterMitra = () => {
                             onChange={handleInputChange}
                             placeholder="021-xxxxxxxx"
                         />
-                        <Input
-                            label="Email"
-                            type="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleInputChange}
-                            placeholder="contact@mitra.com"
-                        />
-                        <Input
-                            label="Website"
-                            name="website"
-                            value={form.website}
-                            onChange={handleInputChange}
-                            placeholder="https://..."
-                        />
-                        <Textarea
-                            label="Deskripsi"
-                            name="description"
-                            value={form.description}
-                            onChange={handleInputChange}
-                            placeholder="Deskripsi singkat perusahaan..."
-                            rows={2}
-                        />
+                        <div className='md:col-span-2'>
+                            <Textarea
+                                label="Alamat"
+                                name="address"
+                                value={form.address}
+                                onChange={handleInputChange}
+                                placeholder="Alamat lengkap perusahaan..."
+                                rows={2}
+                            />
+                        </div>
+                        <div className='md:col-span-2'>
+                            <Textarea
+                                label="Deskripsi"
+                                name="description"
+                                value={form.description}
+                                onChange={handleInputChange}
+                                placeholder="Deskripsi singkat perusahaan..."
+                                rows={2}
+                            />
+                        </div>
+                        
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
                         <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>

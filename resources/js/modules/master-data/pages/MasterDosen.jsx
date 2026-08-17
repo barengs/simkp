@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     useGetLecturersQuery,
     useCreateLecturerMutation,
@@ -35,27 +35,18 @@ import {
     X,
 } from 'lucide-react';
 
-
 const MasterDosen = () => {
-    // ============================================================
-    // API
-    // ============================================================
-
-    const {
-        data: lecturerList,
-        isLoading,
-    } = useGetLecturersQuery();
-
-    const [createLecturer] = useCreateLecturerMutation();
-    const [updateLecturer] = useUpdateLecturerMutation();
-    const [deleteLecturer] = useDeleteLecturerMutation();
-
-
     // ============================================================
     // STATE
     // ============================================================
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -71,6 +62,33 @@ const MasterDosen = () => {
 
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+
+    // ============================================================
+    // API
+    // ============================================================
+
+    const {
+        data: lecturerList,
+        isLoading,
+    } = useGetLecturersQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+    });
+
+    const [createLecturer] = useCreateLecturerMutation();
+    const [updateLecturer] = useUpdateLecturerMutation();
+    const [deleteLecturer] = useDeleteLecturerMutation();
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
 
 
     // ============================================================
@@ -248,37 +266,8 @@ const MasterDosen = () => {
     // ============================================================
 
     const filteredData = useMemo(() => {
-        const data = Array.isArray(lecturerList)
-            ? lecturerList
-            : lecturerList?.data || [];
-
-        const keyword = searchTerm
-            .trim()
-            .toLowerCase();
-
-        if (!keyword) return data;
-
-        return data.filter(item => {
-            const nip = String(
-                item.nip || ''
-            ).toLowerCase();
-
-            const name = String(
-                item.user?.name || ''
-            ).toLowerCase();
-
-            const email = String(
-                item.user?.email || ''
-            ).toLowerCase();
-
-            return (
-                nip.includes(keyword) ||
-                name.includes(keyword) ||
-                email.includes(keyword)
-            );
-        });
-
-    }, [lecturerList, searchTerm]);
+        return lecturerList?.data || [];
+    }, [lecturerList]);
 
 
     // ============================================================
@@ -289,6 +278,7 @@ const MasterDosen = () => {
         {
             name: 'Dosen',
             sortable: true,
+            sortField: 'name',
             width: '450px',
             cell: row => {
                 const name = row.user?.name || '-';
@@ -351,6 +341,7 @@ const MasterDosen = () => {
             name: 'NIP',
             selector: row => row.nip || '-',
             sortable: true,
+            sortField: 'nip',
             width: '270px',
             cell: row => (
                 <div>
@@ -448,7 +439,7 @@ const MasterDosen = () => {
     // TOTAL
     // ============================================================
 
-    const totalLecturers = filteredData.length;
+    const totalLecturers = lecturerList?.meta?.total || 0;
 
 
     // ============================================================
@@ -559,8 +550,8 @@ const MasterDosen = () => {
                             text-xs text-gray-500
                         ">
                             {searchTerm
-                                ? `${filteredData.length} hasil ditemukan`
-                                : `${filteredData.length} dosen terdaftar`
+                                ? `${totalLecturers} hasil ditemukan`
+                                : `${totalLecturers} dosen terdaftar`
                             }
                         </p>
                     </div>
@@ -591,6 +582,21 @@ const MasterDosen = () => {
                         columns={columns}
                         data={filteredData}
                         pagination
+                        paginationServer
+                        paginationTotalRows={totalLecturers}
+                        paginationDefaultPage={page}
+                        onChangeRowsPerPage={(currentRowsPerPage) => {
+                            setPerPage(currentRowsPerPage);
+                            setPage(1);
+                        }}
+                        onChangePage={(page) => setPage(page)}
+                        sortServer
+                        onSort={(column, sortDirection) => {
+                            if (column.sortField) {
+                                setSortBy(column.sortField);
+                                setSortDirection(sortDirection);
+                            }
+                        }}
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
@@ -695,17 +701,15 @@ const MasterDosen = () => {
                                 error={errors.nip}
                             />
 
-                            <div className="md:col-span-2">
-                                <Input
-                                    label="Nama Lengkap"
-                                    required
-                                    name="name"
-                                    value={form.name}
-                                    onChange={handleInputChange}
-                                    placeholder="Contoh: Dr. Ahmad Fauzi, M.Kom."
-                                    error={errors.name}
-                                />
-                            </div>
+                            <Input
+                                label="Nama Lengkap"
+                                required
+                                name="name"
+                                value={form.name}
+                                onChange={handleInputChange}
+                                placeholder="Contoh: Dr. Ahmad Fauzi, M.Kom."
+                                error={errors.name}
+                            />
 
                         </div>
                     </div>

@@ -20,9 +20,10 @@ class KpCompanyController extends Controller
         $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->kService->getAll());
+        $companies = $this->kService->getPaginated($request->all());
+        return KpCompanyResource::collection($companies);
     }
 
     /**
@@ -37,25 +38,41 @@ class KpCompanyController extends Controller
 
     public function store(StoreKpCompanyRequest $request)
     {
-        $k = $this->kService->create($request->validated());
-        return response()->json(new KpCompanyResource($k), 201);
+        try {
+            $k = $this->kService->create($request->validated());
+            return response()->json(new KpCompanyResource($k), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data mitra.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $k = $this->kService->getById($id);
-        return response()->json(new KpCompanyResource($k));
+        try {
+            $k = $this->kService->getById($id);
+            return response()->json(new KpCompanyResource($k));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data mitra tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateKpCompanyRequest $request, int $id)
     {
-        $k = $this->kService->update($id, $request->validated());
-        return response()->json(new KpCompanyResource($k));
+        try {
+            $k = $this->kService->update($id, $request->validated());
+            return response()->json(new KpCompanyResource($k));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data mitra.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->kService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->kService->delete($id);
+            return response()->json(['message' => 'Data mitra berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data mitra. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

@@ -21,4 +21,18 @@ class StoreAcademicPeriodRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama periode akademik wajib diisi.',
+            'name.max' => 'Nama periode akademik maksimal 255 karakter.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'end_date.date' => 'Format tanggal selesai tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal selesai harus sama dengan atau setelah tanggal mulai.',
+            'total_members.integer' => 'Total anggota harus berupa angka.',
+            'total_members.min' => 'Total anggota minimal 1.',
+            'is_active.boolean' => 'Status aktif harus boolean.',
+        ];
+    }
 }

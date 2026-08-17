@@ -15,7 +15,7 @@ class UserController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json(['message' => 'Tidak terautentikasi'], 401);
         }
 
         $data = $request->validate([

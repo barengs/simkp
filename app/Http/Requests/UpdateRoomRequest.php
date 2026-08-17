@@ -22,4 +22,19 @@ class UpdateRoomRequest extends FormRequest
             'description' => ['nullable', 'string'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama ruangan wajib diisi.',
+            'name.max' => 'Nama ruangan maksimal 255 karakter.',
+            'code.required' => 'Kode ruangan wajib diisi.',
+            'code.max' => 'Kode ruangan maksimal 20 karakter.',
+            'code.unique' => 'Kode ruangan sudah terdaftar.',
+            'building.max' => 'Nama gedung maksimal 255 karakter.',
+            'capacity.integer' => 'Kapasitas harus berupa angka.',
+            'capacity.min' => 'Kapasitas minimal 0.',
+            'description.string' => 'Deskripsi harus berupa teks.',
+        ];
+    }
 }

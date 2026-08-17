@@ -21,32 +21,49 @@ class AcademicPeriodController extends Controller
         $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->aService->getAll());
+        $periods = $this->aService->getPaginated($request->all());
+        return AcademicPeriodResource::collection($periods);
     }
 
     public function store(StoreAcademicPeriodRequest $request)
     {
-        $a = $this->aService->create($request->validated());
-        return response()->json(new AcademicPeriodResource($a), 201);
+        try {
+            $a = $this->aService->create($request->validated());
+            return response()->json(new AcademicPeriodResource($a), 201);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menyimpan data periode akademik.'], 500);
+        }
     }
 
     public function show(int $id)
     {
-        $a = $this->aService->getById($id);
-        return response()->json(new AcademicPeriodResource($a));
+        try {
+            $a = $this->aService->getById($id);
+            return response()->json(new AcademicPeriodResource($a));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Data periode akademik tidak ditemukan.'], 404);
+        }
     }
 
     public function update(UpdateAcademicPeriodRequest $request, int $id)
     {
-        $a = $this->aService->update($id, $request->validated());
-        return response()->json(new AcademicPeriodResource($a));
+        try {
+            $a = $this->aService->update($id, $request->validated());
+            return response()->json(new AcademicPeriodResource($a));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal memperbarui data periode akademik.'], 500);
+        }
     }
 
     public function destroy(int $id)
     {
-        $this->aService->delete($id);
-        return response()->json(['message' => 'Deleted']);
+        try {
+            $this->aService->delete($id);
+            return response()->json(['message' => 'Data periode akademik berhasil dihapus']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal menghapus data periode akademik. Pastikan data tidak sedang digunakan.'], 500);
+        }
     }
 }

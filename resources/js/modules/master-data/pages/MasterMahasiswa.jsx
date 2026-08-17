@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetStudentsQuery, useCreateStudentMutation, useUpdateStudentMutation, useDeleteStudentMutation, useGetStudyProgramsQuery } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -11,15 +11,26 @@ import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import { GraduationCap, Plus, Search, Pencil, Trash2, Mail, Phone, X } from 'lucide-react';
-
 const MasterMahasiswa = () => {
-    const { data: studentList, isLoading } = useGetStudentsQuery();
-    const { data: studyPrograms } = useGetStudyProgramsQuery();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    const { data: studentList, isLoading } = useGetStudentsQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+    });
+    const { data: studyPrograms } = useGetStudyProgramsQuery({ type: 'options' });
     const [createStudent] = useCreateStudentMutation();
     const [updateStudent] = useUpdateStudentMutation();
     const [deleteStudent] = useDeleteStudentMutation();
 
-    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
@@ -36,6 +47,14 @@ const MasterMahasiswa = () => {
     });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
 
     const students = Array.isArray(studentList) ? studentList : Array.isArray(studentList?.data) ? studentList.data : [];
 
@@ -144,22 +163,14 @@ const MasterMahasiswa = () => {
     };
 
     const filteredData = useMemo(() => {
-        const keyword = searchTerm.trim().toLowerCase();
-        if (!keyword) return students;
-
-        return students.filter(item => {
-            const nim = String(item.nim || '').toLowerCase();
-            const name = String(item.user?.name || item.name || '').toLowerCase();
-            const email = String(item.user?.email || item.email || '').toLowerCase();
-            const program = String(item.studyProgram?.name || item.study_program?.name || '').toLowerCase();
-            return nim.includes(keyword) || name.includes(keyword) || email.includes(keyword) || program.includes(keyword);
-        });
-    }, [students, searchTerm]);
+        return students;
+    }, [students]);
 
     const columns = [
         {
             name: 'Mahasiswa',
             sortable: true,
+            sortField: 'name',
             width: '350px',
             cell: row => {
                 const name = row.user?.name || row.name || '-';
@@ -220,12 +231,14 @@ const MasterMahasiswa = () => {
             name: 'NIM',
             selector: row => row.nim || '-',
             sortable: true,
+            sortField: 'nim',
             width: '140px',
         },
         {
             name: 'Program Studi',
             selector: row => row.studyProgram?.name || row.study_program?.name || '-',
             sortable: true,
+            sortField: 'study_program_id',
             wrap: true,
         },
         {
@@ -360,8 +373,8 @@ const MasterMahasiswa = () => {
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
                             {searchTerm
-                                ? `${filteredData.length} hasil ditemukan`
-                                : `${filteredData.length} mahasiswa terdaftar`
+                                ? `${studentList?.meta?.total || 0} hasil ditemukan`
+                                : `${studentList?.meta?.total || 0} mahasiswa terdaftar`
                             }
                         </p>
                     </div>
@@ -382,6 +395,21 @@ const MasterMahasiswa = () => {
                         columns={columns}
                         data={filteredData}
                         pagination
+                        paginationServer
+                        paginationTotalRows={studentList?.meta?.total || 0}
+                        paginationDefaultPage={page}
+                        onChangeRowsPerPage={(currentRowsPerPage) => {
+                            setPerPage(currentRowsPerPage);
+                            setPage(1);
+                        }}
+                        onChangePage={(page) => setPage(page)}
+                        sortServer
+                        onSort={(column, sortDirection) => {
+                            if (column.sortField) {
+                                setSortBy(column.sortField);
+                                setSortDirection(sortDirection);
+                            }
+                        }}
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
@@ -420,15 +448,6 @@ const MasterMahasiswa = () => {
                             placeholder="mahasiswa@univ.ac.id"
                             error={errors.email}
                         />
-                        <Select
-                            label="Program Studi"
-                            name="study_program_id"
-                            value={form.study_program_id}
-                            onChange={(e) => handleInputChange(e)}
-                            options={studyPrograms?.map(sp => ({ value: sp.id, label: sp.name })) || []}
-                            placeholder="Pilih program studi"
-                            error={errors.study_program_id}
-                        />
                         <Input
                             label="No. HP"
                             name="phone_number"
@@ -437,6 +456,18 @@ const MasterMahasiswa = () => {
                             placeholder="081234567890"
                             error={errors.phone_number}
                         />
+                        <div className='md:col-span-2'>
+                            <Select
+                                label="Program Studi"
+                                name="study_program_id"
+                                value={form.study_program_id}
+                                onChange={(e) => handleInputChange(e)}
+                                options={studyPrograms?.map(sp => ({ value: sp.id, label: sp.name })) || []}
+                                placeholder="Pilih program studi"
+                                error={errors.study_program_id}
+                            />
+                        </div>
+                        
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
