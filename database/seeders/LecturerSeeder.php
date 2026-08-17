@@ -24,7 +24,6 @@ class LecturerSeeder extends Seeder
         ];
 
         $usedNips = [];
-        $usedNidns = [];
 
         for ($i = 0; $i < 50; $i++) {
             $attempts = 0;
@@ -46,12 +45,6 @@ class LecturerSeeder extends Seeder
                 $nip = '19' . rand(60, 79) . rand(10, 12) . str_pad((string) $i, 4, '0', STR_PAD_LEFT);
             }
             $usedNips[] = $nip;
-
-            $nidn = (string) rand(100000000, 999999999);
-            while (in_array($nidn, $usedNidns)) {
-                $nidn = (string) rand(100000000, 999999999);
-            }
-            $usedNidns[] = $nidn;
 
             $email = 'dosen.' . strtolower(str_replace(' ', '.', $name)) . $i . '@univ.ac.id';
             $phone = '08' . rand(1000000000, 9999999999);
@@ -76,7 +69,6 @@ class LecturerSeeder extends Seeder
             Lecturer::create([
                 'user_id' => $user->id,
                 'nip' => $nip,
-                'nidn' => $nidn,
                 // 'office_address' => 'Gedung Fakultas, Lantai ' . rand(1, 5),
                 // 'position' => ['Dosen Tetap', 'Guru Besar', 'Asisten Pengajar', 'Lektor'][array_rand([
                 //     'Dosen Tetap', 'Guru Besar', 'Asisten Pengajar', 'Lektor'

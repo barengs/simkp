@@ -149,7 +149,6 @@ class PlottingDosenController extends Controller
                 'supervisor' => $supervisor ? [
                     'id' => $supervisor->id,
                     'name' => $supervisor->name,
-                    'nidn' => $supervisor->nidn,
                 ] : null,
                 'assigned_at' => $group->members->first()?->updated_at,
             ];

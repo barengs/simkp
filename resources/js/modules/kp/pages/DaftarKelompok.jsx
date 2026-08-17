@@ -175,9 +175,6 @@ const AdminKelompokView = () => {
             cell: r => r.supervisor ? (
                 <div>
                     <p className="text-sm font-medium text-gray-900">{r.supervisor.name}</p>
-                    {r.supervisor.nidn && (
-                        <p className="text-xs text-gray-500 font-mono">{r.supervisor.nidn}</p>
-                    )}
                 </div>
             ) : '-',
         },

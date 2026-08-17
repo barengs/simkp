@@ -29,7 +29,6 @@ class AuthController extends Controller
                 'lecturer_id' => $user->lecturer?->id,
                 'lecturer' => $user->lecturer ? [
                     'id' => $user->lecturer->id,
-                    'nidn' => $user->lecturer->nidn,
                 ] : null,
                 'student_id' => $student?->id,
                 'student' => $student ? [

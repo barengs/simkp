@@ -15,7 +15,6 @@ class StoreLecturerRequest extends FormRequest
     {
         return [
             'nip' => ['required', 'string', 'max:20', 'unique:lecturer,nip'],
-            'nidn' => ['nullable', 'string', 'max:20', 'unique:lecturer,nidn'],
             // User data (stored in users table)
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],

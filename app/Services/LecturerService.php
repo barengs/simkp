@@ -38,7 +38,6 @@ class LecturerService
             return Lecturer::create([
                 'user_id' => $user->id,
                 'nip' => $data['nip'],
-                'nidn' => $data['nidn'] ?? null,
             ]);
         });
     }
@@ -51,7 +50,6 @@ class LecturerService
             // Update lecturer fields
             $lecturer->update([
                 'nip' => $data['nip'],
-                'nidn' => $data['nidn'] ?? $lecturer->nidn,
             ]);
 
             // Update related user record

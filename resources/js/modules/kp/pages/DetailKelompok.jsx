@@ -195,9 +195,6 @@ const DetailKelompok = () => {
                                 </h3>
                                 <div className="bg-white rounded-lg p-4 border border-emerald-100">
                                     <p className="text-sm font-medium text-gray-900">{data.supervisor.name}</p>
-                                    {data.supervisor.nidn && (
-                                        <p className="text-xs text-gray-500 font-mono mt-1">{data.supervisor.nidn}</p>
-                                    )}
                                 </div>
                             </div>
                         </Card>

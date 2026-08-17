@@ -12,7 +12,6 @@ class LecturerResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'nip' => $this->nip,
-            'nidn' => $this->nidn,
             'name' => $this->user->name ?? null,
             'email' => $this->user->email ?? null,
             'phone_number' => $this->user->phone_number ?? null,

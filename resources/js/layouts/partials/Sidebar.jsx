@@ -11,7 +11,7 @@ const Sidebar = ({ isOpen = true }) => {
   const { user, roles, permissions } = useSelector((state) => state.auth);
   const [openMenus, setOpenMenus] = useState({});
 
-  const { data: settings } = useGetSettingsQuery();
+  const { data: settings } = useGetSettingsQuery(undefined, { skip: !roles.includes('admin') });
 
   const appName = settings?.app_name || 'SIM-KPTA';
   const logoPath = settings?.logo_path || null;

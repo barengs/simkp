@@ -200,7 +200,7 @@ const AssignModal = ({ isOpen, onClose, onConfirm, groups, lecturers, submitting
                     <option value="">-- Pilih Dosen --</option>
                     {lecturers.map(l => (
                         <option key={l.id} value={l.id}>
-                            {l.name} ({l.nidn})
+                            {l.name}
                         </option>
                     ))}
                 </Select>
@@ -374,7 +374,6 @@ const PlottingDosen = () => {
             cell: r => r.supervisor ? (
                 <div>
                     <p className="text-sm font-medium text-gray-900">{r.supervisor.name}</p>
-                    <p className="text-xs text-gray-500 font-mono">{r.supervisor.nidn}</p>
                 </div>
             ) : '-',
         },

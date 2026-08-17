@@ -32,7 +32,6 @@ class LecturerController extends Controller
         // Flatten user data for service
         $data = [
             'nip' => $validated['nip'],
-            'nidn' => $validated['nidn'] ?? null,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,
@@ -56,7 +55,6 @@ class LecturerController extends Controller
         // Flatten user data for service
         $data = [
             'nip' => $validated['nip'],
-            'nidn' => $validated['nidn'] ?? null,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,

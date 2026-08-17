@@ -46,7 +46,6 @@ class KpGroupResource extends JsonResource
                     'supervisor' => $m->supervisor ? [
                         'id'   => $m->supervisor->id,
                         'name' => $m->supervisor->name,
-                        'nidn' => $m->supervisor->nidn,
                     ] : null,
                     'student'    => $m->student ? [
                         'id'   => $m->student->id,
