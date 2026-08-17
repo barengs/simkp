@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGetStudentsQuery, useCreateStudentMutation, useUpdateStudentMutation, useDeleteStudentMutation, useGetStudyProgramsQuery } from '../api/masterDataApi';
 import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -10,7 +10,7 @@ import Modal from '../../../components/ui/Modal';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
-import { GraduationCap, Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { GraduationCap, Plus, Search, Pencil, Trash2, Mail, Phone, X } from 'lucide-react';
 
 const MasterMahasiswa = () => {
     const { data: studentList, isLoading } = useGetStudentsQuery();
@@ -23,6 +23,9 @@ const MasterMahasiswa = () => {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
+    const [selectedRows, setSelectedRows] = useState([]);
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
     const [form, setForm] = useState({
         nim: '',
         name: '',
@@ -35,6 +38,16 @@ const MasterMahasiswa = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const students = Array.isArray(studentList) ? studentList : Array.isArray(studentList?.data) ? studentList.data : [];
+
+    const getInitials = (name = '') => {
+        return name
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map(word => word.charAt(0))
+            .join('')
+            .toUpperCase() || 'M';
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -115,47 +128,166 @@ const MasterMahasiswa = () => {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (!selectedRows.length) return;
+        try {
+            await Promise.all(
+                selectedRows.map(row => deleteStudent(row.id).unwrap())
+            );
+            handleApiSuccess(
+                `${selectedRows.length} data mahasiswa berhasil dihapus`
+            );
+            setSelectedRows([]);
+        } catch (err) {
+            handleApiError(err, 'Gagal menghapus data mahasiswa');
+        }
+    };
+
+    const filteredData = useMemo(() => {
+        const keyword = searchTerm.trim().toLowerCase();
+        if (!keyword) return students;
+
+        return students.filter(item => {
+            const nim = String(item.nim || '').toLowerCase();
+            const name = String(item.user?.name || item.name || '').toLowerCase();
+            const email = String(item.user?.email || item.email || '').toLowerCase();
+            const program = String(item.studyProgram?.name || item.study_program?.name || '').toLowerCase();
+            return nim.includes(keyword) || name.includes(keyword) || email.includes(keyword) || program.includes(keyword);
+        });
+    }, [students, searchTerm]);
+
     const columns = [
-        { name: 'NIM', selector: (row) => row.nim || '-', sortable: true, wrap: true },
-        { name: 'Nama', selector: (row) => row.user?.name || row.name || '-', sortable: true, wrap: true },
-        { name: 'Email', selector: (row) => row.user?.email || row.email || '-', sortable: true, wrap: true },
+        {
+            name: 'Mahasiswa',
+            sortable: true,
+            width: '350px',
+            cell: row => {
+                const name = row.user?.name || row.name || '-';
+                const initials = getInitials(name);
+                const profilePictureUrl = row.user?.profile_picture_url
+                    ? (row.user.profile_picture_url.startsWith('http')
+                        ? row.user.profile_picture_url
+                        : `${window.location.origin}${row.user.profile_picture_url}`)
+                    : null;
+
+                return (
+                    <div className="flex items-center gap-3 py-2">
+                        <div className="
+                            flex h-10 w-10
+                            shrink-0 items-center justify-center
+                            rounded-full
+                            bg-emerald-100
+                            text-sm font-bold
+                            text-emerald-700
+                            overflow-hidden
+                        ">
+                            {profilePictureUrl ? (
+                                <img
+                                    src={profilePictureUrl}
+                                    alt={name}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                initials
+                            )}
+                        </div>
+
+                        <div className="min-w-0">
+                            <p className="
+                                truncate
+                                text-sm font-semibold
+                                text-gray-900
+                            ">
+                                {name}
+                            </p>
+
+                            <div className="
+                                mt-0.5
+                                flex items-center gap-1.5
+                                text-xs text-gray-500
+                            ">
+                                <Mail className="h-3.5 w-3.5" />
+                                <span className="truncate">
+                                    {row.user?.email || row.email || '-'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            name: 'NIM',
+            selector: row => row.nim || '-',
+            sortable: true,
+            width: '140px',
+        },
         {
             name: 'Program Studi',
-            selector: (row) => row.studyProgram?.name || row.study_program?.name || '-',
+            selector: row => row.studyProgram?.name || row.study_program?.name || '-',
             sortable: true,
             wrap: true,
         },
         {
-            name: 'Status',
-            cell: (row) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {row.is_active ? 'Aktif' : 'Nonaktif'}
-                </span>
+            name: 'Kontak',
+            width: '240px',
+            cell: row => (
+                <div className="space-y-1">
+                    {row.user?.phone_number ? (
+                        <div className="
+                            flex items-center gap-1.5
+                            text-xs text-gray-600
+                        ">
+                            <Phone className="h-3.5 w-3.5" />
+                            {row.user.phone_number}
+                        </div>
+                    ) : (
+                        <span className="text-xs text-gray-400">
+                            Tidak tersedia
+                        </span>
+                    )}
+                </div>
             ),
-            ignoreRowClick: true,
         },
         {
             name: 'Aksi',
-            cell: (row) => (
-                <div className="flex items-center gap-1">
-                    <Button className='bg-yellow-500 hover:bg-yellow-600' size="sm" onClick={() => openEdit(row)} icon={Pencil}>Edit</Button>
-                    <Button className='bg-red-500 hover:bg-red-600' size="sm" onClick={() => setDeleting(row)} icon={Trash2}>Hapus</Button>
+            width: '190px',
+            cell: row => (
+                <div className="
+                    flex items-center
+                    justify-center gap-2
+                ">
+                    <Button
+                        size="sm"
+                        variant="warning"
+                        icon={Pencil}
+                        onClick={() => openEdit(row)}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        variant="danger"
+                        icon={Trash2}
+                        onClick={() => setDeleting(row)}
+                    >
+                        Hapus
+                    </Button>
                 </div>
             ),
             ignoreRowClick: true,
         },
     ];
 
-    if (isLoading) return <Skeleton className="h-96" />;
-
-    const filteredData = students.filter(
-        (item) => !searchTerm || [
-            'nim', 'user.name', 'user.email', 'studyProgram.name'
-        ].some(field => {
-            const value = field.split('.').reduce((obj, path) => obj?.[path], item);
-            return String(value || '').toLowerCase().includes(searchTerm.toLowerCase());
-        })
-    );
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                <PageHeader title="Manajemen Mahasiswa" description="Kelola data mahasiswa aktif" icon={GraduationCap} />
+                <Skeleton className="h-[500px]" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -163,19 +295,98 @@ const MasterMahasiswa = () => {
                 title="Manajemen Mahasiswa"
                 description="Kelola data mahasiswa aktif"
                 icon={GraduationCap}
-                actions={<Button onClick={openCreate} icon={Plus}>Tambah Mahasiswa</Button>}
+                actions={
+                    <Button onClick={openCreate} icon={Plus}>
+                        Tambah Mahasiswa
+                    </Button>
+                }
             />
 
-            <Card title="Daftar Mahasiswa" subtitle={`${filteredData.length} mahasiswa terdaftar`}>
-                <div className="mb-4 max-w-sm">
-                    <Input
-                        type="text"
-                        placeholder="Cari NIM, nama, email, atau program studi..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+            {selectedRows.length > 0 && (
+                <div className="
+                    flex flex-col
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                    gap-3
+                    px-5
+                    py-3
+                    bg-emerald-50
+                    border
+                    border-emerald-200
+                    rounded-xl
+                ">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-emerald-900">
+                            {selectedRows.length} mahasiswa dipilih
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="secondary"
+                            icon={X}
+                            size="sm"
+                            onClick={() => setSelectedRows([])}
+                        >
+                            Batal Pilih
+                        </Button>
+
+                        <Button
+                            variant="danger"
+                            icon={Trash2}
+                            size="sm"
+                            onClick={() => setShowBulkDeleteConfirm(true)}
+                        >
+                            Hapus {selectedRows.length} Mahasiswa
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            <Card>
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Mahasiswa
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {searchTerm
+                                ? `${filteredData.length} hasil ditemukan`
+                                : `${filteredData.length} mahasiswa terdaftar`
+                            }
+                        </p>
+                    </div>
+
+                    <div className="w-full sm:w-80">
+                        <Input
+                            type="text"
+                            placeholder="Cari NIM, nama, atau email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            icon={Search}
+                        />
+                    </div>
+                </div>
+
+                <div className="overflow-hidden">
+                    <DataTableWrapper
+                        columns={columns}
+                        data={filteredData}
+                        pagination
+                        highlightOnHover
+                        selectableRows
+                        onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
                     />
                 </div>
-                <DataTableWrapper columns={columns} data={filteredData} pagination />
             </Card>
 
             <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Mahasiswa' : 'Tambah Mahasiswa Baru'} bigger>
@@ -250,6 +461,14 @@ const MasterMahasiswa = () => {
                 onConfirm={handleDelete}
                 title="Hapus Mahasiswa"
                 message={`Yakin ingin menghapus data mahasiswa "${deleting?.user?.name}"?`}
+            />
+
+            <ConfirmDialog
+                isOpen={showBulkDeleteConfirm}
+                onClose={() => setShowBulkDeleteConfirm(false)}
+                onConfirm={handleBulkDelete}
+                title="Hapus Mahasiswa"
+                message={`Yakin ingin menghapus ${selectedRows.length} data mahasiswa yang dipilih?`}
             />
         </div>
     );

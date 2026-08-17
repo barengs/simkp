@@ -15,7 +15,6 @@ class StoreAcademicPeriodRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:20', 'unique:academic_period,code'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'total_members' => ['nullable', 'integer', 'min:1'],

@@ -12,7 +12,7 @@ class AcademicPeriod extends Model
 
     protected $table = 'academic_period';
 
-    protected $fillable = ['name', 'code', 'start_date', 'end_date', 'total_members', 'is_active'];
+    protected $fillable = ['name', 'start_date', 'end_date', 'total_members', 'is_active'];
 
     protected $casts = [
         'start_date' => 'date',

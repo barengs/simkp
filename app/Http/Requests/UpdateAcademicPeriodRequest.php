@@ -16,7 +16,6 @@ class UpdateAcademicPeriodRequest extends FormRequest
         $id = $this->route('academic_period') ?? $this->route('id');
         return [
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:20', 'unique:academic_period,code,' . $id],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'total_members' => ['nullable', 'integer', 'min:1'],

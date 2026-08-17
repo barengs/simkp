@@ -44,11 +44,11 @@ const Navbar = ({ onToggleSidebar }) => {
     if (currentMenuItem?.children) {
       const child = currentMenuItem.children.find(child => currentPath.startsWith(child.path));
       if (child) {
-        return `${currentMenuItem.label} / ${child.label}`;
+        return `${currentMenuItem.label} > ${child.label}`;
       }
     }
     if (currentMenuItem && currentMenuItem.path !== '/dashboard' && currentMenuItem.path !== '/') {
-      return `Home / ${currentMenuItem.label}`;
+      return `Home >> ${currentMenuItem.label}`;
     }
     return 'Home';
   };

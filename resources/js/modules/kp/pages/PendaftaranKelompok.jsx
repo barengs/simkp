@@ -618,7 +618,7 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
             <div>
                 <h3 className="text-sm font-semibold text-gray-800 mb-3">Periode & Perusahaan</h3>
                 <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 px-4">
-                    <Row label="Periode Akademik" value={periode ? `${periode.name} (${periode.code})` : null} />
+                    <Row label="Periode Akademik" value={periode ? periode.name : null} />
                     <Row label="Perusahaan Tujuan KP" value={perusahaan?.name} />
                     {periode?.start_date && periode?.end_date && (
                         <Row 

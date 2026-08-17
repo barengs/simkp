@@ -12,35 +12,30 @@ class AcademicPeriodSeeder extends Seeder
         $periods = [
             [
                 'name' => 'Ganjil 2024/2025',
-                'code' => 'G24',
                 'start_date' => '2024-07-01',
                 'end_date' => '2024-12-31',
                 'is_active' => true,
             ],
             [
                 'name' => 'Genap 2024/2025',
-                'code' => 'P24',
                 'start_date' => '2024-01-01',
                 'end_date' => '2024-06-30',
                 'is_active' => false,
             ],
             [
                 'name' => 'Ganjil 2025/2026',
-                'code' => 'G25',
                 'start_date' => '2025-07-01',
                 'end_date' => '2025-12-31',
                 'is_active' => false,
             ],
             [
                 'name' => 'Genap 2025/2026',
-                'code' => 'P25',
                 'start_date' => '2025-01-01',
                 'end_date' => '2025-06-30',
                 'is_active' => false,
             ],
             [
                 'name' => 'Pendek 2024/Ekspansi',
-                'code' => 'E24',
                 'start_date' => '2024-10-01',
                 'end_date' => '2024-12-15',
                 'is_active' => false,
