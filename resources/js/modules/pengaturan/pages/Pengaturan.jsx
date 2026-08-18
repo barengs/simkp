@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     useGetDocumentTypesQuery,
     useCreateDocumentTypeMutation,
@@ -22,8 +22,6 @@ import {
     Plus,
     Edit2,
     Trash2,
-    AlertCircle,
-    CheckCircle2,
     Search,
     Settings,
     Upload,
@@ -31,9 +29,7 @@ import {
     Globe,
     Monitor,
     Save,
-    FileCheck2,
-    Info,
-    Check,
+    CheckCircle2,
 } from 'lucide-react';
 
 const Pengaturan = () => {
@@ -47,25 +43,19 @@ const Pengaturan = () => {
     const [updateDocumentType] = useUpdateDocumentTypeMutation();
     const [deleteDocumentType] = useDeleteDocumentTypeMutation();
 
-    // -------------------------------------------------------------------------
-    // Document Types State
-    // -------------------------------------------------------------------------
     const [showDocForm, setShowDocForm] = useState(false);
     const [editingDoc, setEditingDoc] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+    const [docSubmitting, setDocSubmitting] = useState(false);
+    const [docSearch, setDocSearch] = useState('');
+    const [docErrors, setDocErrors] = useState({});
+
     const [docFormData, setDocFormData] = useState({
         name: '',
-        code: '',
         description: '',
         is_required: false,
     });
-    const [docErrors, setDocErrors] = useState({});
-    const [docSubmitting, setDocSubmitting] = useState(false);
-    const [docSearch, setDocSearch] = useState('');
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-    // -------------------------------------------------------------------------
-    // Settings State
-    // -------------------------------------------------------------------------
     const [formData, setFormData] = useState({
         app_name: 'SIM-KPTA',
         logo_path: null,
@@ -74,48 +64,31 @@ const Pengaturan = () => {
 
     const [settingsErrors, setSettingsErrors] = useState({});
 
-    // -------------------------------------------------------------------------
-    // Data Processing
-    // -------------------------------------------------------------------------
-    const documentTypes = useMemo(
-        () =>
-            Array.isArray(documentTypesRaw)
-                ? documentTypesRaw
-                : Array.isArray(documentTypesRaw?.data)
-                    ? documentTypesRaw.data
-                    : [],
-        [documentTypesRaw]
-    );
+    const documentTypes = useMemo(() => {
+        if (Array.isArray(documentTypesRaw)) return documentTypesRaw;
+        return Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : [];
+    }, [documentTypesRaw]);
 
-    const filteredDocs = useMemo(
-        () =>
-            documentTypes.filter((dt) => {
-                const keyword = docSearch.toLowerCase();
+    const filteredDocs = useMemo(() => {
+        const keyword = docSearch.trim().toLowerCase();
 
-                return (
-                    !keyword ||
-                    dt.name?.toLowerCase().includes(keyword)
-                );
-            }),
-        [documentTypes, docSearch]
-    );
+        if (!keyword) return documentTypes;
 
-    // -------------------------------------------------------------------------
-    // Load Settings
-    // -------------------------------------------------------------------------
+        return documentTypes.filter((item) =>
+            item.name?.toLowerCase().includes(keyword)
+        );
+    }, [documentTypes, docSearch]);
+
     useEffect(() => {
-        if (settings) {
-            setFormData({
-                app_name: settings.app_name || 'SIM-KPTA',
-                logo_path: settings.logo_path || null,
-                favicon_path: settings.favicon_path || null,
-            });
-        }
+        if (!settings) return;
+
+        setFormData({
+            app_name: settings.app_name || 'SIM-KPTA',
+            logo_path: settings.logo_path || null,
+            favicon_path: settings.favicon_path || null,
+        });
     }, [settings]);
 
-    // -------------------------------------------------------------------------
-    // Document Type Handlers
-    // -------------------------------------------------------------------------
     const handleDocChange = (e) => {
         const { name, value, type, checked } = e.target;
 
@@ -125,11 +98,39 @@ const Pengaturan = () => {
         }));
 
         if (docErrors[name]) {
-            setDocErrors((prev) => ({
-                ...prev,
-                [name]: '',
-            }));
+            setDocErrors((prev) => ({ ...prev, [name]: '' }));
         }
+    };
+
+    const resetDocForm = () => {
+        setDocFormData({
+            name: '',
+            description: '',
+            is_required: false,
+        });
+        setDocErrors({});
+        setEditingDoc(null);
+    };
+
+    const openCreateDoc = () => {
+        resetDocForm();
+        setShowDocForm(true);
+    };
+
+    const openEditDoc = (item) => {
+        setEditingDoc(item);
+        setDocFormData({
+            name: item.name || '',
+            description: item.description || '',
+            is_required: Boolean(item.is_required),
+        });
+        setDocErrors({});
+        setShowDocForm(true);
+    };
+
+    const closeDocForm = () => {
+        setShowDocForm(false);
+        resetDocForm();
     };
 
     const validateDocForm = () => {
@@ -144,43 +145,6 @@ const Pengaturan = () => {
         }
 
         return errors;
-    };
-
-    const openCreateDoc = () => {
-        setEditingDoc(null);
-        setDocFormData({
-            name: '',
-            code: '',
-            description: '',
-            is_required: false,
-        });
-        setDocErrors({});
-        setShowDocForm(true);
-    };
-
-    const openEditDoc = (item) => {
-        setEditingDoc(item);
-
-        setDocFormData({
-            name: item.name || '',
-            description: item.description || '',
-            is_required: Boolean(item.is_required),
-        });
-
-        setDocErrors({});
-        setShowDocForm(true);
-    };
-
-    const closeDocForm = () => {
-        setShowDocForm(false);
-        setEditingDoc(null);
-        setDocFormData({
-            name: '',
-            code: '',
-            description: '',
-            is_required: false,
-        });
-        setDocErrors({});
     };
 
     const handleDocSubmit = async () => {
@@ -208,9 +172,9 @@ const Pengaturan = () => {
             }
 
             closeDocForm();
-        } catch (err) {
+        } catch (error) {
             handleApiError(
-                err,
+                error,
                 editingDoc
                     ? 'Gagal memperbarui tipe dokumen'
                     : 'Gagal menambahkan tipe dokumen'
@@ -220,16 +184,18 @@ const Pengaturan = () => {
         }
     };
 
-    const handleDocDelete = async (id) => {
+    const handleDocDelete = async () => {
+        if (!showDeleteConfirm) return;
+
         setDocSubmitting(true);
 
         try {
-            await deleteDocumentType(id).unwrap();
+            await deleteDocumentType(showDeleteConfirm).unwrap();
 
             handleApiSuccess('Tipe dokumen berhasil dihapus');
             setShowDeleteConfirm(null);
-        } catch (err) {
-            handleApiError(err, 'Gagal menghapus tipe dokumen');
+        } catch (error) {
+            handleApiError(error, 'Gagal menghapus tipe dokumen');
         } finally {
             setDocSubmitting(false);
         }
@@ -245,18 +211,15 @@ const Pengaturan = () => {
             }).unwrap();
 
             handleApiSuccess(
-                !item.is_required
-                    ? 'Dokumen ditandai sebagai wajib'
-                    : 'Dokumen ditandai sebagai opsional'
+                item.is_required
+                    ? 'Dokumen ditandai sebagai opsional'
+                    : 'Dokumen ditandai sebagai wajib'
             );
-        } catch (err) {
-            handleApiError(err, 'Gagal mengubah status dokumen');
+        } catch (error) {
+            handleApiError(error, 'Gagal mengubah status dokumen');
         }
     };
 
-    // -------------------------------------------------------------------------
-    // Settings Handlers
-    // -------------------------------------------------------------------------
     const handleSettingsChange = (e) => {
         const { name, value } = e.target;
 
@@ -266,10 +229,7 @@ const Pengaturan = () => {
         }));
 
         if (settingsErrors[name]) {
-            setSettingsErrors((prev) => ({
-                ...prev,
-                [name]: '',
-            }));
+            setSettingsErrors((prev) => ({ ...prev, [name]: '' }));
         }
     };
 
@@ -284,10 +244,7 @@ const Pengaturan = () => {
         }));
 
         if (settingsErrors[field]) {
-            setSettingsErrors((prev) => ({
-                ...prev,
-                [field]: '',
-            }));
+            setSettingsErrors((prev) => ({ ...prev, [field]: '' }));
         }
     };
 
@@ -295,7 +252,6 @@ const Pengaturan = () => {
         setSettingsErrors({});
 
         const data = new FormData();
-
         data.append('app_name', formData.app_name);
 
         if (formData.logo_path instanceof File) {
@@ -308,16 +264,12 @@ const Pengaturan = () => {
 
         try {
             await updateSettings(data).unwrap();
-
             handleApiSuccess('Pengaturan berhasil disimpan');
-        } catch (err) {
-            handleApiError(err, 'Gagal menyimpan pengaturan');
+        } catch (error) {
+            handleApiError(error, 'Gagal menyimpan pengaturan');
         }
     };
 
-    // -------------------------------------------------------------------------
-    // Image Preview
-    // -------------------------------------------------------------------------
     const getImageUrl = (value) => {
         if (!value) return null;
 
@@ -325,410 +277,289 @@ const Pengaturan = () => {
             return URL.createObjectURL(value);
         }
 
-        if (value.startsWith('http')) {
-            return value;
-        }
-
-        return `${window.location.origin}${value}`;
+        return value.startsWith('http')
+            ? value
+            : `${window.location.origin}${value}`;
     };
 
-    const ImageUploadCard = ({
-        title,
-        description,
-        icon: Icon,
-        field,
-        accept,
-        currentValue,
-        error,
-    }) => {
-        const previewUrl = getImageUrl(currentValue);
-        const isFile = currentValue instanceof File;
+    const ImageUpload = ({ title, icon: Icon, field, accept }) => {
+        const value = formData[field];
+        const preview = getImageUrl(value);
+        const isFile = value instanceof File;
 
         return (
-            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-emerald-600" />
-                    </div>
-
+            <div>
+                <div className="flex items-center gap-2 mb-3">
+                    <Icon className="w-4 h-4 text-gray-500" />
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                            {title}
-                        </h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                            {description}
+                        <p className="text-sm font-medium text-gray-900">{title}</p>
+                        <p className="text-xs text-gray-400">
+                            {isFile ? value.name : 'Upload gambar baru'}
                         </p>
                     </div>
                 </div>
 
-                <div className="p-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 items-center">
-                        <label className="relative flex flex-col items-center justify-center min-h-[150px] px-5 py-6 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer bg-gray-50/50 hover:bg-emerald-50/30 hover:border-emerald-300 transition-all">
-                            <Upload className="w-7 h-7 text-gray-400 mb-3" />
-
-                            <p className="text-sm font-medium text-gray-700">
-                                Klik untuk memilih file
-                            </p>
-
-                            <p className="text-xs text-gray-400 mt-1">
-                                PNG, JPG, SVG
-                            </p>
-
-                            <input
-                                type="file"
-                                className="hidden"
-                                accept={accept}
-                                onChange={(e) => handleFileChange(e, field)}
+                <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {preview ? (
+                            <img
+                                src={preview}
+                                alt={title}
+                                className="max-w-full max-h-full object-contain p-2"
                             />
-                        </label>
-
-                        <div className="flex flex-col items-center justify-center min-w-[130px]">
-                            {previewUrl ? (
-                                <>
-                                    <div className="w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
-                                        <img
-                                            src={previewUrl}
-                                            alt={title}
-                                            className="max-w-full max-h-full object-contain p-2"
-                                        />
-                                    </div>
-
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        {isFile ? 'File baru' : 'File saat ini'}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-24 h-24 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-                                        <ImageIcon className="w-7 h-7 text-gray-300" />
-                                    </div>
-
-                                    <p className="text-xs text-gray-400 mt-2">
-                                        Belum ada gambar
-                                    </p>
-                                </>
-                            )}
-                        </div>
+                        ) : (
+                            <ImageIcon className="w-6 h-6 text-gray-300" />
+                        )}
                     </div>
 
-                    {isFile && (
-                        <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <label className="flex-1 h-20 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors">
+                        <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                        <span className="text-xs font-medium text-gray-600">
+                            Pilih gambar
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                            PNG, JPG, SVG
+                        </span>
 
-                            <div className="min-w-0">
-                                <p className="text-xs font-medium text-emerald-800 truncate">
-                                    {currentValue.name}
-                                </p>
-                                <p className="text-[11px] text-emerald-600">
-                                    {(currentValue.size / 1024).toFixed(1)} KB
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {error && (
-                        <p className="text-xs text-red-600 mt-2">
-                            {error}
-                        </p>
-                    )}
+                        <input
+                            type="file"
+                            className="hidden"
+                            accept={accept}
+                            onChange={(e) => handleFileChange(e, field)}
+                        />
+                    </label>
                 </div>
+
+                {settingsErrors[field] && (
+                    <p className="text-xs text-red-600 mt-2">
+                        {settingsErrors[field]}
+                    </p>
+                )}
             </div>
         );
     };
 
-    // -------------------------------------------------------------------------
-    // Document Table Columns
-    // -------------------------------------------------------------------------
     const docColumns = [
         {
             name: 'Dokumen',
-            selector: (r) => r.name,
+            selector: (row) => row.name,
             sortable: true,
-            wrap: true,
             minWidth: '220px',
-            cell: (r) => (
+            cell: (row) => (
                 <div className="flex items-center gap-3 py-2">
                     <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
                         <FileText className="w-4 h-4 text-emerald-600" />
                     </div>
-
-                    <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                            {r.name}
-                        </p>
-                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                        {row.name}
+                    </span>
                 </div>
             ),
         },
         {
             name: 'Deskripsi',
-            selector: (r) => r.description || '-',
-            sortable: false,
+            selector: (row) => row.description || '-',
             wrap: true,
-            minWidth: '240px',
-            cell: (r) =>
-                r.description ? (
-                    <span className="text-sm text-gray-600">
-                        {r.description}
-                    </span>
-                ) : (
-                    <span className="text-sm text-gray-400 italic">
-                        Tidak ada deskripsi
-                    </span>
-                ),
+            minWidth: '280px',
+            cell: (row) => (
+                <span className="text-sm text-gray-500">
+                    {row.description || '-'}
+                </span>
+            ),
         },
         {
             name: 'Status',
-            selector: (r) => r.is_required,
+            selector: (row) => row.is_required,
             width: '150px',
             center: true,
-            cell: (r) =>
-                r.is_required ? (
-                    <Badge status="emerald">
-                        Wajib
-                    </Badge>
-                ) : (
-                    <Badge status="gray">
-                        Opsional
-                    </Badge>
-                ),
+            cell: (row) => (
+                <button
+                    type="button"
+                    onClick={() => handleDocToggleRequired(row)}
+                    className="focus:outline-none"
+                >
+                    {row.is_required ? (
+                        <Badge status="emerald">Wajib</Badge>
+                    ) : (
+                        <Badge status="gray">Opsional</Badge>
+                    )}
+                </button>
+            ),
         },
         {
             name: 'Aksi',
-            width: '170px',
+            width: '130px',
             center: true,
-            cell: (r) => (
+            cell: (row) => (
                 <div className="flex items-center justify-center gap-1">
                     <Button
                         size="sm"
                         variant="secondary"
                         icon={Edit2}
-                        onClick={() => openEditDoc(r)}
+                        onClick={() => openEditDoc(row)}
                     />
-
                     <Button
                         size="sm"
                         variant="danger"
                         icon={Trash2}
-                        onClick={() => setShowDeleteConfirm(r.id)}
+                        onClick={() => setShowDeleteConfirm(row.id)}
                     />
                 </div>
             ),
         },
     ];
 
-    // -------------------------------------------------------------------------
-    // Render
-    // -------------------------------------------------------------------------
     return (
-        <div className="space-y-6">
+        <div className="space-y-5">
             <PageHeader
                 title="Pengaturan"
-                description="Kelola konfigurasi aplikasi dan kebutuhan dokumen Kerja Praktek."
+                description="Kelola konfigurasi aplikasi dan dokumen Kerja Praktek."
                 icon={Settings}
-                actions={
-                    activeTab === 'dokumen' && (
-                        <Button
-                            icon={Plus}
-                            onClick={openCreateDoc}
-                        >
-                            Tambah Tipe Dokumen
-                        </Button>
-                    )
-                }
             />
 
-            {/* Tabs */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-1.5 inline-flex gap-1">
+            <div className="flex items-center gap-1 border-b border-gray-200">
                 <button
                     onClick={() => setActiveTab('umum')}
-                    className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                         activeTab === 'umum'
-                            ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'border-emerald-600 text-emerald-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                     <Settings className="w-4 h-4" />
-                    Pengaturan Umum
+                    Umum
                 </button>
 
                 <button
                     onClick={() => setActiveTab('dokumen')}
-                    className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                         activeTab === 'dokumen'
-                            ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'border-emerald-600 text-emerald-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
-                    <FileCheck2 className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
                     Dokumen KP
-                    <span className="px-1.5 py-0.5 rounded-full bg-gray-100 text-[10px] text-gray-500">
+                    <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
                         {documentTypes.length}
                     </span>
                 </button>
             </div>
 
-            {/* ================================================================= */}
-            {/* TAB UMUM                                                         */}
-            {/* ================================================================= */}
             {activeTab === 'umum' && (
-                <div className="space-y-5">
+                <Card>
                     {settingsLoading ? (
-                        <div className="space-y-5">
-                            <Skeleton className="h-32 rounded-xl" />
-                            <Skeleton className="h-64 rounded-xl" />
-                            <Skeleton className="h-64 rounded-xl" />
+                        <div className="p-6 space-y-5">
+                            <Skeleton className="h-10 w-full max-w-xl" />
+                            <Skeleton className="h-28 w-full" />
+                            <Skeleton className="h-28 w-full" />
                         </div>
                     ) : (
-                        <>
-                            {/* Application Identity */}
-                            <Card>
-                                <div className="p-6">
-                                    <div className="flex items-start gap-3 mb-6">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                                            <Globe className="w-5 h-5 text-blue-600" />
-                                        </div>
-
-                                        <div>
-                                            <h2 className="text-base font-semibold text-gray-900">
-                                                Identitas Aplikasi
-                                            </h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">
-                                                Tentukan informasi dasar yang digunakan oleh sistem.
-                                            </p>
-                                        </div>
+                        <div className="p-6 space-y-7">
+                            <section>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
+                                        <Globe className="w-4 h-4 text-gray-600" />
                                     </div>
-
-                                    <div className="max-w-xl">
-                                        <Input
-                                            label="Nama Aplikasi"
-                                            name="app_name"
-                                            value={formData.app_name}
-                                            onChange={handleSettingsChange}
-                                            placeholder="SIM-KPTA"
-                                            error={settingsErrors.app_name}
-                                        />
-
-                                        <div className="mt-2 flex items-start gap-2">
-                                            <Info className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-
-                                            <p className="text-xs text-gray-400">
-                                                Nama aplikasi akan digunakan pada sidebar,
-                                                halaman login, dan judul halaman.
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-900">
+                                            Identitas Aplikasi
+                                        </h3>
+                                        <p className="text-xs text-gray-400">
+                                            Informasi dasar aplikasi.
+                                        </p>
                                     </div>
                                 </div>
-                            </Card>
 
-                            {/* Logo */}
-                            <ImageUploadCard
-                                title="Logo Sidebar"
-                                description="Logo utama yang ditampilkan pada sidebar aplikasi."
-                                icon={ImageIcon}
-                                field="logo_path"
-                                accept="image/png,image/jpeg,image/svg+xml"
-                                currentValue={formData.logo_path}
-                                error={settingsErrors.logo_path}
-                            />
+                                <div className="max-w-xl">
+                                    <Input
+                                        label="Nama Aplikasi"
+                                        name="app_name"
+                                        value={formData.app_name}
+                                        onChange={handleSettingsChange}
+                                        placeholder="SIM-KPTA"
+                                        error={settingsErrors.app_name}
+                                    />
+                                </div>
+                            </section>
 
-                            {/* Favicon */}
-                            <ImageUploadCard
-                                title="Favicon"
-                                description="Icon kecil yang ditampilkan pada tab browser."
-                                icon={Monitor}
-                                field="favicon_path"
-                                accept="image/png,image/x-icon,image/svg+xml"
-                                currentValue={formData.favicon_path}
-                                error={settingsErrors.favicon_path}
-                            />
+                            <div className="border-t border-gray-100" />
 
-                            {/* Save */}
-                            <div className="flex justify-end">
+                            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <ImageUpload
+                                    title="Logo Sidebar"
+                                    icon={ImageIcon}
+                                    field="logo_path"
+                                    accept="image/png,image/jpeg,image/svg+xml"
+                                />
+
+                                <ImageUpload
+                                    title="Favicon"
+                                    icon={Monitor}
+                                    field="favicon_path"
+                                    accept="image/png,image/x-icon,image/svg+xml"
+                                />
+                            </section>
+
+                            <div className="flex justify-end pt-2">
                                 <Button
-                                    onClick={handleSettingsSubmit}
-                                    loading={settingsSubmitting}
                                     icon={Save}
+                                    loading={settingsSubmitting}
+                                    onClick={handleSettingsSubmit}
                                 >
-                                    Simpan Pengaturan
+                                    Simpan
                                 </Button>
                             </div>
-                        </>
+                        </div>
                     )}
-                </div>
+                </Card>
             )}
 
-            {/* ================================================================= */}
-            {/* TAB DOKUMEN                                                      */}
-            {/* ================================================================= */}
             {activeTab === 'dokumen' && (
                 <div className="space-y-5">
-                    {/* Information */}
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 flex items-start gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-4 h-4 text-blue-600" />
-                        </div>
-
-                        <div>
-                            <h3 className="text-sm font-semibold text-blue-900">
-                                Tipe Dokumen Kerja Praktek
-                            </h3>
-
-                            <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                                Atur jenis dokumen yang harus atau dapat diupload
-                                mahasiswa selama proses Kerja Praktek.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Search */}
                     <Card>
-                        <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex-1 max-w-md">
+                        <div className="p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                            <div className="w-full sm:max-w-sm">
                                 <Input
-                                    placeholder="Cari nama atau kode dokumen..."
+                                    placeholder="Cari tipe dokumen..."
                                     value={docSearch}
                                     onChange={(e) => setDocSearch(e.target.value)}
                                     icon={Search}
                                 />
                             </div>
 
-                            <Button
-                                icon={Plus}
-                                onClick={openCreateDoc}
-                            >
-                                Tambah Tipe Dokumen
+                            <Button icon={Plus} onClick={openCreateDoc}>
+                                Tambah Dokumen
                             </Button>
                         </div>
                     </Card>
 
-                    {/* Table */}
                     <Card
-                        title="Daftar Tipe Dokumen"
-                        subtitle={`${filteredDocs.length} dari ${documentTypes.length} tipe dokumen`}
+                        title="Tipe Dokumen"
+                        subtitle={`${filteredDocs.length} dokumen`}
                     >
                         {docsLoading ? (
                             <Skeleton className="h-64" />
                         ) : filteredDocs.length === 0 ? (
-                            <div className="py-14 flex flex-col items-center justify-center text-center">
-                                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                            <div className="py-14 text-center">
+                                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                                     {docSearch ? (
-                                        <Search className="w-6 h-6 text-gray-400" />
+                                        <Search className="w-5 h-5 text-gray-400" />
                                     ) : (
-                                        <FileText className="w-6 h-6 text-gray-400" />
+                                        <FileText className="w-5 h-5 text-gray-400" />
                                     )}
                                 </div>
 
-                                <h3 className="text-sm font-semibold text-gray-700">
+                                <p className="text-sm font-medium text-gray-700">
                                     {docSearch
                                         ? 'Dokumen tidak ditemukan'
                                         : 'Belum ada tipe dokumen'}
-                                </h3>
+                                </p>
 
                                 <p className="text-xs text-gray-400 mt-1">
                                     {docSearch
-                                        ? 'Coba gunakan kata kunci pencarian yang berbeda.'
-                                        : 'Tambahkan tipe dokumen pertama untuk memulai.'}
+                                        ? 'Coba gunakan kata kunci lain.'
+                                        : 'Tambahkan tipe dokumen untuk memulai.'}
                                 </p>
 
                                 {!docSearch && (
@@ -738,7 +569,7 @@ const Pengaturan = () => {
                                         className="mt-4"
                                         onClick={openCreateDoc}
                                     >
-                                        Tambah Tipe Dokumen
+                                        Tambah Dokumen
                                     </Button>
                                 )}
                             </div>
@@ -754,32 +585,19 @@ const Pengaturan = () => {
                 </div>
             )}
 
-            {/* ================================================================= */}
-            {/* DOCUMENT FORM MODAL                                               */}
-            {/* ================================================================= */}
             <Modal
                 isOpen={showDocForm}
                 onClose={closeDocForm}
                 title={editingDoc ? 'Edit Tipe Dokumen' : 'Tambah Tipe Dokumen'}
                 size="md"
             >
-                <div className="space-y-5">
-                    <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-3 flex items-start gap-2">
-                        <FileText className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-
-                        <p className="text-xs text-emerald-800 leading-relaxed">
-                            {editingDoc
-                                ? 'Perbarui informasi tipe dokumen sesuai kebutuhan sistem.'
-                                : 'Tambahkan tipe dokumen yang akan digunakan dalam proses Kerja Praktek.'}
-                        </p>
-                    </div>
-
+                <div className="space-y-4">
                     <Input
                         label="Nama Tipe Dokumen"
                         required
+                        name="name"
                         value={docFormData.name}
                         onChange={handleDocChange}
-                        name="name"
                         placeholder="Contoh: Surat Proposal"
                         error={docErrors.name}
                     />
@@ -790,11 +608,12 @@ const Pengaturan = () => {
                         </label>
 
                         <textarea
+                            name="description"
                             value={docFormData.description}
                             onChange={handleDocChange}
-                            name="description"
-                            placeholder="Penjelasan singkat mengenai dokumen..."
-                            rows={4}
+                            rows={3}
+                            maxLength={500}
+                            placeholder="Deskripsi singkat dokumen..."
                             className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                                 docErrors.description
                                     ? 'border-red-400'
@@ -803,32 +622,26 @@ const Pengaturan = () => {
                         />
 
                         <div className="flex justify-between mt-1">
-                            {docErrors.description ? (
-                                <p className="text-xs text-red-500">
-                                    {docErrors.description}
-                                </p>
-                            ) : (
-                                <span />
-                            )}
-
+                            <span className="text-xs text-red-500">
+                                {docErrors.description}
+                            </span>
                             <span className="text-[11px] text-gray-400">
                                 {docFormData.description.length}/500
                             </span>
                         </div>
                     </div>
 
-                    <label className="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/70 cursor-pointer hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+                    <label className="flex items-center justify-between p-3.5 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                             </div>
 
                             <div>
-                                <p className="text-sm font-semibold text-gray-800">
+                                <p className="text-sm font-medium text-gray-800">
                                     Dokumen Wajib
                                 </p>
-
-                                <p className="text-xs text-gray-500 mt-0.5">
+                                <p className="text-xs text-gray-400">
                                     Mahasiswa wajib mengupload dokumen ini.
                                 </p>
                             </div>
@@ -839,39 +652,33 @@ const Pengaturan = () => {
                             name="is_required"
                             checked={docFormData.is_required}
                             onChange={handleDocChange}
-                            className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                            className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                         />
                     </label>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-5 mt-5 border-t border-gray-100">
-                    <Button
-                        variant="secondary"
-                        onClick={closeDocForm}
-                    >
+                <div className="flex justify-end gap-2 pt-4 mt-5 border-t border-gray-100">
+                    <Button variant="secondary" onClick={closeDocForm}>
                         Batal
                     </Button>
 
                     <Button
-                        variant="primary"
+                        icon={editingDoc ? CheckCircle2 : Plus}
                         loading={docSubmitting}
-                        icon={editingDoc ? Check : Plus}
                         onClick={handleDocSubmit}
                     >
-                        {editingDoc ? 'Perbarui Dokumen' : 'Tambah Dokumen'}
+                        {editingDoc ? 'Simpan Perubahan' : 'Tambah Dokumen'}
                     </Button>
                 </div>
             </Modal>
 
-            {/* ================================================================= */}
-            {/* DELETE CONFIRMATION                                               */}
-            {/* ================================================================= */}
             <ConfirmDialog
                 isOpen={!!showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(null)}
-                onConfirm={() => handleDocDelete(showDeleteConfirm)}
-                title="Hapus Tipe Dokumen"
-                message="Tipe dokumen yang dihapus tidak dapat dikembalikan. Pastikan dokumen ini tidak sedang digunakan oleh data lain."
+                onConfirm={handleDocDelete}
+                title="Hapus Tipe Dokumen?"
+                message="Data yang dihapus tidak dapat dikembalikan. Pastikan tipe dokumen ini tidak sedang digunakan."
+                loading={docSubmitting}
             />
         </div>
     );

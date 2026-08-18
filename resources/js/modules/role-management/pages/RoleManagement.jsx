@@ -631,8 +631,8 @@ const RoleManagement = () => {
             </div>
 
             {/* Tab */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="border-b border-gray-200 px-2 flex gap-1">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div className="border-b border-gray-200 px-4 pt-4 flex gap-1">
                     <TabButton
                         active={activeTab === TAB_ROLES}
                         onClick={() => setActiveTab(TAB_ROLES)}
