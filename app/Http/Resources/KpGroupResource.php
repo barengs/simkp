@@ -10,8 +10,6 @@ class KpGroupResource extends JsonResource
     {
         return [
             'id'             => $this->id,
-            'name'           => $this->name,
-            'code'           => $this->code,
             'status'         => $this->status,
             'rejection_note' => $this->rejection_note,
             'description'    => $this->description,
@@ -45,7 +43,7 @@ class KpGroupResource extends JsonResource
                     'supervisor_lecturer_id' => $m->supervisor_lecturer_id,
                     'supervisor' => $m->supervisor ? [
                         'id'   => $m->supervisor->id,
-                        'name' => $m->supervisor->name,
+                        'name' => $m->supervisor->user?->name,
                     ] : null,
                     'student'    => $m->student ? [
                         'id'   => $m->student->id,
@@ -66,7 +64,6 @@ class KpGroupResource extends JsonResource
                     'document_type'   => $d->documentType ? [
                         'id'   => $d->documentType->id,
                         'name' => $d->documentType->name,
-                        'code' => $d->documentType->code,
                     ] : null,
                     'created_at'      => $d->created_at,
                 ])

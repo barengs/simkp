@@ -2,7 +2,7 @@ import React from 'react';
 
 const Card = ({ title, subtitle, actions, children, className = '', bodyClassName = '' }) => {
     return (
-        <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${className}`}>
+        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
             {(title || actions) && (
                 <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                     <div>

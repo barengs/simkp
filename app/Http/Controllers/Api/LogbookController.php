@@ -18,12 +18,12 @@ class LogbookController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = request()->user();
+        $user = $request->user();
 
         if ($user->can('kp.logbook.approve')) {
-            $groupId = request()->query('group_id');
+            $groupId = $request->query('group_id');
 
             if ($groupId) {
                 return response()->json(
@@ -54,7 +54,7 @@ class LogbookController extends Controller
                 );
             }
 
-            return response()->json(LogbookResource::collection($this->logbookService->getAll()));
+            return response()->json(LogbookResource::collection($this->logbookService->getPaginated($request->all())));
         }
 
         $student = $user->student;

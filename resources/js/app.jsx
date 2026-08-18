@@ -11,13 +11,13 @@ import { store } from './store/store';
 import { setCredentials } from './store/slices/authSlice';
 import AppRouter from './router/AppRouter';
 import { kpApi } from './modules/kp/api/kpApi';
-import { useGetSettingsQuery } from './modules/pengaturan/api/pengaturanApi';
+import { useGetPublicSettingsQuery } from './modules/pengaturan/api/pengaturanApi';
 import { menuConfig } from './config/menuConfig';
 import { useSelector } from 'react-redux';
 
 const DocumentTitle = () => {
     const { roles = [] } = useSelector((state) => state.auth);
-    const { data: settings } = useGetSettingsQuery(undefined, { skip: !roles.includes('admin') });
+    const { data: settings } = useGetPublicSettingsQuery();
 
     useEffect(() => {
         const appName = settings?.app_name || 'SIM-KPTA';

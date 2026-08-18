@@ -102,10 +102,10 @@ const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onP
     const [propForm, setPropForm] = useState({ name: '', address: '', contact_person: '', phone_number: '', email: '' });
     const [propErr, setPropErr]   = useState({});
 
-    const aktiPeriode = (periodeList || []).filter(p => p.is_active);
+    const aktiPeriode = Array.isArray(periodeList) ? periodeList.filter(p => p.is_active) : [];
     
     const filtered = useMemo(() =>
-        (perusahaanList || []).filter(p =>
+        (Array.isArray(perusahaanList) ? perusahaanList : []).filter(p =>
             !search || p.name?.toLowerCase().includes(search.toLowerCase()) ||
             p.address?.toLowerCase().includes(search.toLowerCase())
         ),
@@ -278,7 +278,7 @@ const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onP
 
 // ─── Langkah 2: Tema KP ───────────────────────────────────────────────────────
 const Step2TemaKp = ({ form, onChange, temaList }) => {
-    const aktif = (temaList || []).filter(t => t.is_active);
+    const aktif = Array.isArray(temaList) ? temaList.filter(t => t.is_active) : [];
     return (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
             {aktif.length === 0 && (
@@ -461,8 +461,8 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existi
         }
     };
 
-    const requiredDocs = (documentTypes || []).filter(dt => dt.is_required);
-    const optionalDocs = (documentTypes || []).filter(dt => !dt.is_required);
+    const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
+    const optionalDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => !dt.is_required);
 
     const renderDocumentUpload = (doc) => {
         const existingDoc = existingDocuments[doc.id];
@@ -595,9 +595,9 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existi
 
 // ─── Langkah 5: Preview ───────────────────────────────────────────────────────
 const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList, ketuaStudent }) => {
-    const periode    = (periodeList    || []).find(p => String(p.id) === String(form.academic_period_id));
-    const perusahaan = (perusahaanList || []).find(p => String(p.id) === String(form.kp_company_id));
-    const tema       = (temaList       || []).find(t => String(t.id) === String(form.kp_theme_id));
+    const periode    = (Array.isArray(periodeList) ? periodeList : []).find(p => String(p.id) === String(form.academic_period_id));
+    const perusahaan = (Array.isArray(perusahaanList) ? perusahaanList : []).find(p => String(p.id) === String(form.kp_company_id));
+    const tema       = (Array.isArray(temaList) ? temaList : []).find(t => String(t.id) === String(form.kp_theme_id));
     const anggotaTambahan = (form.anggota_ids || []).map(id => (studentList || []).find(s => s.id === id)).filter(Boolean);
 
     const Row = ({ label, value }) => (
@@ -695,8 +695,7 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
                         <UserCheck className={`w-5 h-5 ${isPending ? 'text-orange-600' : 'text-blue-600'}`} />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-gray-900">{group.name || group.code}</p>
-                        <p className="text-xs text-gray-500 font-mono">{group.code}</p>
+                        <p className="text-sm font-bold text-gray-900">Kelompok {group.id}</p>
                     </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
@@ -812,9 +811,9 @@ const PendaftaranKelompok = () => {
 
     // Data fetching
     const { data: kpGroups, isLoading, refetch }  = useGetKpGroupsQuery();
-    const { data: periodeList }          = useGetAcademicPeriodsQuery();
+    const { data: periodeListRaw }          = useGetAcademicPeriodsQuery();
     const { data: perusahaanListRaw }    = useGetKpCompaniesQuery();
-    const { data: temaList }             = useGetKpThemesQuery();
+    const { data: temaListRaw }             = useGetKpThemesQuery();
     const { data: studentListRaw }       = useGetStudentsQuery();
     const { data: documentTypesRaw }     = useGetDocumentTypesQuery();
     const [createKpGroup]                = useCreateKpGroupMutation();
@@ -839,6 +838,16 @@ const PendaftaranKelompok = () => {
         Array.isArray(documentTypesRaw) ? documentTypesRaw
         : Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : [],
     [documentTypesRaw]);
+
+    const periodeList = useMemo(() =>
+        Array.isArray(periodeListRaw) ? periodeListRaw
+        : Array.isArray(periodeListRaw?.data) ? periodeListRaw.data : [],
+    [periodeListRaw]);
+
+    const temaList = useMemo(() =>
+        Array.isArray(temaListRaw) ? temaListRaw
+        : Array.isArray(temaListRaw?.data) ? temaListRaw.data : [],
+    [temaListRaw]);
 
     // Semua kelompok yang melibatkan user ini
     const kelompok = useMemo(() =>
@@ -991,7 +1000,7 @@ const PendaftaranKelompok = () => {
         if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
         if (step === 1 && !form.kp_company_id)      e.kp_company_id      = 'Pilih perusahaan tujuan KP';
         if (step === 4) {
-            const requiredDocs = (documentTypes || []).filter(dt => dt.is_required);
+            const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
             for (const doc of requiredDocs) {
                 if (!uploads[doc.id] && !existingDocuments[doc.id]) {
                     e.documents = 'Semua dokumen wajib belum diunggah.';
@@ -1112,8 +1121,8 @@ const PendaftaranKelompok = () => {
                             <h3 className="text-sm font-semibold text-gray-900 mb-3">Informasi Kelompok</h3>
                             <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
-                                    <p className="text-sm font-medium text-gray-900 font-mono">{currentGroup.code || '-'}</p>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide">Kelompok</p>
+                                    <p className="text-sm font-medium text-gray-900 font-mono">{currentGroup.id || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
@@ -1168,7 +1177,7 @@ const PendaftaranKelompok = () => {
                                                     {member.student?.nim || '-'}
                                                 </td>
                                                 <td className="px-4 py-2 text-sm">
-                                                    <Badge status={member.role === 'ketua' ? 'amber' : 'gray'}>
+                                                    <Badge status={member.role === 'ketua' ? 'ketua' : 'anggota'}>
                                                         {member.role === 'ketua' ? 'Ketua' : 'Anggota'}
                                                     </Badge>
                                                 </td>

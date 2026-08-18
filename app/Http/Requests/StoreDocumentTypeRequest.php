@@ -15,7 +15,6 @@ class StoreDocumentTypeRequest extends FormRequest
     {
         return [
             'name'        => ['required', 'string', 'max:255', 'unique:document_type,name'],
-            'code'        => ['required', 'string', 'max:50', 'unique:document_type,code'],
             'description' => ['nullable', 'string', 'max:500'],
             'is_required' => ['boolean'],
         ];
@@ -26,8 +25,6 @@ class StoreDocumentTypeRequest extends FormRequest
         return [
             'name.required'        => 'Nama tipe dokumen wajib diisi.',
             'name.unique'          => 'Nama tipe dokumen sudah terdaftar.',
-            'code.required'        => 'Kode tipe dokumen wajib diisi.',
-            'code.unique'          => 'Kode tipe dokumen sudah terdaftar.',
             'description.max'      => 'Deskripsi maksimal 500 karakter.',
             'is_required.boolean'  => 'Bidang wajib harus boolean.',
         ];

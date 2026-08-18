@@ -140,15 +140,31 @@ class PlottingDosenController extends Controller
             $supervisor = $group->members->first()?->supervisor;
             return [
                 'id' => $group->id,
-                'code' => $group->code,
                 'status' => $group->status,
+                'created_at' => $group->created_at,
                 'academic_period' => $group->academicPeriod,
                 'kp_theme' => $group->kpTheme,
                 'kp_company' => $group->kpCompany,
                 'members_count' => $group->members->count(),
+                'members' => $group->members->map(function ($m) {
+                    return [
+                        'id' => $m->id,
+                        'role' => $m->role,
+                        'status' => $m->status,
+                        'student' => $m->student ? [
+                            'id' => $m->student->id,
+                            'name' => $m->student->user?->name,
+                            'nim' => $m->student->nim,
+                        ] : null,
+                        'supervisor' => $m->supervisor ? [
+                            'id' => $m->supervisor->id,
+                            'name' => $m->supervisor->user?->name,
+                        ] : null,
+                    ];
+                }),
                 'supervisor' => $supervisor ? [
                     'id' => $supervisor->id,
-                    'name' => $supervisor->name,
+                    'name' => $supervisor->user?->name,
                 ] : null,
                 'assigned_at' => $group->members->first()?->updated_at,
             ];
@@ -188,9 +204,8 @@ class PlottingDosenController extends Controller
             $member = $group->members->first();
             return [
                 'id' => $group->id,
-                'code' => $group->code,
-                'name' => $group->name,
                 'status' => $group->status,
+                'created_at' => $group->created_at,
                 'academic_period' => $group->academicPeriod,
                 'kp_theme' => $group->kpTheme,
                 'kp_company' => $group->kpCompany,
@@ -202,6 +217,10 @@ class PlottingDosenController extends Controller
                             'id' => $m->student->id,
                             'name' => $m->student->user?->name,
                             'nim' => $m->student->nim,
+                        ] : null,
+                        'supervisor' => $m->supervisor ? [
+                            'id' => $m->supervisor->id,
+                            'name' => $m->supervisor->user?->name,
                         ] : null,
                     ];
                 }),

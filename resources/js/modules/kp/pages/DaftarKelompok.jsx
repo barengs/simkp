@@ -11,13 +11,16 @@ import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import Statistik from '../../../components/ui/Statistik';
+import Input from '../../../components/ui/Input';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
 import {
     Users, FileText, Search, Building2, BookOpen, CalendarDays,
-    GraduationCap, Crown, Eye, Trash2, UserMinus, UsersRound,
+    GraduationCap, Crown, Eye, Trash2, UserMinus, UsersRound, Clock, CheckCircle2,
 } from 'lucide-react';
+
 
 const STATUS_LABEL = {
     draft: 'Draft', submitted: 'Menunggu Validasi', rejected: 'Ditolak',
@@ -51,7 +54,7 @@ const RemoveSupervisorModal = ({ isOpen, onClose, onConfirm, submitting, data })
 
                 <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Kelompok</p>
-                    <p className="text-sm font-medium text-gray-900 font-mono">{data.code}</p>
+                    <p className="text-sm font-medium text-gray-900 font-mono">{data.id}</p>
                     <p className="text-xs text-gray-500">{data.kp_company?.name}</p>
                 </div>
 
@@ -83,7 +86,10 @@ const RemoveSupervisorModal = ({ isOpen, onClose, onConfirm, submitting, data })
 // ─── Admin View Component ─────────────────────────────────────────────────────
 const AdminKelompokView = () => {
     const navigate = useNavigate();
-    const [search, setSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
     const [selectedData, setSelectedData] = useState(null);
     const [showRemove, setShowRemove] = useState(false);
     const { data: groupsRaw, isLoading, refetch } = useGetAssignedGroupsQuery();
@@ -93,6 +99,14 @@ const AdminKelompokView = () => {
         refetch();
     }, [refetch]);
 
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
     // Process data
     const groups = useMemo(() =>
         Array.isArray(groupsRaw) ? groupsRaw
@@ -101,11 +115,15 @@ const AdminKelompokView = () => {
 
     const filtered = useMemo(() =>
         groups.filter(g =>
-            !search || g.code?.toLowerCase().includes(search.toLowerCase()) ||
-            g.kp_company?.name?.toLowerCase().includes(search.toLowerCase()) ||
-            g.supervisor?.name?.toLowerCase().includes(search.toLowerCase())
+            !debouncedSearch || g.kp_company?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            g.supervisor?.name?.toLowerCase().includes(debouncedSearch.toLowerCase())
         ),
-    [groups, search]);
+    [groups, debouncedSearch]);
+
+    const paginatedData = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return filtered.slice(start, start + perPage);
+    }, [filtered, page, perPage]);
 
     // Stats
     const stats = useMemo(() => ({
@@ -137,11 +155,19 @@ const AdminKelompokView = () => {
     // Columns
     const columns = [
         {
-            name: 'Kode',
-            selector: r => r.code || '-',
-            sortable: true,
-            width: '120px',
-            cell: r => <code className="text-xs">{r.code}</code>,
+            name: 'Ketua',
+            selector: r => r.members?.find(m => m.role === 'ketua')?.student?.name || '-',
+            sortable: false,
+            wrap: true,
+            cell: r => {
+                const ketua = r.members?.find(m => m.role === 'ketua');
+                return (
+                    <div>
+                        <p className="text-sm font-medium text-gray-900">{ketua?.student?.name || '-'}</p>
+                        <p className="text-xs text-gray-500 font-mono">{ketua?.student?.nim || '-'}</p>
+                    </div>
+                );
+            },
         },
         {
             name: 'Perusahaan',
@@ -169,14 +195,17 @@ const AdminKelompokView = () => {
         },
         {
             name: 'Dosen Pembimbing',
-            selector: r => r.supervisor?.name || '-',
+            selector: r => r.members?.find(m => m.supervisor)?.supervisor?.name || '-',
             sortable: true,
             wrap: true,
-            cell: r => r.supervisor ? (
-                <div>
-                    <p className="text-sm font-medium text-gray-900">{r.supervisor.name}</p>
-                </div>
-            ) : '-',
+            cell: r => {
+                const supervisor = r.members?.find(m => m.supervisor)?.supervisor;
+                return supervisor ? (
+                    <div>
+                        <p className="text-sm font-medium text-gray-900">{supervisor.name}</p>
+                    </div>
+                ) : '-';
+            },
         },
         {
             name: 'Status',
@@ -206,53 +235,83 @@ const AdminKelompokView = () => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="bg-white">
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Kelompok</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                    </div>
-                </Card>
-                <Card className="bg-emerald-50 border-emerald-200">
-                    <div className="p-4">
-                        <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Berjalan</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.ongoing}</p>
-                    </div>
-                </Card>
+                <Statistik
+                    title="Total Kelompok"
+                    value={stats.total}
+                    icon={Users}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Disetujui"
+                    value={stats.approved}
+                    icon={CheckCircle2}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
+                <Statistik
+                    title="Berjalan"
+                    value={stats.ongoing}
+                    icon={Clock}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
             </div>
 
-            {/* Search */}
-            <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <input
-                        type="text"
-                        placeholder="Cari kode kelompok, perusahaan, atau dosen..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                </div>
-            </Card>
-
             {/* Table */}
-            <Card title="Daftar Kelompok Terplotting" subtitle={`${filtered.length} kelompok`}>
-                {isLoading ? (
-                    <Skeleton className="h-64" />
-                ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang diplotting'}
+            <Card>
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Kelompok Terplotting
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {debouncedSearch ? `${filtered.length} hasil ditemukan` : `${filtered.length} kelompok`}
                         </p>
                     </div>
-                ) : (
-                    <DataTableWrapper columns={columns} data={filtered} pagination />
-                )}
+                    <div className="w-full sm:w-80">
+                        <Input
+                            placeholder="Cari kode kelompok, perusahaan, atau dosen..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            icon={Search}
+                        />
+                    </div>
+                </div>
+                <div className="overflow-hidden">
+                    {isLoading ? (
+                        <Skeleton className="h-64" />
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {debouncedSearch ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang diplotting'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={paginatedData}
+                            pagination
+                            paginationTotalRows={filtered.length}
+                            paginationDefaultPage={page}
+                            onChangeRowsPerPage={(currentRowsPerPage) => {
+                                setPerPage(currentRowsPerPage);
+                                setPage(1);
+                            }}
+                            onChangePage={(page) => setPage(page)}
+                            highlightOnHover
+                        />
+                    )}
+                </div>
             </Card>
 
             {/* Modals */}
@@ -272,8 +331,10 @@ const AdminKelompokView = () => {
 // ─── Dosen View Component ─────────────────────────────────────────────────────
 const DosenKelompokView = () => {
     const navigate = useNavigate();
-    const [search, setSearch] = useState('');
-    const [selectedData, setSelectedData] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
 
     // API
     const { data: groupsRaw, isLoading, refetch } = useGetMyAssignedGroupsQuery();
@@ -281,6 +342,14 @@ const DosenKelompokView = () => {
     useEffect(() => {
         refetch();
     }, [refetch]);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
 
     // Process data
     const groups = useMemo(() =>
@@ -290,10 +359,14 @@ const DosenKelompokView = () => {
 
     const filtered = useMemo(() =>
         groups.filter(g =>
-            !search || g.code?.toLowerCase().includes(search.toLowerCase()) ||
-            g.kp_company?.name?.toLowerCase().includes(search.toLowerCase())
+            !debouncedSearch || g.kp_company?.name?.toLowerCase().includes(debouncedSearch.toLowerCase())
         ),
-    [groups, search]);
+    [groups, debouncedSearch]);
+
+    const paginatedData = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return filtered.slice(start, start + perPage);
+    }, [filtered, page, perPage]);
 
     // Stats
     const stats = useMemo(() => ({
@@ -310,11 +383,19 @@ const DosenKelompokView = () => {
     // Columns
     const columns = [
         {
-            name: 'Kode',
-            selector: r => r.code || '-',
-            sortable: true,
-            width: '120px',
-            cell: r => <code className="text-xs">{r.code}</code>,
+            name: 'Ketua',
+            selector: r => r.members?.find(m => m.role === 'ketua')?.student?.name || '-',
+            sortable: false,
+            wrap: true,
+            cell: r => {
+                const ketua = r.members?.find(m => m.role === 'ketua');
+                return (
+                    <div>
+                        <p className="text-sm font-medium text-gray-900">{ketua?.student?.name || '-'}</p>
+                        <p className="text-xs text-gray-500 font-mono">{ketua?.student?.nim || '-'}</p>
+                    </div>
+                );
+            },
         },
         {
             name: 'Perusahaan',
@@ -363,68 +444,88 @@ const DosenKelompokView = () => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="bg-white">
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Kelompok</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                    </div>
-                </Card>
-                <Card className="bg-emerald-50 border-emerald-200">
-                    <div className="p-4">
-                        <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Berjalan</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.ongoing}</p>
-                    </div>
-                </Card>
+                <Statistik
+                    title="Total Kelompok"
+                    value={stats.total}
+                    icon={Users}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Disetujui"
+                    value={stats.approved}
+                    icon={CheckCircle2}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
+                <Statistik
+                    title="Berjalan"
+                    value={stats.ongoing}
+                    icon={Clock}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
             </div>
 
-            {/* Search */}
-            <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <input
-                        type="text"
-                        placeholder="Cari kode kelompok atau perusahaan..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                </div>
-            </Card>
-
             {/* Table */}
-            <Card title="Kelompok Bimbingan Anda" subtitle={`${filtered.length} kelompok`}>
-                {isLoading ? (
-                    <Skeleton className="h-64" />
-                ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang dibimbing'}
+            <Card>
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Kelompok Bimbingan Anda
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {debouncedSearch ? `${filtered.length} hasil ditemukan` : `${filtered.length} kelompok`}
                         </p>
                     </div>
-                ) : (
-                    <DataTableWrapper columns={columns} data={filtered} pagination />
-                )}
+                    <div className="w-full sm:w-80">
+                        <Input
+                            placeholder="Cari kode kelompok atau perusahaan..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            icon={Search}
+                        />
+                    </div>
+                </div>
+                <div className="overflow-hidden">
+                    {isLoading ? (
+                        <Skeleton className="h-64" />
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {debouncedSearch ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang dibimbing'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={paginatedData}
+                            pagination
+                            paginationTotalRows={filtered.length}
+                            paginationDefaultPage={page}
+                            onChangeRowsPerPage={(currentRowsPerPage) => {
+                                setPerPage(currentRowsPerPage);
+                                setPage(1);
+                            }}
+                            onChangePage={(page) => setPage(page)}
+                            highlightOnHover
+                        />
+                    )}
+                </div>
             </Card>
-
-            {/* Modals */}
-            {/* {showRemove && selectedData && (
-                <RemoveSupervisorModal
-                    isOpen={showRemove}
-                    onClose={() => setShowRemove(false)}
-                    onConfirm={confirmRemove}
-                    submitting={isRemoving}
-                    data={selectedData}
-                />
-            )} */}
         </div>
     );
 };
+
 
 // ─── Main Component (Router Based on Role) ───────────────────────────────────
 const DaftarKelompok = () => {

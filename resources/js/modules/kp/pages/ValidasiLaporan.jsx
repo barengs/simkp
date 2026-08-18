@@ -10,6 +10,7 @@ import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler'
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Badge from '../../../components/ui/Badge';
+import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
@@ -17,8 +18,9 @@ import Textarea from '../../../components/ui/Textarea';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import {
-    FileText, Search, Check, X, AlertCircle, Eye, Award,
+    FileText, Search, Check, X, AlertCircle, Eye, Award, Clock, CheckCircle2, XCircle,
 } from 'lucide-react';
+
 
 const STATUS_CONFIG = {
     pending: { label: 'Menunggu Review', color: 'yellow' },
@@ -114,12 +116,10 @@ const ValidasiLaporan = () => {
 
     const filtered = useMemo(() => {
         return reports.filter(item => {
-            const groupName = item.kp_group?.name || '';
             const companyName = item.kp_group?.kp_company?.name || '';
             const studentName = item.student?.user?.name || '';
             const matchSearch = !search ||
                 studentName.toLowerCase().includes(search.toLowerCase()) ||
-                groupName.toLowerCase().includes(search.toLowerCase()) ||
                 companyName.toLowerCase().includes(search.toLowerCase());
 
             const matchStatus = !filterStatus || item.status === filterStatus;
@@ -226,7 +226,7 @@ const ValidasiLaporan = () => {
         },
         {
             name: 'Kelompok',
-            selector: row => row.kp_group?.name || '-',
+            selector: row => row.kp_group?.id || '-',
             sortable: true,
             wrap: true,
         },
@@ -300,37 +300,59 @@ const ValidasiLaporan = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <Card className="bg-white">
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                    </div>
-                </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.pending}</p>
-                    </div>
-                </Card>
-                <Card className="bg-emerald-50 border-emerald-200">
-                    <div className="p-4">
-                        <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
-                <Card className="bg-red-50 border-red-200">
-                    <div className="p-4">
-                        <p className="text-xs text-red-700 uppercase tracking-wide">Revisi</p>
-                        <p className="text-2xl font-bold text-red-900 mt-1">{stats.rejected}</p>
-                    </div>
-                </Card>
+                <Statistik
+                    title="Total"
+                    value={stats.total}
+                    icon={FileText}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Menunggu"
+                    value={stats.pending}
+                    icon={Clock}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
+                <Statistik
+                    title="Disetujui"
+                    value={stats.approved}
+                    icon={CheckCircle2}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
+                <Statistik
+                    title="Revisi"
+                    value={stats.rejected}
+                    icon={XCircle}
+                    iconClassName="text-red-600"
+                    borderClassName="bg-red-500"
+                />
             </div>
 
-            {/* Filters */}
+            {/* Table */}
             <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Laporan
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {search || filterStatus
+                                ? `${filtered.length} hasil ditemukan`
+                                : `${filtered.length} entri`}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="w-full sm:w-80">
                             <Input
                                 placeholder="Cari mahasiswa atau kelompok..."
                                 value={search}
@@ -352,26 +374,24 @@ const ValidasiLaporan = () => {
                         </div>
                     </div>
                 </div>
-            </Card>
-
-            {/* Table */}
-            <Card title="Daftar Laporan" subtitle={`${filtered.length} entri`}>
-                {isLoading ? (
-                    <Skeleton className="h-64" />
-                ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada laporan'}
-                        </p>
-                    </div>
-                ) : (
-                    <DataTableWrapper
-                        columns={columns}
-                        data={filtered}
-                        pagination
-                    />
-                )}
+                <div className="overflow-hidden">
+                    {isLoading ? (
+                        <Skeleton className="h-64" />
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-12">
+                            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada laporan'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={filtered}
+                            pagination
+                        />
+                    )}
+                </div>
             </Card>
 
             {showAction && (
@@ -395,7 +415,7 @@ const ValidasiLaporan = () => {
                     <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
                             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
-                            <span>Input nilai untuk laporan kelompok <strong>{gradingReport.kp_group?.name || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
+                            <span>Input nilai untuk laporan kelompok <strong>{gradingReport.kp_group?.id || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

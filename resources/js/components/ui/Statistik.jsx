@@ -35,7 +35,6 @@ const Statistik = ({
                     top-0
                     bottom-0
                     w-1
-                    border-l-4
                     ${borderClassName}
                 `}
             />

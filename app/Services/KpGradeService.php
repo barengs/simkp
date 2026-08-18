@@ -8,6 +8,37 @@ use Illuminate\Support\Facades\DB;
 
 class KpGradeService
 {
+    public function getPaginated(array $params)
+    {
+        $query = KpGrade::with([
+            'kpGroupMember.kpGroup.academicPeriod',
+            'kpGroupMember.kpGroup.kpCompany',
+            'kpGroupMember.student.user',
+            'evaluationCriteria',
+        ]);
+
+        if (!empty($params['search'])) {
+            $search = $params['search'];
+            $query->whereHas('kpGroupMember.student.user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('kpGroupMember.kpGroup.kpCompany', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+
+        if (!empty($params['status'])) {
+            $query->where('status', $params['status']);
+        }
+
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortDirection = $params['sort_direction'] ?? 'desc';
+        $allowedSorts = ['created_at', 'status'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = isset($params['per_page']) ? (int)$params['per_page'] : 10;
+        return $query->paginate($perPage);
+    }
+
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return KpGrade::with([

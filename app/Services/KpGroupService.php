@@ -17,8 +17,38 @@ class KpGroupService
             'kpTheme',
             'kpCompany',
             'members.student.user',
+            'members.supervisor',
             'kpDocuments.documentType',
         ]);
+    }
+
+    public function getPaginated(array $params)
+    {
+        $query = $this->withRelations()
+            ->whereDoesntHave('members', fn ($q) => $q->whereNotNull('supervisor_lecturer_id'));
+
+        if (!empty($params['search'])) {
+            $search = $params['search'];
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('kpCompany', fn ($cq) => $cq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('members.supervisor', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if (!empty($params['status'])) {
+            $query->where('status', $params['status']);
+        }
+
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortDirection = $params['sort_direction'] ?? 'desc';
+        $allowedSorts = ['created_at', 'status'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = isset($params['per_page']) ? (int)$params['per_page'] : 10;
+        return $query->paginate($perPage);
     }
 
     public function getAll(): \Illuminate\Database\Eloquent\Collection
@@ -45,24 +75,18 @@ class KpGroupService
 
     /**
      * Buat kelompok baru.
-     * - Auto-generate code dari periode + urutan jika tidak disuplai.
      * - Mahasiswa pembuat otomatis menjadi ketua (role = 'ketua').
      */
     public function create(array $data): KpGroup
     {
         return DB::transaction(function () use ($data) {
-            // Auto-generate code jika tidak disuplai
-            $code = $data['code'] ?? $this->generateCode($data['academic_period_id']);
-
             $kelompok = KpGroup::create([
-                'name'               => $data['name'] ?? $code,
-                'code'               => $code,
                 'start_date'         => $data['start_date'] ?? null,
                 'end_date'           => $data['end_date'] ?? null,
                 'kp_company_id'      => $data['kp_company_id'],
                 'kp_theme_id'        => $data['kp_theme_id'],
                 'academic_period_id' => $data['academic_period_id'],
-                'status'             => 'submitted', // Langsung diajukan, bukan draft
+                'status'             => 'submitted',
                 'description'        => $data['description'] ?? null,
             ]);
 

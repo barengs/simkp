@@ -58,7 +58,11 @@ export const pengaturanApi = createApi({
             invalidatesTags: ['DocumentType'],
         }),
 
-        // Pengaturan Aplikasi
+        // Pengaturan Aplikasi (public - untuk sidebar/logo)
+        getPublicSettings: builder.query({
+            query: () => '/setting/public',
+            providesTags: ['Setting'],
+        }),
         getSettings: builder.query({
             query: () => '/setting',
             providesTags: ['Setting'],
@@ -120,6 +124,7 @@ export const {
     useCreateDocumentTypeMutation,
     useUpdateDocumentTypeMutation,
     useDeleteDocumentTypeMutation,
+    useGetPublicSettingsQuery,
     useGetSettingsQuery,
     useUpdateSettingsMutation,
     useUpdateProfileMutation,

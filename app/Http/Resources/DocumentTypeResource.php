@@ -12,7 +12,6 @@ class DocumentTypeResource extends JsonResource
         return [
             'id'          => $this->id,
             'name'        => $this->name,
-            'code'        => $this->code,
             'description' => $this->description,
             'is_required' => $this->is_required,
             'created_at'  => $this->created_at,

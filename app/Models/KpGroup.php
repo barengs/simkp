@@ -12,8 +12,6 @@ class KpGroup extends Model
     protected $table = 'kp_group';
 
     protected $fillable = [
-        'name',
-        'code',
         'start_date',
         'end_date',
         'kp_company_id',

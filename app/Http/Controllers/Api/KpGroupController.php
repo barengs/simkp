@@ -38,7 +38,7 @@ class KpGroupController extends Controller
         }
 
         // Koordinator / Dosen / Admin: semua kelompok
-        return KpGroupResource::collection($this->kpGroupService->getAll());
+        return KpGroupResource::collection($this->kpGroupService->getPaginated($request->all()));
     }
 
     /**

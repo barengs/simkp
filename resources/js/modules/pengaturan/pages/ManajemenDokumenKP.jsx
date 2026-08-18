@@ -42,8 +42,7 @@ const ManajemenDokumenKP = () => {
 
     const filtered = useMemo(() =>
         (documentTypes || []).filter(dt =>
-            !search || dt.name?.toLowerCase().includes(search.toLowerCase()) ||
-            dt.code?.toLowerCase().includes(search.toLowerCase())
+            !search || dt.name?.toLowerCase().includes(search.toLowerCase())
         ),
     [documentTypes, search]);
 
@@ -60,15 +59,13 @@ const ManajemenDokumenKP = () => {
     const validateForm = () => {
         const e = {};
         if (!formData.name.trim()) e.name = 'Nama tipe dokumen wajib diisi';
-        if (!formData.code.trim()) e.code = 'Kode tipe dokumen wajib diisi';
-        if (formData.code.includes(' ')) e.code = 'Kode tidak boleh mengandung spasi';
         if (formData.description.length > 500) e.description = 'Deskripsi maksimal 500 karakter';
         return e;
     };
 
     const openCreate = () => {
         setEditing(null);
-        setFormData({ name: '', code: '', description: '', is_required: false });
+        setFormData({ name: '', description: '', is_required: false });
         setErrors({});
         setShowForm(true);
     };
@@ -77,7 +74,6 @@ const ManajemenDokumenKP = () => {
         setEditing(item);
         setFormData({
             name: item.name,
-            code: item.code,
             description: item.description || '',
             is_required: item.is_required || false,
         });
@@ -133,13 +129,6 @@ const ManajemenDokumenKP = () => {
             selector: r => r.name,
             sortable: true,
             wrap: true,
-        },
-        {
-            name: 'Kode',
-            selector: r => r.code,
-            sortable: true,
-            width: '120px',
-            cell: r => <code className="text-xs bg-gray-100 px-2 py-1 rounded">{r.code}</code>,
         },
         {
             name: 'Deskripsi',
@@ -258,16 +247,6 @@ const ManajemenDokumenKP = () => {
                                     name="name"
                                     placeholder="Contoh: Surat Proposal"
                                     error={errors.name}
-                                />
-                                <Input
-                                    label="Kode"
-                                    required
-                                    value={formData.code}
-                                    onChange={handleChange}
-                                    name="code"
-                                    placeholder="Contoh: PROPOSAL"
-                                    error={errors.code}
-                                    helperText="Tanpa spasi, gunakan underscore jika perlu"
                                 />
                                 <div>
                                     <label className="block text-sm font-medium text-gray-900 mb-2">

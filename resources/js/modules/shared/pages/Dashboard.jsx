@@ -312,9 +312,9 @@ const Dashboard = () => {
     const stats = useMemo(() => {
         if (isAdmin) {
             return [
-                { title: 'Total Mahasiswa KP', value: students.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'border-blue-500' },
-                { title: 'Total Dosen', value: lecturers.length, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'border-emerald-500' },
-                { title: 'Total Pendaftaran KP', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-purple-600', borderClassName: 'border-purple-500' },
+                { title: 'Total Mahasiswa KP', value: students.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
+                { title: 'Total Dosen', value: lecturers.length, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Total Pendaftaran KP', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
             ];
         }
 
@@ -322,9 +322,9 @@ const Dashboard = () => {
             const submittedGroups = filteredKpGroups.filter(g => g.status === 'submitted').length;
             const approvedGroups = filteredKpGroups.filter(g => g.status === 'approved').length;
             return [
-                { title: 'Pendaftaran Baru', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-blue-600', borderClassName: 'border-blue-500' },
-                { title: 'Menunggu Verifikasi', value: submittedGroups, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'border-yellow-500' },
-                { title: 'Sudah Disetujui', value: approvedGroups, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'border-emerald-500' },
+                { title: 'Pendaftaran Baru', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
+                { title: 'Menunggu Verifikasi', value: submittedGroups, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'bg-yellow-500' },
+                { title: 'Sudah Disetujui', value: approvedGroups, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
             ];
         }
 
@@ -333,9 +333,9 @@ const Dashboard = () => {
             const pendingLogbooks = filteredLogbooks.filter(l => supervisedGroups.some(g => g.id === l.kp_group_id) && l.status === 'pending').length;
             const pendingReports = filteredReports.filter(r => supervisedGroups.some(g => g.id === r.kp_group_id) && r.status === 'pending').length;
             return [
-                { title: 'Kelompok Bimbingan', value: supervisedGroups.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'border-blue-500' },
-                { title: 'Total Mahasiswa', value: totalStudents, icon: GraduationCap, iconClassName: 'text-emerald-600', borderClassName: 'border-emerald-500' },
-                { title: 'Menunggu Verifikasi', value: pendingLogbooks + pendingReports, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'border-yellow-500' },
+                { title: 'Kelompok Bimbingan', value: supervisedGroups.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
+                { title: 'Total Mahasiswa', value: totalStudents, icon: GraduationCap, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Menunggu Verifikasi', value: pendingLogbooks + pendingReports, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'bg-yellow-500' },
             ];
         }
 
@@ -346,9 +346,9 @@ const Dashboard = () => {
             const myLogbooks = filteredLogbooks.filter(l => l.kp_group_id === myGroupId);
             const myReports = filteredReports.filter(r => r.kp_group_id === myGroupId);
             return [
-                { title: 'Status Kelompok', value: myGroup ? myGroup.status : 'Belum', icon: Users, iconClassName: 'text-blue-600', borderClassName: 'border-blue-500' },
-                { title: 'Logbook Baru', value: myLogbooks.length, icon: BookOpen, iconClassName: 'text-purple-600', borderClassName: 'border-purple-500' },
-                { title: 'Laporan Baru', value: myReports.length, icon: FileText, iconClassName: 'text-orange-600', borderClassName: 'border-orange-500' },
+                { title: 'Status Kelompok', value: myGroup ? myGroup.status : 'Belum', icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
+                { title: 'Logbook Baru', value: myLogbooks.length, icon: BookOpen, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
+                { title: 'Laporan Baru', value: myReports.length, icon: FileText, iconClassName: 'text-orange-600', borderClassName: 'bg-orange-500' },
             ];
         }
 
@@ -365,7 +365,7 @@ const Dashboard = () => {
 
         filteredGroups.forEach(group => {
             const ketua = group.members?.find(m => m.role === 'ketua');
-            const name = ketua?.student?.user?.name || group.name || 'Kelompok';
+            const name = ketua?.student?.user?.name || 'Kelompok';
 
             if (group.status === 'submitted') {
                 activities.push({ name, status: 'Menunggu Validasi', type: 'Pendaftaran', date: group.created_at });
@@ -389,7 +389,7 @@ const Dashboard = () => {
         filteredReports.forEach(report => {
             const group = report.kp_group;
             const ketua = group?.members?.find(m => m.role === 'ketua');
-            const name = ketua?.student?.user?.name || group?.name || 'Laporan';
+            const name = ketua?.student?.user?.name || 'Laporan';
 
             let status = 'Menunggu Validasi';
             if (report.status === 'approved') status = 'Disetujui';

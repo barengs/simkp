@@ -8,6 +8,37 @@ use Illuminate\Support\Facades\DB;
 
 class ReportService
 {
+    public function getPaginated(array $params)
+    {
+        $query = Report::with([
+            'kpGroup.academicPeriod',
+            'kpGroup.kpCompany',
+            'student.user',
+            'kpGroup.members.student.user',
+        ]);
+
+        if (!empty($params['search'])) {
+            $search = $params['search'];
+            $query->whereHas('student.user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('kpGroup.kpCompany', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+
+        if (!empty($params['status'])) {
+            $query->where('status', $params['status']);
+        }
+
+        $sortBy = $params['sort_by'] ?? 'created_at';
+        $sortDirection = $params['sort_direction'] ?? 'desc';
+        $allowedSorts = ['created_at', 'status'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = isset($params['per_page']) ? (int)$params['per_page'] : 10;
+        return $query->paginate($perPage);
+    }
+
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return Report::with([

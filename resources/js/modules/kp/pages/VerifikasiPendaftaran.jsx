@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     useGetVerifikasiQuery,
     useUpdateVerifikasiMutation,
@@ -10,6 +10,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
@@ -60,7 +61,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                     <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Nama</p>
-                            <p className="text-sm font-medium text-gray-900">{ketua.student?.user?.name || '-'}</p>
+                            <p className="text-sm font-medium text-gray-900">{ketua.student?.name || '-'}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide">NIM</p>
@@ -104,9 +105,9 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Kelompok</p>
                             <p className="text-sm font-medium text-gray-900 font-mono">
-                                {data.code || '-'}
+                                {data.id || '-'}
                             </p>
                         </div>
                     </div>
@@ -133,7 +134,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                                     <tr key={member.id}>
                                         <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
                                         <td className="px-4 py-2 text-sm font-medium text-gray-900">
-                                            {member.student?.user?.name || '-'}
+                                            {member.student?.name || '-'}
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-500 font-mono">
                                             {member.student?.nim || '-'}
@@ -179,16 +180,11 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                                                         <p className="text-sm font-medium text-gray-900">
                                                             {doc.document_type?.name || doc.title || '-'}
                                                         </p>
-                                                        {doc.document_type?.code && (
-                                                            <p className="text-xs text-gray-500 font-mono">
-                                                                {doc.document_type.code}
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-2">
-                                                <Badge status={doc.status === 'approved' ? 'approved' : doc.status === 'rejected' ? 'ditolak' : 'submitted'}>
+                                                <Badge status={doc.status === 'approved' ? 'approved' : doc.status === 'rejected' ? 'rejected' : 'submitted'}>
                                                     {doc.status === 'approved' ? 'Disetujui' : doc.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
                                                 </Badge>
                                             </td>
@@ -443,7 +439,7 @@ const PlottingModal = ({ isOpen, onClose, onConfirm, submitting, data, lecturers
 
                 <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Kelompok</p>
-                    <p className="text-sm font-medium text-gray-900 font-mono">{data?.code}</p>
+                    <p className="text-sm font-medium text-gray-900 font-mono">{data?.id}</p>
                     <p className="text-xs text-gray-500">{data?.kp_company?.name}</p>
                 </div>
 
@@ -484,13 +480,24 @@ const VerifikasiPendaftaran = () => {
     const [assignSupervisor, { isLoading: isAssigning }] = useAssignSupervisorMutation();
 
     // State
-    const [search, setSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [filterStatus, setFilterStatus] = useState('');
     const [selectedData, setSelectedData] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [showReject, setShowReject] = useState(false);
     const [showApprove, setShowApprove] = useState(false);
     const [showPlotting, setShowPlotting] = useState(false);
-    const [filterStatus, setFilterStatus] = useState('');
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
 
     // Process data
     const verifikasi = useMemo(() =>
@@ -505,17 +512,21 @@ const VerifikasiPendaftaran = () => {
 
     const filtered = useMemo(() =>
         verifikasi.filter(item => {
-            const matchSearch = !search ||
-                item.student?.name?.toLowerCase().includes(search.toLowerCase()) ||
-                item.student?.nim?.toLowerCase().includes(search.toLowerCase()) ||
-                item.kp_company?.name?.toLowerCase().includes(search.toLowerCase()) ||
-                item.code?.toLowerCase().includes(search.toLowerCase());
+            const matchSearch = !debouncedSearch ||
+                item.student?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                item.student?.nim?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                item.kp_company?.name?.toLowerCase().includes(debouncedSearch.toLowerCase());
 
             const matchStatus = !filterStatus || item.status === filterStatus;
 
             return matchSearch && matchStatus;
         }),
-    [verifikasi, search, filterStatus]);
+    [verifikasi, debouncedSearch, filterStatus]);
+
+    const paginatedData = useMemo(() => {
+        const start = (page - 1) * perPage;
+        return filtered.slice(start, start + perPage);
+    }, [filtered, page, perPage]);
 
     // Stats
     const stats = useMemo(() => ({
@@ -538,6 +549,7 @@ const VerifikasiPendaftaran = () => {
                 setShowReject(false);
                 setShowDetail(false);
                 refetch();
+                setPage(1);
             })
             .catch(() => {});
     };
@@ -548,6 +560,7 @@ const VerifikasiPendaftaran = () => {
                 setShowApprove(false);
                 setShowDetail(false);
                 refetch();
+                setPage(1);
             })
             .catch(() => {});
     };
@@ -575,6 +588,7 @@ const VerifikasiPendaftaran = () => {
             setShowPlotting(false);
             setShowDetail(false);
             refetch();
+            setPage(1);
         } catch (err) {
             handleApiError(err, 'Gagal menugaskan dosen pembimbing');
         }
@@ -593,7 +607,7 @@ const VerifikasiPendaftaran = () => {
                 const ketua = row.members?.find(m => m.role === "ketua");
                 return (
                     <div>
-                        <p className="text-sm font-medium text-gray-900">{ketua?.student?.user?.name || '-'}</p>
+                        <p className="text-sm font-medium text-gray-900">{ketua?.student?.name || '-'}</p>
                         <p className="text-xs text-gray-500 font-mono">{ketua?.student?.nim || '-'}</p>
                     </div>
                 );
@@ -696,41 +710,63 @@ const VerifikasiPendaftaran = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <Card className="bg-white">
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Pendaftaran</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                    </div>
-                </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu Validasi</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.submitted}</p>
-                    </div>
-                </Card>
-                <Card className="bg-emerald-50 border-emerald-200">
-                    <div className="p-4">
-                        <p className="text-xs text-emerald-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
-                <Card className="bg-red-50 border-red-200">
-                    <div className="p-4">
-                        <p className="text-xs text-red-700 uppercase tracking-wide">Ditolak</p>
-                        <p className="text-2xl font-bold text-red-900 mt-1">{stats.rejected}</p>
-                    </div>
-                </Card>
+                <Statistik
+                    title="Total Pendaftaran"
+                    value={stats.total}
+                    icon={FileText}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Menunggu Validasi"
+                    value={stats.submitted}
+                    icon={AlertCircle}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
+                <Statistik
+                    title="Disetujui"
+                    value={stats.approved}
+                    icon={CheckCircle2}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
+                <Statistik
+                    title="Ditolak"
+                    value={stats.rejected}
+                    icon={XCircle}
+                    iconClassName="text-red-600"
+                    borderClassName="bg-red-500"
+                />
             </div>
 
-            {/* Filters */}
+            {/* Table */}
             <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Pendaftaran
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {debouncedSearch || filterStatus
+                                ? `${filtered.length} hasil ditemukan`
+                                : `${filtered.length} pendaftaran`}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="w-full sm:w-80">
                             <Input
-                                placeholder="Cari berdasarkan nama, NIM, perusahaan, atau kode kelompok..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari nama, NIM, perusahaan, atau kode..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 icon={Search}
                             />
                         </div>
@@ -747,27 +783,32 @@ const VerifikasiPendaftaran = () => {
                         </div>
                     </div>
                 </div>
-            </Card>
-
-            {/* Table */}
-            <Card title="Daftar Pendaftaran" subtitle={`${filtered.length} pendaftaran`}>
-                {isLoading ? (
-                    <Skeleton className="h-64" />
-                ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada pendaftaran'}
-                        </p>
-                    </div>
-                ) : (
-                    <DataTableWrapper
-                        columns={columns}
-                        data={filtered}
-                        pagination
-                        highlightOnHover
-                    />
-                )}
+                <div className="overflow-hidden">
+                    {isLoading ? (
+                        <Skeleton className="h-64" />
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-12">
+                            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {debouncedSearch || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada pendaftaran'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={paginatedData}
+                            pagination
+                            paginationTotalRows={filtered.length}
+                            paginationDefaultPage={page}
+                            onChangeRowsPerPage={(currentRowsPerPage) => {
+                                setPerPage(currentRowsPerPage);
+                                setPage(1);
+                            }}
+                            onChangePage={(page) => setPage(page)}
+                            highlightOnHover
+                        />
+                    )}
+                </div>
             </Card>
 
             {/* Modals */}

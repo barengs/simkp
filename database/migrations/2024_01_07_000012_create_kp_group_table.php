@@ -10,8 +10,6 @@ return new class extends Migration
     {
         Schema::create('kp_group', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('code')->unique();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->foreignId('kp_company_id')->nullable()->constrained('kp_company')->nullOnDelete();

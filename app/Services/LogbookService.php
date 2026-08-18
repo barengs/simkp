@@ -8,6 +8,40 @@ use Illuminate\Support\Facades\DB;
 
 class LogbookService
 {
+    public function getPaginated(array $params)
+    {
+        $query = Logbook::with([
+            'kpGroup.academicPeriod',
+            'kpGroup.kpCompany',
+            'kpGroup.members.student.user',
+            'student.user',
+        ]);
+
+        if (!empty($params['search'])) {
+            $search = $params['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('activity', 'like', "%{$search}%")
+                  ->orWhereHas('student.user', fn ($sq) => $sq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('kpGroup.kpCompany', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if (!empty($params['status'])) {
+            $query->where('status', $params['status']);
+        }
+
+        $sortBy = $params['sort_by'] ?? 'date';
+        $sortDirection = $params['sort_direction'] ?? 'desc';
+        $allowedSorts = ['date', 'status'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = isset($params['per_page']) ? (int)$params['per_page'] : 10;
+        return $query->paginate($perPage);
+    }
+
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return Logbook::with([

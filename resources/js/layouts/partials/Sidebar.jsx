@@ -4,14 +4,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Database } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { menuConfig } from '../../config/menuConfig';
-import { useGetSettingsQuery } from '../../modules/pengaturan/api/pengaturanApi';
+import { useGetPublicSettingsQuery } from '../../modules/pengaturan/api/pengaturanApi';
 
 const Sidebar = ({ isOpen = true }) => {
   const location = useLocation();
   const { user, roles, permissions } = useSelector((state) => state.auth);
   const [openMenus, setOpenMenus] = useState({});
 
-  const { data: settings } = useGetSettingsQuery(undefined, { skip: !roles.includes('admin') });
+  const { data: settings } = useGetPublicSettingsQuery();
 
   const appName = settings?.app_name || 'SIM-KPTA';
   const logoPath = settings?.logo_path || null;

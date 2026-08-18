@@ -19,12 +19,12 @@ class KpGradeController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = request()->user();
+        $user = $request->user();
 
         if ($user->can('kp.nilai.input')) {
-            $groupId = request()->query('group_id');
+            $groupId = $request->query('group_id');
 
             if ($groupId) {
                 return response()->json(
@@ -55,7 +55,7 @@ class KpGradeController extends Controller
                 );
             }
 
-            return response()->json(KpGradeResource::collection($this->kpGradeService->getAll()));
+            return response()->json(KpGradeResource::collection($this->kpGradeService->getPaginated($request->all())));
         }
 
         $student = $user->student;

@@ -14,10 +14,12 @@ import Skeleton from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
 import Input from '../../../components/ui/Input';
 import Textarea from '../../../components/ui/Textarea';
+import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import {
-    FileText, Search, Award, CheckCircle, Users,
+    FileText, Search, Award, CheckCircle, Users, Clock,
 } from 'lucide-react';
+
 
 const Nilai = () => {
     const authUser = useSelector(s => s.auth.user);
@@ -48,10 +50,8 @@ const Nilai = () => {
 
     const filteredGroups = useMemo(() => {
         return groups.filter(group => {
-            const groupName = group.name || '';
             const companyName = group.kp_company?.name || '';
             const matchSearch = !search ||
-                groupName.toLowerCase().includes(search.toLowerCase()) ||
                 companyName.toLowerCase().includes(search.toLowerCase());
 
             return matchSearch;
@@ -127,13 +127,12 @@ const Nilai = () => {
         },
         {
             name: 'Kelompok',
-            selector: r => r.name || '-',
+            selector: r => r.id || '-',
             sortable: true,
             wrap: true,
             cell: r => (
                 <div>
-                    <p className="text-sm font-medium text-gray-900">{r.name || '-'}</p>
-                    <p className="text-xs text-gray-500 font-mono">{r.code || '-'}</p>
+                    <p className="text-sm font-medium text-gray-900">{r.id || '-'}</p>
                 </div>
             ),
         },
@@ -203,60 +202,75 @@ const Nilai = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card>
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Kelompok</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{groups.length}</p>
-                    </div>
-                </Card>
-                <Card>
-                    <div className="p-4">
-                        <p className="text-xs text-green-700 uppercase tracking-wide">Sudah Dinilai</p>
-                        <p className="text-2xl font-bold text-green-900 mt-1">
-                            {groups.filter(g => getGroupStats(g.id).pending === 0 && getGroupStats(g.id).total > 0).length}
-                        </p>
-                    </div>
-                </Card>
-                <Card>
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Belum Dinilai</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">
-                            {groups.filter(g => getGroupStats(g.id).pending > 0).length}
-                        </p>
-                    </div>
-                </Card>
+                <Statistik
+                    title="Total Kelompok"
+                    value={groups.length}
+                    icon={Users}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Sudah Dinilai"
+                    value={groups.filter(g => getGroupStats(g.id).pending === 0 && getGroupStats(g.id).total > 0).length}
+                    icon={CheckCircle}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
+                <Statistik
+                    title="Belum Dinilai"
+                    value={groups.filter(g => getGroupStats(g.id).pending > 0).length}
+                    icon={Clock}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
             </div>
 
-            {/* Filters */}
-            <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
-                            <Input
-                                placeholder="Cari kelompok atau mitra..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                icon={Search}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </Card>
-
             {/* Table */}
-            <Card title="Daftar Kelompok" subtitle={`${filteredGroups.length} kelompok`}>
-                {isLoadingGroups ? (
-                    <Skeleton className="h-64" />
-                ) : filteredGroups.length === 0 ? (
-                    <div className="text-center py-12">
-                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang disetujui'}
+            <Card>
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Kelompok
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {search ? `${filteredGroups.length} hasil ditemukan` : `${filteredGroups.length} kelompok`}
                         </p>
                     </div>
-                ) : (
-                    <DataTableWrapper columns={columns} data={filteredGroups} pagination />
-                )}
+                    <div className="w-full sm:w-80">
+                        <Input
+                            placeholder="Cari kelompok atau mitra..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            icon={Search}
+                        />
+                    </div>
+                </div>
+                <div className="overflow-hidden">
+                    {isLoadingGroups ? (
+                        <Skeleton className="h-64" />
+                    ) : filteredGroups.length === 0 ? (
+                        <div className="text-center py-12">
+                            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {search ? 'Tidak ada hasil pencarian' : 'Belum ada kelompok yang disetujui'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={filteredGroups}
+                            pagination
+                        />
+                    )}
+                </div>
             </Card>
 
             {/* Grade Modal */}
@@ -268,7 +282,7 @@ const Nilai = () => {
                     <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
                             <Users className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
-                            <span>Input nilai untuk kelompok <strong>{selectedGroup.name || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
+                            <span>Input nilai untuk kelompok <strong>{selectedGroup.id || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

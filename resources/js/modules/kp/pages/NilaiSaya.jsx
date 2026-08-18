@@ -37,11 +37,9 @@ const NilaiSaya = () => {
         return grades.filter(item => {
             const member = item.kp_group_member;
             const studentName = member?.student?.user?.name || '';
-            const groupName = member?.kp_group?.name || '';
             const companyName = member?.kp_group?.kp_company?.name || '';
             const matchSearch = !search ||
                 studentName.toLowerCase().includes(search.toLowerCase()) ||
-                groupName.toLowerCase().includes(search.toLowerCase()) ||
                 companyName.toLowerCase().includes(search.toLowerCase());
 
             return matchSearch;
@@ -101,7 +99,7 @@ const NilaiSaya = () => {
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs text-gray-500">Kelompok</p>
                                 <p className="text-sm font-medium text-gray-900 truncate">
-                                    {group?.name || group?.code || '-'}
+                                    {group?.id || '-'}
                                 </p>
                             </div>
                         </div>

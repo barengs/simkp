@@ -17,12 +17,12 @@ class ReportController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = request()->user();
+        $user = $request->user();
 
         if ($user->can('kp.laporan.approve')) {
-            $groupId = request()->query('group_id');
+            $groupId = $request->query('group_id');
 
             if ($groupId) {
                 return response()->json(
@@ -53,7 +53,7 @@ class ReportController extends Controller
                 );
             }
 
-            return response()->json(ReportResource::collection($this->reportService->getAll()));
+            return response()->json(ReportResource::collection($this->reportService->getPaginated($request->all())));
         }
 
         $student = $user->student;

@@ -9,6 +9,7 @@ import { handleApiError, handleApiSuccess } from '../../shared/api/errorHandler'
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Badge from '../../../components/ui/Badge';
+import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import Modal from '../../../components/ui/Modal';
@@ -16,8 +17,9 @@ import Textarea from '../../../components/ui/Textarea';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import {
-    FileText, Search, Eye, Check, AlertCircle,
+    FileText, Search, Eye, Check, AlertCircle, Clock, CheckCircle2,
 } from 'lucide-react';
+
 
 const STATUS_CONFIG = {
     pending: { label: 'Menunggu Validasi', color: 'yellow' },
@@ -201,32 +203,53 @@ const LogbookValidation = () => {
             />
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <Card className="bg-white">
-                    <div className="p-4">
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-                    </div>
-                </Card>
-                <Card className="bg-yellow-50 border-yellow-200">
-                    <div className="p-4">
-                        <p className="text-xs text-yellow-700 uppercase tracking-wide">Menunggu</p>
-                        <p className="text-2xl font-bold text-yellow-900 mt-1">{stats.pending}</p>
-                    </div>
-                </Card>
-                <Card className="bg-green-50 border-green-200">
-                    <div className="p-4">
-                        <p className="text-xs text-green-700 uppercase tracking-wide">Disetujui</p>
-                        <p className="text-2xl font-bold text-green-900 mt-1">{stats.approved}</p>
-                    </div>
-                </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Statistik
+                    title="Total"
+                    value={stats.total}
+                    icon={FileText}
+                    iconClassName="text-blue-600"
+                    borderClassName="bg-blue-500"
+                />
+                <Statistik
+                    title="Menunggu"
+                    value={stats.pending}
+                    icon={Clock}
+                    iconClassName="text-yellow-600"
+                    borderClassName="bg-yellow-500"
+                />
+                <Statistik
+                    title="Disetujui"
+                    value={stats.approved}
+                    icon={CheckCircle2}
+                    iconClassName="text-emerald-600"
+                    borderClassName="bg-emerald-500"
+                />
             </div>
 
-            {/* Filters */}
+            {/* Table */}
             <Card>
-                <div className="p-4 border-b border-gray-200">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
+                <div className="
+                    flex flex-col
+                    gap-4
+                    border-b border-gray-100
+                    p-5
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                ">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                            Daftar Logbook
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            {filterStatus
+                                ? `${filtered.length} hasil ditemukan`
+                                : `${filtered.length} entri`}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="w-full sm:w-80">
                             <Input
                                 placeholder="Cari mahasiswa atau kegiatan..."
                                 value={search}
@@ -248,27 +271,25 @@ const LogbookValidation = () => {
                         </div>
                     </div>
                 </div>
-            </Card>
-
-            {/* Table */}
-            <Card title="Daftar Logbook" subtitle={`${filtered.length} entri`}>
-                {isLoading ? (
-                    <Skeleton className="h-64" />
-                ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">
-                            {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada logbook'}
-                        </p>
-                    </div>
-                ) : (
-                    <DataTableWrapper
-                        columns={columns}
-                        data={filtered}
-                        pagination
-                        onRowClicked={handleRowClick}
-                    />
-                )}
+                <div className="overflow-hidden">
+                    {isLoading ? (
+                        <Skeleton className="h-64" />
+                    ) : filtered.length === 0 ? (
+                        <div className="text-center py-12">
+                            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500">
+                                {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada logbook'}
+                            </p>
+                        </div>
+                    ) : (
+                        <DataTableWrapper
+                            columns={columns}
+                            data={filtered}
+                            pagination
+                            onRowClicked={handleRowClick}
+                        />
+                    )}
+                </div>
             </Card>
 
             {showAction && (

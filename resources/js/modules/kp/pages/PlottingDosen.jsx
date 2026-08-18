@@ -53,8 +53,8 @@ const DetailModal = ({ data, onClose }) => {
                     </h4>
                     <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-4">
                         <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Kode Kelompok</p>
-                            <p className="text-sm font-medium text-gray-900 font-mono">{data.code || '-'}</p>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Kelompok</p>
+                            <p className="text-sm font-medium text-gray-900 font-mono">{data.id || '-'}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Status</p>
@@ -177,7 +177,7 @@ const AssignModal = ({ isOpen, onClose, onConfirm, groups, lecturers, submitting
                     <option value="">-- Pilih Kelompok --</option>
                     {groups.map(g => (
                         <option key={g.id} value={g.id}>
-                            {g.code} - {g.kp_company?.name} ({g.members?.length} anggota)
+                            {g.id} - {g.kp_company?.name} ({g.members?.length} anggota)
                         </option>
                     ))}
                 </Select>
@@ -185,7 +185,7 @@ const AssignModal = ({ isOpen, onClose, onConfirm, groups, lecturers, submitting
                 {group && (
                     <div className="bg-gray-50 rounded-lg p-3">
                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Kelompok Dipilih:</p>
-                        <p className="text-sm font-medium text-gray-900">{group.code}</p>
+                        <p className="text-sm font-medium text-gray-900">{group.id}</p>
                         <p className="text-xs text-gray-500">{group.kp_company?.name}</p>
                         <p className="text-xs text-gray-500">{group.members?.length} anggota</p>
                     </div>
@@ -255,15 +255,13 @@ const PlottingDosen = () => {
 
     const filteredUnassigned = useMemo(() =>
         unassignedGroups.filter(g =>
-            !search || g.code?.toLowerCase().includes(search.toLowerCase()) ||
-            g.kp_company?.name?.toLowerCase().includes(search.toLowerCase())
+            !search || g.kp_company?.name?.toLowerCase().includes(search.toLowerCase())
         ),
     [unassignedGroups, search]);
 
     const filteredAssigned = useMemo(() =>
         assignedGroups.filter(g =>
-            !search || g.code?.toLowerCase().includes(search.toLowerCase()) ||
-            g.kp_company?.name?.toLowerCase().includes(search.toLowerCase()) ||
+            !search || g.kp_company?.name?.toLowerCase().includes(search.toLowerCase()) ||
             g.supervisor?.name?.toLowerCase().includes(search.toLowerCase())
         ),
     [assignedGroups, search]);
@@ -304,11 +302,11 @@ const PlottingDosen = () => {
     // Columns
     const columns = [
         {
-            name: 'Kode',
-            selector: r => r.code || '-',
+            name: 'Kelompok',
+            selector: r => r.id || '-',
             sortable: true,
             width: '120px',
-            cell: r => <code className="text-xs">{r.code}</code>,
+            cell: r => <code className="text-xs">{r.id}</code>,
         },
         {
             name: 'Perusahaan',
