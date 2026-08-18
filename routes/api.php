@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/role/{id}', [\App\Http\Controllers\Api\RoleController::class, 'update']);
     Route::delete('/role/{id}', [\App\Http\Controllers\Api\RoleController::class, 'destroy']);
     Route::get('/permission', function () {
-        return response()->json(\Spatie\Permission\Models\Permission::all());
+        return response()->json(\Spatie\Permission\Models\Permission::select(['id', 'name'])->get());
     });
 
     // KP Module

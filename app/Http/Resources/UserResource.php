@@ -18,8 +18,8 @@ class UserResource extends JsonResource
             'lecturer' => $this->whenLoaded('lecturer'),
             'student_id' => $this->student?->id,
             'student' => $this->whenLoaded('student'),
-            'roles' => $this->whenLoaded('roles'),
-            'permissions' => $this->whenLoaded('permissions'),
+            'roles' => $this->relationLoaded('roles') ? $this->roles->pluck('name') : [],
+            'permissions' => $this->relationLoaded('permissions') ? $this->permissions->pluck('name') : [],
         ];
     }
 }
