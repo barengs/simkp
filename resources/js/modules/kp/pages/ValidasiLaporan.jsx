@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
     useGetReportQuery,
@@ -84,8 +84,14 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting, type }) => {
 };
 
 const ValidasiLaporan = () => {
-    const [search, setSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('pending');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('created_at');
+    const [sortDirection, setSortDirection] = useState('desc');
+
     const [showAction, setShowAction] = useState(false);
     const [actionType, setActionType] = useState('approve');
     const [selectedReport, setSelectedReport] = useState(null);
@@ -99,14 +105,34 @@ const ValidasiLaporan = () => {
     });
     const [gradeErrors, setGradeErrors] = useState({});
 
-    const { data: reportsRaw, isLoading, refetch } = useGetReportQuery();
+    // Debounce search term
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    const { data: reportsRaw, isLoading, refetch } = useGetReportQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+        status: filterStatus,
+    });
+
     const [updateReport, { isLoading: isUpdating }] = useUpdateReportMutation();
     const [createGroupGrade, { isLoading: isCreatingGrade }] = useCreateGroupGradeMutation();
     const { data: criteriaRaw } = useGetEvaluationCriteriaQuery();
 
     const reports = useMemo(() =>
-        Array.isArray(reportsRaw) ? reportsRaw
-        : Array.isArray(reportsRaw?.data) ? reportsRaw.data : [],
+        reportsRaw?.data || [],
+    [reportsRaw]);
+
+    const totalRows = useMemo(() =>
+        reportsRaw?.meta?.total || 0,
     [reportsRaw]);
 
     const criteria = useMemo(() =>
@@ -114,26 +140,15 @@ const ValidasiLaporan = () => {
         : Array.isArray(criteriaRaw?.data) ? criteriaRaw.data : [],
     [criteriaRaw]);
 
-    const filtered = useMemo(() => {
-        return reports.filter(item => {
-            const companyName = item.kp_group?.kp_company?.name || '';
-            const studentName = item.student?.user?.name || '';
-            const matchSearch = !search ||
-                studentName.toLowerCase().includes(search.toLowerCase()) ||
-                companyName.toLowerCase().includes(search.toLowerCase());
-
-            const matchStatus = !filterStatus || item.status === filterStatus;
-
-            return matchSearch && matchStatus;
-        });
-    }, [reports, search, filterStatus]);
-
-    const stats = useMemo(() => ({
-        total: reports.length,
-        pending: reports.filter(r => r.status === 'pending').length,
-        approved: reports.filter(r => r.status === 'approved').length,
-        rejected: reports.filter(r => r.status === 'rejected').length,
-    }), [reports]);
+    const stats = useMemo(() => {
+        const responseStats = reportsRaw?.meta?.stats;
+        return {
+            total: responseStats?.total || 0,
+            pending: responseStats?.pending || 0,
+            approved: responseStats?.approved || 0,
+            rejected: responseStats?.rejected || 0,
+        };
+    }, [reportsRaw]);
 
     const openAction = (report, type) => {
         setSelectedReport(report);
@@ -215,7 +230,7 @@ const ValidasiLaporan = () => {
         {
             name: 'Mahasiswa',
             selector: row => row.student?.user?.name || '-',
-            sortable: true,
+            sortable: false,
             wrap: true,
             cell: row => (
                 <div>
@@ -226,19 +241,21 @@ const ValidasiLaporan = () => {
         },
         {
             name: 'Kelompok',
-            selector: row => row.kp_group?.id || '-',
-            sortable: true,
+            selector: row => row.kp_group_id || '-',
+            sortable: false,
             wrap: true,
         },
         {
             name: 'Mitra',
             selector: row => row.kp_group?.kp_company?.name || '-',
-            sortable: true,
+            sortable: false,
             wrap: true,
         },
         {
             name: 'Status',
             selector: row => row.status,
+            sortable: true,
+            sortField: 'status',
             width: '150px',
             center: true,
             cell: row => getStatusBadge(row.status),
@@ -346,24 +363,25 @@ const ValidasiLaporan = () => {
                             Daftar Laporan
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
-                            {search || filterStatus
-                                ? `${filtered.length} hasil ditemukan`
-                                : `${filtered.length} entri`}
+                            {totalRows} entri ditemukan
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="w-full sm:w-80">
                             <Input
                                 placeholder="Cari mahasiswa atau kelompok..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 icon={Search}
                             />
                         </div>
                         <div className="w-full sm:w-48">
                             <select
                                 value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
+                                onChange={(e) => {
+                                    setFilterStatus(e.target.value);
+                                    setPage(1);
+                                }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
                                 <option value="">Semua Status</option>
@@ -377,18 +395,31 @@ const ValidasiLaporan = () => {
                 <div className="overflow-hidden">
                     {isLoading ? (
                         <Skeleton className="h-64" />
-                    ) : filtered.length === 0 ? (
+                    ) : reports.length === 0 ? (
                         <div className="text-center py-12">
                             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500">
-                                {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada laporan'}
+                                {searchTerm || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada laporan'}
                             </p>
                         </div>
                     ) : (
                         <DataTableWrapper
                             columns={columns}
-                            data={filtered}
+                            data={reports}
                             pagination
+                            paginationServer
+                            paginationTotalRows={totalRows}
+                            onChangePage={(newPage) => setPage(newPage)}
+                            onChangeRowsPerPage={(newPerPage) => {
+                                setPerPage(newPerPage);
+                                setPage(1);
+                            }}
+                            paginationDefaultPage={page}
+                            sortServer
+                            onSort={(column, direction) => {
+                                setSortBy(column.sortField || 'created_at');
+                                setSortDirection(direction);
+                            }}
                         />
                     )}
                 </div>

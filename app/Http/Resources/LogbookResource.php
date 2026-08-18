@@ -22,8 +22,6 @@ class LogbookResource extends JsonResource
                 ? $this->kpGroup->kpCompany
                 : null,
             'student' => $this->whenLoaded('student'),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -99,7 +99,12 @@ export const kpApi = createApi({
 
         // ── Logbook ────────────────────────────────────────────────────────────
         getLogbook: builder.query({
-            query: (groupId) => groupId ? `/logbook?group_id=${groupId}` : '/logbook',
+            query: (params) => {
+                if (typeof params === 'object' && params !== null) {
+                    return { url: '/logbook', params };
+                }
+                return params ? `/logbook?group_id=${params}` : '/logbook';
+            },
             providesTags: ['Logbook'],
         }),
         createLogbook: builder.mutation({
@@ -131,7 +136,12 @@ export const kpApi = createApi({
 
         // ── Report ───────────────────────────────────────────────────────────────
         getReport: builder.query({
-            query: (groupId) => groupId ? `/report?group_id=${groupId}` : '/report',
+            query: (params) => {
+                if (typeof params === 'object' && params !== null) {
+                    return { url: '/report', params };
+                }
+                return params ? `/report?group_id=${params}` : '/report';
+            },
             providesTags: ['Report'],
         }),
         createReport: builder.mutation({

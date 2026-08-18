@@ -25,16 +25,19 @@ class ReportController extends Controller
             $groupId = $request->query('group_id');
 
             if ($groupId) {
-                return response()->json(
-                    ReportResource::collection($this->reportService->getByKpGroup((int) $groupId))
-                );
+                return ReportResource::collection($this->reportService->getByKpGroup((int) $groupId))
+                    ->additional([
+                        'meta' => [
+                            'stats' => $this->reportService->getStats(['kp_group_id' => $groupId])
+                        ]
+                    ]);
             }
 
             if ($user->hasRole('dosen')) {
                 $lecturerId = optional($user->lecturer)->id;
 
                 if (!$lecturerId) {
-                    return response()->json([]);
+                    return ReportResource::collection(collect([]));
                 }
 
                 $supervisedGroupIds = \App\Models\KpGroupMember::query()
@@ -45,15 +48,26 @@ class ReportController extends Controller
                     ->toArray();
 
                 if (empty($supervisedGroupIds)) {
-                    return response()->json([]);
+                    return ReportResource::collection(collect([]));
                 }
 
-                return response()->json(
-                    ReportResource::collection($this->reportService->getByKpGroupIds($supervisedGroupIds))
-                );
+                $params = $request->all();
+                $params['kp_group_ids'] = $supervisedGroupIds;
+
+                return ReportResource::collection($this->reportService->getPaginated($params))
+                    ->additional([
+                        'meta' => [
+                            'stats' => $this->reportService->getStats($params)
+                        ]
+                    ]);
             }
 
-            return response()->json(ReportResource::collection($this->reportService->getPaginated($request->all())));
+            return ReportResource::collection($this->reportService->getPaginated($request->all()))
+                ->additional([
+                    'meta' => [
+                        'stats' => $this->reportService->getStats($request->all())
+                    ]
+                ]);
         }
 
         $student = $user->student;
@@ -69,15 +83,21 @@ class ReportController extends Controller
                 ->exists();
 
             if ($isMember) {
-                return response()->json(
-                    ReportResource::collection($this->reportService->getByKpGroup((int) $groupId))
-                );
+                return ReportResource::collection($this->reportService->getByKpGroup((int) $groupId))
+                    ->additional([
+                        'meta' => [
+                            'stats' => $this->reportService->getStats(['kp_group_id' => $groupId])
+                        ]
+                    ]);
             }
         }
 
-        return response()->json(
-            ReportResource::collection($this->reportService->getByStudent($student->id))
-        );
+        return ReportResource::collection($this->reportService->getByStudent($student->id))
+            ->additional([
+                'meta' => [
+                    'stats' => $this->reportService->getStats(['student_id' => $student->id])
+                ]
+            ]);
     }
 
     public function store(StoreReportRequest $request)
@@ -128,13 +148,6 @@ class ReportController extends Controller
     {
         $report = $this->reportService->getById($id);
         $this->authorize('update', $report);
-
-        \Log::info('Report update raw request', [
-            'id' => $id,
-            'all' => $request->all(),
-            'has_file' => $request->hasFile('file'),
-            'headers' => $request->headers->all(),
-        ]);
 
         $data = $request->validated();
 

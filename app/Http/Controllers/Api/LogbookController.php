@@ -26,16 +26,19 @@ class LogbookController extends Controller
             $groupId = $request->query('group_id');
 
             if ($groupId) {
-                return response()->json(
-                    LogbookResource::collection($this->logbookService->getByKpGroup((int) $groupId))
-                );
+                return LogbookResource::collection($this->logbookService->getByKpGroup((int) $groupId))
+                    ->additional([
+                        'meta' => [
+                            'stats' => $this->logbookService->getStats(['kp_group_id' => $groupId])
+                        ]
+                    ]);
             }
 
             if ($user->hasRole('dosen')) {
                 $lecturerId = optional($user->lecturer)->id;
 
                 if (!$lecturerId) {
-                    return response()->json([]);
+                    return LogbookResource::collection(collect([]));
                 }
 
                 $supervisedGroupIds = \App\Models\KpGroupMember::query()
@@ -46,15 +49,26 @@ class LogbookController extends Controller
                     ->toArray();
 
                 if (empty($supervisedGroupIds)) {
-                    return response()->json([]);
+                    return LogbookResource::collection(collect([]));
                 }
 
-                return response()->json(
-                    LogbookResource::collection($this->logbookService->getByKpGroupIds($supervisedGroupIds))
-                );
+                $params = $request->all();
+                $params['kp_group_ids'] = $supervisedGroupIds;
+
+                return LogbookResource::collection($this->logbookService->getPaginated($params))
+                    ->additional([
+                        'meta' => [
+                            'stats' => $this->logbookService->getStats($params)
+                        ]
+                    ]);
             }
 
-            return response()->json(LogbookResource::collection($this->logbookService->getPaginated($request->all())));
+            return LogbookResource::collection($this->logbookService->getPaginated($request->all()))
+                ->additional([
+                    'meta' => [
+                        'stats' => $this->logbookService->getStats($request->all())
+                    ]
+                ]);
         }
 
         $student = $user->student;
@@ -64,9 +78,12 @@ class LogbookController extends Controller
 
         $kpGroupId = $student->kpGroupMembers()->where('status', 'active')->first()?->kp_group_id ?? 0;
 
-        return response()->json(
-            LogbookResource::collection($this->logbookService->getByKpGroup($kpGroupId))
-        );
+        return LogbookResource::collection($this->logbookService->getByKpGroup($kpGroupId))
+            ->additional([
+                'meta' => [
+                    'stats' => $this->logbookService->getStats(['kp_group_id' => $kpGroupId])
+                ]
+            ]);
     }
 
     public function store(StoreLogbookRequest $request)

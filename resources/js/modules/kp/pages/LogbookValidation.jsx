@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -73,40 +73,57 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting }) => {
 
 const LogbookValidation = () => {
     const navigate = useNavigate();
-    const [search, setSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('pending');
+    const [page, setPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+    const [sortBy, setSortBy] = useState('date');
+    const [sortDirection, setSortDirection] = useState('desc');
+
     const [showAction, setShowAction] = useState(false);
     const [selectedLogbook, setSelectedLogbook] = useState(null);
 
-    const { data: logbooksRaw, isLoading, refetch } = useGetLogbookQuery();
+    // Debounce search term
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(1);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    const { data: logbooksRaw, isLoading, refetch } = useGetLogbookQuery({
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+        search: debouncedSearch,
+        status: filterStatus,
+    });
+
     const [updateLogbook, { isLoading: isUpdating }] = useUpdateLogbookMutation();
 
     const logbooks = useMemo(() =>
-        Array.isArray(logbooksRaw) ? logbooksRaw
-        : Array.isArray(logbooksRaw?.data) ? logbooksRaw.data : [],
+        logbooksRaw?.data || [],
     [logbooksRaw]);
 
-    const filtered = useMemo(() =>
-        logbooks.filter(item => {
-            const matchSearch = !search ||
-                item.student?.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-                item.activity?.toLowerCase().includes(search.toLowerCase());
+    const totalRows = useMemo(() =>
+        logbooksRaw?.meta?.total || 0,
+    [logbooksRaw]);
 
-            const matchStatus = !filterStatus || item.status === filterStatus;
-
-            return matchSearch && matchStatus;
-        }),
-    [logbooks, search, filterStatus]);
-
-    const stats = useMemo(() => ({
-        total: logbooks.length,
-        pending: logbooks.filter(l => l.status === 'pending').length,
-        approved: logbooks.filter(l => l.status === 'approved').length,
-    }), [logbooks]);
+    const stats = useMemo(() => {
+        const responseStats = logbooksRaw?.meta?.stats;
+        return {
+            total: responseStats?.total || 0,
+            pending: responseStats?.pending || 0,
+            approved: responseStats?.approved || 0,
+        };
+    }, [logbooksRaw]);
 
     const handleRowClick = (data) => {
-        if (data?.kp_group?.id) {
-            navigate(`/kp/daftar-kelompok/${data.kp_group.id}`);
+        if (data?.kp_group_id) {
+            navigate(`/kp/daftar-kelompok/${data.kp_group_id}`);
         }
     };
 
@@ -141,7 +158,7 @@ const LogbookValidation = () => {
         {
             name: 'Mahasiswa',
             selector: row => row.student?.user?.name || '-',
-            sortable: true,
+            sortable: false,
             wrap: true,
             cell: row => (
                 <div>
@@ -154,24 +171,27 @@ const LogbookValidation = () => {
             name: 'Tanggal',
             selector: row => row.date,
             sortable: true,
+            sortField: 'date',
             width: '120px',
             cell: row => row.date ? new Date(row.date).toLocaleDateString('id-ID') : '-',
         },
         {
             name: 'Kegiatan',
             selector: row => row.activity,
-            sortable: true,
+            sortable: false,
             wrap: true,
         },
         {
             name: 'Perusahaan',
             selector: row => row?.kp_company?.name || '-',
-            sortable: true,
+            sortable: false,
             wrap: true,
         },
         {
             name: 'Status',
             selector: row => row.status,
+            sortable: true,
+            sortField: 'status',
             width: '180px',
             center: true,
             cell: row => getStatusBadge(row.status),
@@ -243,24 +263,25 @@ const LogbookValidation = () => {
                             Daftar Logbook
                         </h3>
                         <p className="mt-1 text-xs text-gray-500">
-                            {filterStatus
-                                ? `${filtered.length} hasil ditemukan`
-                                : `${filtered.length} entri`}
+                            {totalRows} entri ditemukan
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="w-full sm:w-80">
                             <Input
                                 placeholder="Cari mahasiswa atau kegiatan..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 icon={Search}
                             />
                         </div>
                         <div className="w-full sm:w-48">
                             <select
                                 value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
+                                onChange={(e) => {
+                                    setFilterStatus(e.target.value);
+                                    setPage(1);
+                                }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
                                 <option value="">Semua Status</option>
@@ -274,18 +295,31 @@ const LogbookValidation = () => {
                 <div className="overflow-hidden">
                     {isLoading ? (
                         <Skeleton className="h-64" />
-                    ) : filtered.length === 0 ? (
+                    ) : logbooks.length === 0 ? (
                         <div className="text-center py-12">
                             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                             <p className="text-gray-500">
-                                {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada logbook'}
+                                {searchTerm || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada logbook'}
                             </p>
                         </div>
                     ) : (
                         <DataTableWrapper
                             columns={columns}
-                            data={filtered}
+                            data={logbooks}
                             pagination
+                            paginationServer
+                            paginationTotalRows={totalRows}
+                            onChangePage={(newPage) => setPage(newPage)}
+                            onChangeRowsPerPage={(newPerPage) => {
+                                setPerPage(newPerPage);
+                                setPage(1);
+                            }}
+                            paginationDefaultPage={page}
+                            sortServer
+                            onSort={(column, direction) => {
+                                setSortBy(column.sortField || 'date');
+                                setSortDirection(direction);
+                            }}
                             onRowClicked={handleRowClick}
                         />
                     )}

@@ -19,8 +19,6 @@ class ReportResource extends JsonResource
             'file_url' => $this->file_url ? '/storage/' . ltrim($this->file_url, '/') : null,
             'kp_group' => $this->whenLoaded('kpGroup'),
             'student' => $this->whenLoaded('student'),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }
