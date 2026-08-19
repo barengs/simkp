@@ -300,7 +300,7 @@ const Pengaturan = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
                         {preview ? (
                             <img
                                 src={preview}
@@ -347,7 +347,7 @@ const Pengaturan = () => {
             minWidth: '220px',
             cell: (row) => (
                 <div className="flex items-center gap-3 py-2">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                         <FileText className="w-4 h-4 text-emerald-600" />
                     </div>
                     <span className="text-sm font-medium text-gray-900">
@@ -420,11 +420,10 @@ const Pengaturan = () => {
             <div className="flex items-center gap-1 border-b border-gray-200">
                 <button
                     onClick={() => setActiveTab('umum')}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === 'umum'
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'umum'
                             ? 'border-emerald-600 text-emerald-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                        }`}
                 >
                     <Settings className="w-4 h-4" />
                     Umum
@@ -432,11 +431,10 @@ const Pengaturan = () => {
 
                 <button
                     onClick={() => setActiveTab('dokumen')}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === 'dokumen'
+                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'dokumen'
                             ? 'border-emerald-600 text-emerald-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                        }`}
                 >
                     <FileText className="w-4 h-4" />
                     Dokumen KP
@@ -614,11 +612,10 @@ const Pengaturan = () => {
                             rows={3}
                             maxLength={500}
                             placeholder="Deskripsi singkat dokumen..."
-                            className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                                docErrors.description
+                            className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 ${docErrors.description
                                     ? 'border-red-400'
                                     : 'border-gray-300'
-                            }`}
+                                }`}
                         />
 
                         <div className="flex justify-between mt-1">

@@ -341,7 +341,7 @@ const Dashboard = () => {
 
         if (isMahasiswa) {
             const myGroup = kpGroups.find(g => g.members?.some(m => m.student_id === user?.student_id && m.role === 'ketua')) ||
-                          kpGroups.find(g => g.members?.some(m => m.student_id === user?.student_id));
+                kpGroups.find(g => g.members?.some(m => m.student_id === user?.student_id));
             const myGroupId = myGroup?.id;
             const myLogbooks = filteredLogbooks.filter(l => l.kp_group_id === myGroupId);
             const myReports = filteredReports.filter(r => r.kp_group_id === myGroupId);
@@ -423,9 +423,9 @@ const Dashboard = () => {
                 title="Dashboard"
                 description={
                     isAdmin ? 'Ringkasan sistem secara keseluruhan' :
-                    isKoordinator ? 'Ringkasan verifikasi dan plotting' :
-                    isDosen ? 'Ringkasan kelompok bimbingan Anda' :
-                    'Ringkasan kegiatan KP Anda'
+                        isKoordinator ? 'Ringkasan verifikasi dan plotting' :
+                            isDosen ? 'Ringkasan kelompok bimbingan Anda' :
+                                'Ringkasan kegiatan KP Anda'
                 }
                 icon={TrendingUp}
             />
@@ -451,7 +451,7 @@ const Dashboard = () => {
                                 options={PERIOD_OPTIONS}
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value)}
-                                className="w-40 flex-shrink-0"
+                                className="w-40 shrink-0"
                             />
                         </div>
 

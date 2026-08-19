@@ -212,7 +212,7 @@ const Register = () => {
                 <img
                   src={logoUrl}
                   alt="Logo"
-                  className="h-16 w-auto object-contain flex-shrink-0"
+                  className="h-16 w-auto object-contain shrink-0"
                 />
               ) : (
                 <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
@@ -261,8 +261,8 @@ const Register = () => {
                     autoComplete="name"
                     placeholder="Masukkan nama lengkap"
                     className={`w-full h-10 pl-9 pr-3 text-sm border rounded-lg outline-none transition ${errors.name
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   />
                 </div>
@@ -296,8 +296,8 @@ const Register = () => {
                     autoComplete="email"
                     placeholder="Masukkan email"
                     className={`w-full h-10 pl-9 pr-3 text-sm border rounded-lg outline-none transition ${errors.email
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   />
                 </div>
@@ -330,8 +330,8 @@ const Register = () => {
                     disabled={isSubmitting}
                     placeholder="Masukkan NIM"
                     className={`w-full h-10 pl-9 pr-3 text-sm border rounded-lg outline-none transition ${errors.nim
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   />
                 </div>
@@ -365,8 +365,8 @@ const Register = () => {
                       loadingPrograms
                     }
                     className={`w-full h-10 pl-9 pr-3 text-sm border rounded-lg outline-none transition bg-white appearance-none ${errors.study_program_id
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   >
                     <option value="">
@@ -419,8 +419,8 @@ const Register = () => {
                     autoComplete="new-password"
                     placeholder="Minimal 6 karakter"
                     className={`w-full h-10 pl-9 pr-10 text-sm border rounded-lg outline-none transition ${errors.password
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   />
 
@@ -477,8 +477,8 @@ const Register = () => {
                     autoComplete="new-password"
                     placeholder="Ulangi password"
                     className={`w-full h-10 pl-9 pr-3 text-sm border rounded-lg outline-none transition ${errors.password_confirmation
-                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
-                        : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+                      ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                   />
                 </div>
@@ -493,7 +493,7 @@ const Register = () => {
               {/* Server Error */}
               {serverError && (
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
 
                   <p className="text-xs text-red-700 leading-relaxed">
                     {serverError}

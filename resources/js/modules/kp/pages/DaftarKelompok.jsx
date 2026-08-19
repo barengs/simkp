@@ -48,7 +48,7 @@ const RemoveSupervisorModal = ({ isOpen, onClose, onConfirm, submitting, data })
         >
             <div className="space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800 flex gap-2">
-                    <UserMinus className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
+                    <UserMinus className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
                     <span>Konfirmasi penghapusan plotting dosen pembimbing.</span>
                 </div>
 
@@ -110,15 +110,15 @@ const AdminKelompokView = () => {
     // Process data
     const groups = useMemo(() =>
         Array.isArray(groupsRaw) ? groupsRaw
-        : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
-    [groupsRaw]);
+            : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
+        [groupsRaw]);
 
     const filtered = useMemo(() =>
         groups.filter(g =>
             !debouncedSearch || g.kp_company?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
             g.supervisor?.name?.toLowerCase().includes(debouncedSearch.toLowerCase())
         ),
-    [groups, debouncedSearch]);
+        [groups, debouncedSearch]);
 
     const paginatedData = useMemo(() => {
         const start = (page - 1) * perPage;
@@ -354,14 +354,14 @@ const DosenKelompokView = () => {
     // Process data
     const groups = useMemo(() =>
         Array.isArray(groupsRaw) ? groupsRaw
-        : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
-    [groupsRaw]);
+            : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
+        [groupsRaw]);
 
     const filtered = useMemo(() =>
         groups.filter(g =>
             !debouncedSearch || g.kp_company?.name?.toLowerCase().includes(debouncedSearch.toLowerCase())
         ),
-    [groups, debouncedSearch]);
+        [groups, debouncedSearch]);
 
     const paginatedData = useMemo(() => {
         const start = (page - 1) * perPage;
@@ -532,7 +532,7 @@ const DaftarKelompok = () => {
     // Check user role
     const { user, roles, permissions } = useSelector(s => s.auth);
     const isDosen = !!user?.lecturer_id;
-    const canViewAll = permissions?.some(p => 
+    const canViewAll = permissions?.some(p =>
         p === 'kp.plotting-dosen' || p === 'master-data.manage' || p === 'kp.verifikasi-pendaftaran'
     ) || false;
 

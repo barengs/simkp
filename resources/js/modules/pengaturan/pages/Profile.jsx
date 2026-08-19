@@ -249,7 +249,7 @@ const Profile = () => {
                     <Card>
                         <div className="p-5">
                             <div className="flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
                                     <Info className="w-4 h-4 text-blue-600" />
                                 </div>
                                 <div>
@@ -340,7 +340,7 @@ const Profile = () => {
                     <Card>
                         <div className="p-6">
                             <div className="flex items-start gap-4 mb-6">
-                                <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
                                     <LockKeyhole className="w-5 h-5 text-amber-600" />
                                 </div>
                                 <div>

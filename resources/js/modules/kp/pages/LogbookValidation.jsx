@@ -48,7 +48,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting }) => {
         <Modal isOpen={isOpen} onClose={handleClose} title="Setujui Logbook" size="md">
             <div className="space-y-4">
                 <div className="rounded-lg p-3 text-sm flex gap-2 bg-green-50 border border-green-200 text-green-800">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>Konfirmasi bahwa logbook ini telah divalidasi dan disetujui.</span>
                 </div>
 
@@ -106,11 +106,11 @@ const LogbookValidation = () => {
 
     const logbooks = useMemo(() =>
         logbooksRaw?.data || [],
-    [logbooksRaw]);
+        [logbooksRaw]);
 
     const totalRows = useMemo(() =>
         logbooksRaw?.meta?.total || 0,
-    [logbooksRaw]);
+        [logbooksRaw]);
 
     const stats = useMemo(() => {
         const responseStats = logbooksRaw?.meta?.stats;

@@ -43,22 +43,21 @@ const Sidebar = ({ isOpen = true }) => {
         /* Mobile logic */
         ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} 
         /* Desktop logic */
-        md:translate-x-0 ${isOpen ? 'md:w-64' : 'md:w-[4.5rem]'} md:relative`}
+        md:translate-x-0 ${isOpen ? 'md:w-64' : 'md:w-18'} md:relative`}
     >
       {/* Brand / Logo */}
       <div
-        className={`flex items-center h-16 border-b border-emerald-900/60 flex-shrink-0 overflow-hidden ${
-          isOpen ? 'gap-3 px-6' : 'gap-0 px-4 justify-center'
-        }`}
+        className={`flex items-center h-16 border-b border-emerald-900/60 shrink-0 overflow-hidden ${isOpen ? 'gap-3 px-6' : 'gap-0 px-4 justify-center'
+          }`}
       >
         {logoUrl ? (
           <img
             src={logoUrl}
             alt="Logo"
-            className="h-8 w-auto object-contain flex-shrink-0"
+            className="h-8 w-auto object-contain shrink-0"
           />
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-lg flex-shrink-0 shadow-lg shadow-emerald-500/20">
+          <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-lg shrink-0 shadow-lg shadow-emerald-500/20">
             <Database className="w-5 h-5 text-white" />
           </div>
         )}
@@ -91,40 +90,35 @@ const Sidebar = ({ isOpen = true }) => {
                 <button
                   onClick={() => toggleSubmenu(item.label)}
                   title={isOpen ? item.label : undefined}
-                  className={`w-full flex items-center justify-between gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${
-                    isOpen ? '' : 'justify-center px-0'
-                  } ${
-                    active
+                  className={`w-full flex items-center justify-between gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${isOpen ? '' : 'justify-center px-0'
+                    } ${active
                       ? 'bg-amber-400 text-amber-950 border-r-4 border-amber-600 shadow-md'
                       : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`flex items-center gap-3 ${
-                      !isOpen ? 'flex-1 justify-center' : ''
-                    }`}
+                    className={`flex items-center gap-3 ${!isOpen ? 'flex-1 justify-center' : ''
+                      }`}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <Icon className="w-5 h-5 shrink-0" />
                     {isOpen && (
                       <span className="whitespace-nowrap">{item.label}</span>
                     )}
                   </div>
                   {isOpen && (
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${
-                        isOpenSubmenu ? 'rotate-180' : ''
-                      }`}
+                      className={`w-4 h-4 transition-transform duration-300 ${isOpenSubmenu ? 'rotate-180' : ''
+                        }`}
                     />
                   )}
                 </button>
 
                 {/* Container transisi halus untuk dropdown sub-menu */}
                 <div
-                  className={`grid transition-all duration-300 ease-in-out ${
-                    isOpenSubmenu && isOpen
+                  className={`grid transition-all duration-300 ease-in-out ${isOpenSubmenu && isOpen
                       ? 'grid-rows-[1fr] opacity-100'
                       : 'grid-rows-[0fr] opacity-0'
-                  }`}
+                    }`}
                 >
                   <div className="overflow-hidden space-y-1">
                     {item.children.map((child) => {
@@ -133,11 +127,10 @@ const Sidebar = ({ isOpen = true }) => {
                         <Link
                           key={child.path}
                           to={child.path}
-                          className={`block pl-16 pr-6 py-2.5 text-sm transition-all rounded-none ${
-                            childActive
+                          className={`block pl-16 pr-6 py-2.5 text-sm transition-all rounded-none ${childActive
                               ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-sm'
                               : 'text-emerald-200/70 hover:text-white hover:bg-emerald-900/20'
-                          }`}
+                            }`}
                         >
                           {child.label}
                         </Link>
@@ -154,15 +147,13 @@ const Sidebar = ({ isOpen = true }) => {
               key={item.path}
               to={item.path}
               title={isOpen ? item.label : undefined}
-              className={`flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${
-                !isOpen ? 'justify-center px-0' : ''
-              } ${
-                active
+              className={`flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
+                } ${active
                   ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-md'
                   : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'
-              }`}
+                }`}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
+              <Icon className="w-5 h-5 shrink-0" />
               {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
             </Link>
           );
@@ -172,17 +163,15 @@ const Sidebar = ({ isOpen = true }) => {
       {/* Sidebar User Footer */}
       <Link
         to="/profile"
-        className={`border-t border-emerald-600/60 bg-emerald-950 flex-shrink-0 block ${
-          isOpen ? 'p-4' : 'p-2 flex justify-center'
-        }`}
+        className={`border-t border-emerald-600/60 bg-emerald-950 shrink-0 block ${isOpen ? 'p-4' : 'p-2 flex justify-center'
+          }`}
       >
         <div
-          className={`flex items-center gap-3 ${
-            !isOpen ? 'justify-center' : ''
-          }`}
+          className={`flex items-center gap-3 ${!isOpen ? 'justify-center' : ''
+            }`}
         >
           <img
-            className="w-9 h-9 rounded-full border border-emerald-500 shadow-md shadow-emerald-500/20 flex-shrink-0 object-cover"
+            className="w-9 h-9 rounded-full border border-emerald-500 shadow-md shadow-emerald-500/20 shrink-0 object-cover"
             src={user?.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=10b981&color=fff&size=64`}
             alt="Avatar"
             title={user?.name}

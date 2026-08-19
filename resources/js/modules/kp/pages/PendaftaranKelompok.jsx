@@ -34,38 +34,35 @@ import {
 
 // ─── Langkah stepper ─────────────────────────────────────────────────────────
 const STEPS = [
-    { id: 1, label: 'Periode & Tempat', icon: Building2,    desc: 'Pilih periode dan perusahaan tujuan' },
-    { id: 2, label: 'Tema KP',          icon: BookOpen,     desc: 'Topik kerja praktek' },
-    { id: 3, label: 'Anggota',          icon: Users,        desc: 'Tambah anggota (ketua otomatis)' },
-    { id: 4, label: 'Dokumen',          icon: FileText,     desc: 'Unggah dokumen pendukung' },
-    { id: 5, label: 'Preview',          icon: CheckCircle2, desc: 'Tinjau dan kirim' },
+    { id: 1, label: 'Periode & Tempat', icon: Building2, desc: 'Pilih periode dan perusahaan tujuan' },
+    { id: 2, label: 'Tema KP', icon: BookOpen, desc: 'Topik kerja praktek' },
+    { id: 3, label: 'Anggota', icon: Users, desc: 'Tambah anggota (ketua otomatis)' },
+    { id: 4, label: 'Dokumen', icon: FileText, desc: 'Unggah dokumen pendukung' },
+    { id: 5, label: 'Preview', icon: CheckCircle2, desc: 'Tinjau dan kirim' },
 ];
 
 // ─── Stepper header ───────────────────────────────────────────────────────────
 const StepperHeader = ({ currentStep, completedSteps }) => (
     <div className="flex items-start mb-8">
         {STEPS.map((step, idx) => {
-            const done    = completedSteps.includes(step.id);
-            const active  = currentStep === step.id;
-            const isLast  = idx === STEPS.length - 1;
+            const done = completedSteps.includes(step.id);
+            const active = currentStep === step.id;
+            const isLast = idx === STEPS.length - 1;
             return (
                 <React.Fragment key={step.id}>
-                    <div className="flex flex-col items-center flex-shrink-0 w-20">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                            done   ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : active ? 'bg-white border-emerald-600 text-emerald-600'
-                                     : 'bg-white border-gray-200 text-gray-400'
-                        }`}>
+                    <div className="flex flex-col items-center shrink-0 w-20">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${done ? 'bg-emerald-600 border-emerald-600 text-white'
+                                : active ? 'bg-white border-emerald-600 text-emerald-600'
+                                    : 'bg-white border-gray-200 text-gray-400'
+                            }`}>
                             {done ? <Check className="w-5 h-5" /> : <step.icon className="w-4 h-4" />}
                         </div>
-                        <p className={`mt-1.5 text-xs font-medium text-center leading-tight ${
-                            active ? 'text-emerald-700' : done ? 'text-emerald-600' : 'text-gray-400'
-                        }`}>{step.label}</p>
+                        <p className={`mt-1.5 text-xs font-medium text-center leading-tight ${active ? 'text-emerald-700' : done ? 'text-emerald-600' : 'text-gray-400'
+                            }`}>{step.label}</p>
                     </div>
                     {!isLast && (
-                        <div className={`flex-1 h-0.5 mt-5 transition-all ${
-                            done ? 'bg-emerald-500' : 'bg-gray-200'
-                        }`} />
+                        <div className={`flex-1 h-0.5 mt-5 transition-all ${done ? 'bg-emerald-500' : 'bg-gray-200'
+                            }`} />
                     )}
                 </React.Fragment>
             );
@@ -78,17 +75,15 @@ const SelectionCard = ({ selected, onClick, children }) => (
     <button
         type="button"
         onClick={onClick}
-        className={`w-full text-left rounded-xl border-2 p-4 transition-all ${
-            selected
+        className={`w-full text-left rounded-xl border-2 p-4 transition-all ${selected
                 ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-200'
                 : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-gray-50'
-        }`}
+            }`}
     >
         <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">{children}</div>
-            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                selected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
-            }`}>
+            <div className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${selected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                }`}>
                 {selected && <Check className="w-3 h-3 text-white" />}
             </div>
         </div>
@@ -97,19 +92,19 @@ const SelectionCard = ({ selected, onClick, children }) => (
 
 // ─── Langkah 1: Pilih Periode & Tempat KP (merged) ────────────────────────────
 const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onPropose, errors }) => {
-    const [mode, setMode]       = useState('pilih-perusahaan'); // 'pilih-periode' | 'pilih-perusahaan' | 'daftar'
-    const [search, setSearch]   = useState('');
+    const [mode, setMode] = useState('pilih-perusahaan'); // 'pilih-periode' | 'pilih-perusahaan' | 'daftar'
+    const [search, setSearch] = useState('');
     const [propForm, setPropForm] = useState({ name: '', address: '', contact_person: '', phone_number: '', email: '' });
-    const [propErr, setPropErr]   = useState({});
+    const [propErr, setPropErr] = useState({});
 
     const aktiPeriode = Array.isArray(periodeList) ? periodeList.filter(p => p.is_active) : [];
-    
+
     const filtered = useMemo(() =>
         (Array.isArray(perusahaanList) ? perusahaanList : []).filter(p =>
             !search || p.name?.toLowerCase().includes(search.toLowerCase()) ||
             p.address?.toLowerCase().includes(search.toLowerCase())
         ),
-    [perusahaanList, search]);
+        [perusahaanList, search]);
 
     const handlePropose = () => {
         const e = {};
@@ -126,7 +121,7 @@ const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onP
         return (
             <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 text-sm text-blue-800 flex gap-2">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                     <span>Langkah 1: Pilih periode akademik terlebih dahulu, kemudian pilih perusahaan tujuan KP.</span>
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900 mt-4">Periode Akademik</h3>
@@ -184,25 +179,25 @@ const Step1PeriodeTempatKP = ({ form, onChange, periodeList, perusahaanList, onP
                     <ArrowLeft className="w-4 h-4" /> Kembali ke daftar perusahaan
                 </button>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 text-sm text-blue-800 flex gap-2">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                     <span>Perusahaan yang Anda daftarkan akan diajukan dan dapat diverifikasi oleh koordinator.</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input label="Nama Perusahaan" required value={propForm.name}
-                        onChange={e => { setPropForm(p => ({...p, name: e.target.value})); if (propErr.name) setPropErr(p => ({...p, name:''})); }}
+                        onChange={e => { setPropForm(p => ({ ...p, name: e.target.value })); if (propErr.name) setPropErr(p => ({ ...p, name: '' })); }}
                         placeholder="PT. Contoh Indonesia" error={propErr.name} />
                     <Input label="Kontak Person" value={propForm.contact_person}
-                        onChange={e => setPropForm(p => ({...p, contact_person: e.target.value}))}
+                        onChange={e => setPropForm(p => ({ ...p, contact_person: e.target.value }))}
                         placeholder="Nama penanggung jawab" />
                     <Input label="Alamat" value={propForm.address}
-                        onChange={e => setPropForm(p => ({...p, address: e.target.value}))}
+                        onChange={e => setPropForm(p => ({ ...p, address: e.target.value }))}
                         placeholder="Jl. Contoh No. 1, Kota" />
                     <Input label="Telepon" value={propForm.phone_number}
-                        onChange={e => setPropForm(p => ({...p, phone_number: e.target.value}))}
+                        onChange={e => setPropForm(p => ({ ...p, phone_number: e.target.value }))}
                         placeholder="021-xxxx" />
                     <div className="md:col-span-2">
                         <Input label="Email" type="email" value={propForm.email}
-                            onChange={e => setPropForm(p => ({...p, email: e.target.value}))}
+                            onChange={e => setPropForm(p => ({ ...p, email: e.target.value }))}
                             placeholder="info@perusahaan.com" />
                     </div>
                 </div>
@@ -323,18 +318,18 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
         onChange({ target: { name: 'anggota_ids', value: ids.filter(x => x !== id) } });
 
     const details = ids.map(id => (studentList || []).find(s => s.id === id)).filter(Boolean);
-    
+
     // Total anggota termasuk ketua (ketua + members)
     const totalWithKetua = (ketuaStudent ? 1 : 0) + details.length;
-    const target  = maxAnggota ?? 3; // maxAnggota sudah exclude ketua
-    const pct     = Math.min(Math.round((details.length / target) * 100), 100);
-    const isFull  = details.length >= target;
+    const target = maxAnggota ?? 3; // maxAnggota sudah exclude ketua
+    const pct = Math.min(Math.round((details.length / target) * 100), 100);
+    const isFull = details.length >= target;
 
     return (
         <div className="space-y-5">
             {/* Info ketua otomatis */}
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3.5 text-sm text-amber-800 flex gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" />
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
                 <span>Anda akan otomatis menjadi <strong>Ketua Kelompok</strong>.</span>
             </div>
 
@@ -344,7 +339,7 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
                     <p className="text-sm font-semibold text-gray-700 mb-2">Ketua Kelompok (Anda)</p>
                     <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                                 <Crown className="w-4 h-4 text-amber-600" />
                             </div>
                             <div>
@@ -401,7 +396,7 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
                         )}
                     </div>
                     <Button type="button" variant="primary" icon={Plus}
-                        disabled={!found || ids.includes(found?.id) || (ketuaStudent && found?.id === ketuaStudent.id)} 
+                        disabled={!found || ids.includes(found?.id) || (ketuaStudent && found?.id === ketuaStudent.id)}
                         onClick={add}>
                         Tambah
                     </Button>
@@ -418,7 +413,7 @@ const Step3Anggota = ({ form, onChange, studentList, maxAnggota, ketuaStudent })
                 {details.map((s, i) => (
                     <div key={s.id} className="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                                 <GraduationCap className="w-4 h-4 text-blue-600" />
                             </div>
                             <div>
@@ -471,11 +466,10 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existi
 
         return (
             <div className="mt-3">
-                <label className={`flex items-center justify-center w-full px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                    hasDocument
+                <label className={`flex items-center justify-center w-full px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors ${hasDocument
                         ? 'border-emerald-300 bg-emerald-50'
                         : 'border-gray-300 hover:border-gray-400'
-                }`}>
+                    }`}>
                     <div className="text-center">
                         <FileText className={`w-5 h-5 mx-auto mb-1 ${hasDocument ? 'text-emerald-500' : 'text-gray-400'}`} />
                         {uploadedFile ? (
@@ -595,14 +589,14 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existi
 
 // ─── Langkah 5: Preview ───────────────────────────────────────────────────────
 const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList, ketuaStudent }) => {
-    const periode    = (Array.isArray(periodeList) ? periodeList : []).find(p => String(p.id) === String(form.academic_period_id));
+    const periode = (Array.isArray(periodeList) ? periodeList : []).find(p => String(p.id) === String(form.academic_period_id));
     const perusahaan = (Array.isArray(perusahaanList) ? perusahaanList : []).find(p => String(p.id) === String(form.kp_company_id));
-    const tema       = (Array.isArray(temaList) ? temaList : []).find(t => String(t.id) === String(form.kp_theme_id));
+    const tema = (Array.isArray(temaList) ? temaList : []).find(t => String(t.id) === String(form.kp_theme_id));
     const anggotaTambahan = (form.anggota_ids || []).map(id => (studentList || []).find(s => s.id === id)).filter(Boolean);
 
     const Row = ({ label, value }) => (
         <div className="flex gap-3 py-2.5 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-gray-500 w-40 flex-shrink-0">{label}</span>
+            <span className="text-sm text-gray-500 w-40 shrink-0">{label}</span>
             <span className="text-sm font-medium text-gray-900 flex-1">{value || '-'}</span>
         </div>
     );
@@ -610,10 +604,10 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
     return (
         <div className="space-y-5">
             <div className="bg-green-50 border border-green-200 rounded-lg p-3.5 text-sm text-green-800 flex gap-2">
-                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-600" />
+                <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-600" />
                 <span>Tinjau kembali semua data di bawah sebelum mengirim pendaftaran.</span>
             </div>
-            
+
             {/* Periode & Perusahaan */}
             <div>
                 <h3 className="text-sm font-semibold text-gray-800 mb-3">Periode & Perusahaan</h3>
@@ -621,9 +615,9 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
                     <Row label="Periode Akademik" value={periode ? periode.name : null} />
                     <Row label="Perusahaan Tujuan KP" value={perusahaan?.name} />
                     {periode?.start_date && periode?.end_date && (
-                        <Row 
-                            label="Rentang KP" 
-                            value={`${new Date(periode.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - ${new Date(periode.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`} 
+                        <Row
+                            label="Rentang KP"
+                            value={`${new Date(periode.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - ${new Date(periode.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`}
                         />
                     )}
                 </div>
@@ -648,7 +642,7 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
                     {ketuaStudent && (
                         <div className="flex items-center gap-3 py-2 px-3 bg-amber-50 border border-amber-200 rounded-lg">
                             <span className="text-xs text-amber-600 w-5 font-semibold">1.</span>
-                            <Crown className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                            <Crown className="w-4 h-4 text-amber-500 shrink-0" />
                             <span className="text-sm text-gray-800 flex-1">{ketuaStudent.user?.name}</span>
                             <span className="text-xs text-gray-500 font-mono">{ketuaStudent.nim}</span>
                             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Ketua</span>
@@ -658,7 +652,7 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
                     {anggotaTambahan.map((s, i) => (
                         <div key={s.id} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded-lg">
                             <span className="text-xs text-gray-400 w-5">{(ketuaStudent ? 1 : 0) + i + 1}.</span>
-                            <GraduationCap className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                            <GraduationCap className="w-4 h-4 text-blue-500 shrink-0" />
                             <span className="text-sm text-gray-800 flex-1">{s.user?.name}</span>
                             <span className="text-xs text-gray-500 font-mono">{s.nim}</span>
                         </div>
@@ -679,19 +673,17 @@ const STATUS_LABEL = {
 // ─── Kartu undangan: tampil di halaman mahasiswa yang diundang ────────────────
 const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
     const ketua = group.members?.find(m => m.role === 'ketua');
-    const saya  = group.members?.find(m => m.student_id === myStudentId);
+    const saya = group.members?.find(m => m.student_id === myStudentId);
     const isPending = saya?.status === 'inactive';
 
     return (
-        <div className={`bg-white rounded-xl border-2 shadow-sm p-5 space-y-4 ${
-            isPending ? 'border-orange-200' : 'border-blue-200'
-        }`}>
+        <div className={`bg-white rounded-xl border-2 shadow-sm p-5 space-y-4 ${isPending ? 'border-orange-200' : 'border-blue-200'
+            }`}>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-xl border flex items-center justify-center ${
-                        isPending ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'
-                    }`}>
+                    <div className={`shrink-0 w-10 h-10 rounded-xl border flex items-center justify-center ${isPending ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'
+                        }`}>
                         <UserCheck className={`w-5 h-5 ${isPending ? 'text-orange-600' : 'text-blue-600'}`} />
                     </div>
                     <div>
@@ -700,11 +692,10 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                     <Badge status={group.status}>{STATUS_LABEL[group.status] || group.status}</Badge>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        isPending
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${isPending
                             ? 'bg-orange-100 text-orange-700 border-orange-200'
                             : 'bg-blue-100 text-blue-700 border-blue-200'
-                    }`}>
+                        }`}>
                         <UserCheck className="w-3 h-3" />
                         {isPending ? 'Menunggu Respons' : 'Anggota'}
                     </span>
@@ -745,11 +736,10 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
                         const isSaya = m.student_id === myStudentId;
                         return (
                             <div key={m.id}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg ${
-                                    isSaya ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
-                                }`}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isSaya ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
+                                    }`}
                             >
-                                <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
+                                <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">
                                     {m.role === 'ketua'
                                         ? <Crown className="w-3.5 h-3.5 text-amber-500" />
                                         : <GraduationCap className="w-3.5 h-3.5 text-gray-400" />
@@ -762,11 +752,10 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
                                     </p>
                                     <p className="text-xs text-gray-500 font-mono">{m.student?.nim || '-'}</p>
                                 </div>
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                    m.role === 'ketua'
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.role === 'ketua'
                                         ? 'bg-amber-100 text-amber-700'
                                         : 'bg-gray-100 text-gray-600'
-                                }`}>
+                                    }`}>
                                     {m.role === 'ketua' ? 'Ketua' : 'Anggota'}
                                 </span>
                             </div>
@@ -778,7 +767,7 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
             {/* Catatan penolakan */}
             {group.status === 'rejected' && group.rejection_note && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800 flex gap-2">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
                     <div>
                         <p className="font-semibold mb-0.5">Catatan Penolakan:</p>
                         <p>{group.rejection_note}</p>
@@ -810,80 +799,80 @@ const PendaftaranKelompok = () => {
     const authUser = useSelector(s => s.auth.user);
 
     // Data fetching
-    const { data: kpGroups, isLoading, refetch }  = useGetKpGroupsQuery();
-    const { data: periodeListRaw }          = useGetAcademicPeriodsQuery();
-    const { data: perusahaanListRaw }    = useGetKpCompaniesQuery();
-    const { data: temaListRaw }             = useGetKpThemesQuery();
-    const { data: studentListRaw }       = useGetStudentsQuery();
-    const { data: documentTypesRaw }     = useGetDocumentTypesQuery();
-    const [createKpGroup]                = useCreateKpGroupMutation();
-    const [updateKpGroup]                = useUpdateKpGroupMutation();
-    const [proposeKpCompany]             = useProposeKpCompanyMutation();
-    const [uploadKpDocument]             = useUploadKpDocumentMutation();
-    const [deleteKpDocument]             = useDeleteKpDocumentMutation();
-    const [acceptInvitation]             = useAcceptInvitationMutation();
-    const [declineInvitation]            = useDeclineInvitationMutation();
+    const { data: kpGroups, isLoading, refetch } = useGetKpGroupsQuery();
+    const { data: periodeListRaw } = useGetAcademicPeriodsQuery();
+    const { data: perusahaanListRaw } = useGetKpCompaniesQuery();
+    const { data: temaListRaw } = useGetKpThemesQuery();
+    const { data: studentListRaw } = useGetStudentsQuery();
+    const { data: documentTypesRaw } = useGetDocumentTypesQuery();
+    const [createKpGroup] = useCreateKpGroupMutation();
+    const [updateKpGroup] = useUpdateKpGroupMutation();
+    const [proposeKpCompany] = useProposeKpCompanyMutation();
+    const [uploadKpDocument] = useUploadKpDocumentMutation();
+    const [deleteKpDocument] = useDeleteKpDocumentMutation();
+    const [acceptInvitation] = useAcceptInvitationMutation();
+    const [declineInvitation] = useDeclineInvitationMutation();
 
     const perusahaanList = useMemo(() =>
         Array.isArray(perusahaanListRaw) ? perusahaanListRaw
-        : Array.isArray(perusahaanListRaw?.data) ? perusahaanListRaw.data : [],
-    [perusahaanListRaw]);
+            : Array.isArray(perusahaanListRaw?.data) ? perusahaanListRaw.data : [],
+        [perusahaanListRaw]);
 
     const studentList = useMemo(() =>
         Array.isArray(studentListRaw) ? studentListRaw
-        : Array.isArray(studentListRaw?.data) ? studentListRaw.data : [],
-    [studentListRaw]);
+            : Array.isArray(studentListRaw?.data) ? studentListRaw.data : [],
+        [studentListRaw]);
 
     const documentTypes = useMemo(() =>
         Array.isArray(documentTypesRaw) ? documentTypesRaw
-        : Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : [],
-    [documentTypesRaw]);
+            : Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : [],
+        [documentTypesRaw]);
 
     const periodeList = useMemo(() =>
         Array.isArray(periodeListRaw) ? periodeListRaw
-        : Array.isArray(periodeListRaw?.data) ? periodeListRaw.data : [],
-    [periodeListRaw]);
+            : Array.isArray(periodeListRaw?.data) ? periodeListRaw.data : [],
+        [periodeListRaw]);
 
     const temaList = useMemo(() =>
         Array.isArray(temaListRaw) ? temaListRaw
-        : Array.isArray(temaListRaw?.data) ? temaListRaw.data : [],
-    [temaListRaw]);
+            : Array.isArray(temaListRaw?.data) ? temaListRaw.data : [],
+        [temaListRaw]);
 
     // Semua kelompok yang melibatkan user ini
     const kelompok = useMemo(() =>
         Array.isArray(kpGroups) ? kpGroups
-        : Array.isArray(kpGroups?.data) ? kpGroups.data : [],
-    [kpGroups]);
+            : Array.isArray(kpGroups?.data) ? kpGroups.data : [],
+        [kpGroups]);
 
     // Student record user yang login (untuk cek peran di kelompok)
     const myStudent = useMemo(() =>
         studentList.find(s => s.user_id === authUser?.id || String(s.user_id) === String(authUser?.id)),
-    [studentList, authUser]);
+        [studentList, authUser]);
 
     // Pisahkan: kelompok yang user ini jadi KETUA vs jadi ANGGOTA (diundang)
     const kelompokSebagaiKetua = useMemo(() =>
         kelompok.filter(g =>
             g.members?.some(m => m.student_id === myStudent?.id && m.role === 'ketua')
         ),
-    [kelompok, myStudent]);
+        [kelompok, myStudent]);
 
     const kelompokSebagaiAnggota = useMemo(() =>
         kelompok.filter(g =>
             g.members?.some(m => m.student_id === myStudent?.id && m.role !== 'ketua')
         ),
-    [kelompok, myStudent]);
+        [kelompok, myStudent]);
 
     // State wizard
-    const [editing, setEditing]           = useState(null);
-    const [currentStep, setStep]          = useState(1);
-    const [completedSteps, setCompleted]  = useState([]);
-    const [form, setForm]                 = useState(EMPTY);
-    const [uploads, setUploads]           = useState({}); // { document_type_id: File }
+    const [editing, setEditing] = useState(null);
+    const [currentStep, setStep] = useState(1);
+    const [completedSteps, setCompleted] = useState([]);
+    const [form, setForm] = useState(EMPTY);
+    const [uploads, setUploads] = useState({}); // { document_type_id: File }
     const [existingDocuments, setExistingDocuments] = useState({}); // { document_type_id: { id, title, file_url, ... } }
     const [removedDocumentIds, setRemovedDocumentIds] = useState([]); // document IDs to delete
-    const [errors, setErrors]             = useState({});
-    const [submitting, setSubmitting]     = useState(false);
-    const [showConfirm, setShowConfirm]   = useState(false);
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     // Jumlah anggota maksimal dari periode yang dipilih
     const maxAnggota = useMemo(() => {
@@ -921,11 +910,11 @@ const PendaftaranKelompok = () => {
         setEditing(item);
         setForm({
             academic_period_id: item.academic_period?.id || '',
-            kp_company_id:      item.kp_company?.id      || '',
-            kp_theme_id:        item.kp_theme?.id         || '',
-            start_date:         item.start_date           || '',
-            end_date:           item.end_date             || '',
-            anggota_ids:        (item.members || [])
+            kp_company_id: item.kp_company?.id || '',
+            kp_theme_id: item.kp_theme?.id || '',
+            start_date: item.start_date || '',
+            end_date: item.end_date || '',
+            anggota_ids: (item.members || [])
                 .filter(m => m.role === 'anggota')
                 .map(m => m.student_id),
         });
@@ -998,7 +987,7 @@ const PendaftaranKelompok = () => {
     const validate = (step) => {
         const e = {};
         if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
-        if (step === 1 && !form.kp_company_id)      e.kp_company_id      = 'Pilih perusahaan tujuan KP';
+        if (step === 1 && !form.kp_company_id) e.kp_company_id = 'Pilih perusahaan tujuan KP';
         if (step === 4) {
             const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
             for (const doc of requiredDocs) {
@@ -1038,18 +1027,18 @@ const PendaftaranKelompok = () => {
         try {
             const payload = {
                 academic_period_id: Number(form.academic_period_id),
-                kp_company_id:      Number(form.kp_company_id),
-                kp_theme_id:        Number(form.kp_theme_id),
-                start_date:         form.start_date,
-                end_date:           form.end_date,
-                anggota_ids:        form.anggota_ids,
+                kp_company_id: Number(form.kp_company_id),
+                kp_theme_id: Number(form.kp_theme_id),
+                start_date: form.start_date,
+                end_date: form.end_date,
+                anggota_ids: form.anggota_ids,
             };
-            
+
             // Jika mengedit kelompok yang ditolak, otomatis reset ke submitted
             if (editing && editing.status === 'rejected') {
                 payload.status = 'submitted';
             }
-            
+
             let savedGroup;
             if (editing) {
                 await updateKpGroup({ id: editing.id, ...payload }).unwrap();
@@ -1059,7 +1048,7 @@ const PendaftaranKelompok = () => {
                 savedGroup = await createKpGroup(payload).unwrap();
                 handleApiSuccess('Pendaftaran kelompok berhasil dikirim');
             }
-            
+
             // Hapus dokumen yang dihapus saat edit
             for (const docId of removedDocumentIds) {
                 try {
@@ -1068,12 +1057,12 @@ const PendaftaranKelompok = () => {
                     handleApiError(err, 'Gagal menghapus dokumen');
                 }
             }
-            
+
             // Upload dokumen setelah kelompok berhasil disimpan
-            const documentTypes = Array.isArray(documentTypesRaw) 
-                ? documentTypesRaw 
+            const documentTypes = Array.isArray(documentTypesRaw)
+                ? documentTypesRaw
                 : (Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : []);
-            
+
             for (const [documentTypeId, file] of Object.entries(uploads)) {
                 if (file) {
                     const docType = documentTypes.find(dt => String(dt.id) === String(documentTypeId));
@@ -1085,7 +1074,7 @@ const PendaftaranKelompok = () => {
                     await uploadKpDocument(formData).unwrap();
                 }
             }
-            
+
             resetWizard();
             setShowConfirm(false);
         } catch (err) {
@@ -1146,7 +1135,7 @@ const PendaftaranKelompok = () => {
                         {/* Catatan penolakan */}
                         {currentGroup.status === 'rejected' && currentGroup.rejection_note && (
                             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800 flex gap-2">
-                                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
+                                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
                                 <div>
                                     <p className="font-semibold mb-1">Catatan Penolakan:</p>
                                     <p>{currentGroup.rejection_note}</p>
@@ -1226,9 +1215,9 @@ const PendaftaranKelompok = () => {
                         {/* Konten langkah */}
                         <div className="min-h-[280px]">
                             {currentStep === 1 && (
-                                <Step1PeriodeTempatKP 
+                                <Step1PeriodeTempatKP
                                     form={form} onChange={handleChange} errors={errors}
-                                    periodeList={periodeList} perusahaanList={perusahaanList} 
+                                    periodeList={periodeList} perusahaanList={perusahaanList}
                                     onPropose={handlePropose}
                                 />
                             )}
@@ -1243,9 +1232,9 @@ const PendaftaranKelompok = () => {
                                 />
                             )}
                             {currentStep === 4 && (
-                                <Step4Dokumen 
-                                    form={form} 
-                                    onChange={handleChange} 
+                                <Step4Dokumen
+                                    form={form}
+                                    onChange={handleChange}
                                     documentTypes={documentTypes}
                                     uploads={uploads}
                                     existingDocuments={existingDocuments}
@@ -1255,7 +1244,7 @@ const PendaftaranKelompok = () => {
                                 />
                             )}
                             {currentStep === 5 && (
-                                <Step5Preview 
+                                <Step5Preview
                                     form={form} periodeList={periodeList}
                                     perusahaanList={perusahaanList} temaList={temaList}
                                     studentList={studentList} ketuaStudent={myStudent}
@@ -1266,7 +1255,7 @@ const PendaftaranKelompok = () => {
                         {/* Error validasi */}
                         {Object.keys(errors).length > 0 && (
                             <div className="mt-4 flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <AlertCircle className="w-4 h-4 shrink-0" />
                                 {Object.values(errors)[0]}
                             </div>
                         )}

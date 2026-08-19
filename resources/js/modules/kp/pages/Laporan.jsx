@@ -57,8 +57,8 @@ const Laporan = () => {
 
     const reports = useMemo(() =>
         Array.isArray(reportsRaw) ? reportsRaw
-        : Array.isArray(reportsRaw?.data) ? reportsRaw.data : [],
-    [reportsRaw]);
+            : Array.isArray(reportsRaw?.data) ? reportsRaw.data : [],
+        [reportsRaw]);
 
     const currentReport = reports[0];
 
@@ -221,7 +221,7 @@ const Laporan = () => {
 
                     {currentReport?.rejection_note && currentReport.status === 'rejected' && (
                         <div className="mb-4 rounded-lg p-3 text-sm flex gap-2 bg-red-50 border border-red-200 text-red-800">
-                            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                             <div>
                                 <p className="font-semibold mb-0.5">Catatan Revisi dari Dosen:</p>
                                 <p>{currentReport.rejection_note}</p>

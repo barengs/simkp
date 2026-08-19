@@ -164,7 +164,7 @@ const AssignModal = ({ isOpen, onClose, onConfirm, groups, lecturers, submitting
         <Modal isOpen={isOpen} onClose={handleClose} title="Plotting Dosen Pembimbing" size="md">
             <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
-                    <UserPlus className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                    <UserPlus className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                     <span>Pilih kelompok KP dan dosen pembimbing yang akan ditugaskan.</span>
                 </div>
 
@@ -240,31 +240,31 @@ const PlottingDosen = () => {
     // Process data
     const unassignedGroups = useMemo(() =>
         Array.isArray(unassignedRaw) ? unassignedRaw
-        : Array.isArray(unassignedRaw?.data) ? unassignedRaw.data : [],
-    [unassignedRaw]);
+            : Array.isArray(unassignedRaw?.data) ? unassignedRaw.data : [],
+        [unassignedRaw]);
 
     const assignedGroups = useMemo(() =>
         Array.isArray(assignedRaw) ? assignedRaw
-        : Array.isArray(assignedRaw?.data) ? assignedRaw.data : [],
-    [assignedRaw]);
+            : Array.isArray(assignedRaw?.data) ? assignedRaw.data : [],
+        [assignedRaw]);
 
     const lecturers = useMemo(() =>
         Array.isArray(lecturersRaw) ? lecturersRaw
-        : Array.isArray(lecturersRaw?.data) ? lecturersRaw.data : [],
-    [lecturersRaw]);
+            : Array.isArray(lecturersRaw?.data) ? lecturersRaw.data : [],
+        [lecturersRaw]);
 
     const filteredUnassigned = useMemo(() =>
         unassignedGroups.filter(g =>
             !search || g.kp_company?.name?.toLowerCase().includes(search.toLowerCase())
         ),
-    [unassignedGroups, search]);
+        [unassignedGroups, search]);
 
     const filteredAssigned = useMemo(() =>
         assignedGroups.filter(g =>
             !search || g.kp_company?.name?.toLowerCase().includes(search.toLowerCase()) ||
             g.supervisor?.name?.toLowerCase().includes(search.toLowerCase())
         ),
-    [assignedGroups, search]);
+        [assignedGroups, search]);
 
     // Stats
     const stats = useMemo(() => ({
@@ -413,21 +413,19 @@ const PlottingDosen = () => {
                 <div className="border-b border-gray-200 px-2 flex gap-1">
                     <button
                         onClick={() => setActiveTab('unassigned')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                            activeTab === 'unassigned'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'unassigned'
                                 ? 'border-emerald-500 text-emerald-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                            }`}
                     >
                         Belum Plotting ({stats.unassigned})
                     </button>
                     <button
                         onClick={() => setActiveTab('assigned')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                            activeTab === 'assigned'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'assigned'
                                 ? 'border-emerald-500 text-emerald-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                            }`}
                     >
                         Sudah Plotting ({stats.assigned})
                     </button>

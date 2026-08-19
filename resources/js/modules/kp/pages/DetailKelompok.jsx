@@ -73,7 +73,7 @@ const formatDate = (date) => {
 
 const DetailItem = ({ icon: Icon, label, value, children }) => (
     <div className="flex gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 text-gray-500 flex-shrink-0">
+        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-50 text-gray-500 shrink-0">
             <Icon className="w-4 h-4" />
         </div>
 
@@ -83,7 +83,7 @@ const DetailItem = ({ icon: Icon, label, value, children }) => (
             </p>
 
             {children || (
-                <p className="mt-1 text-sm font-medium text-gray-900 break-words">
+                <p className="mt-1 text-sm font-medium text-gray-900 wrap-break-words">
                     {value || '-'}
                 </p>
             )}
@@ -94,7 +94,7 @@ const DetailItem = ({ icon: Icon, label, value, children }) => (
 const SectionHeader = ({ icon: Icon, title, description, action }) => (
     <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex-shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
                 <Icon className="w-4 h-4" />
             </div>
 
@@ -252,7 +252,7 @@ const DetailKelompok = () => {
             width: '220px',
             cell: r => (
                 <div className="flex items-center gap-2.5">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex-shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 shrink-0">
                         <UserRound className="w-4 h-4" />
                     </div>
 
@@ -324,9 +324,9 @@ const DetailKelompok = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="h-[500px] rounded-lg lg:col-span-1" />
+                    <Skeleton className="h-125 rounded-lg lg:col-span-1" />
 
-                    <Skeleton className="h-[500px] rounded-lg lg:col-span-2" />
+                    <Skeleton className="h-125 rounded-lg lg:col-span-2" />
                 </div>
             </div>
         );
@@ -387,7 +387,7 @@ const DetailKelompok = () => {
                 HERO
             ========================== */}
             <Card className="overflow-hidden">
-                <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-7 text-white">
+                <div className="relative bg-linear-to-r from-emerald-600 to-emerald-500 px-6 py-7 text-white">
 
                     <div className="absolute right-0 top-0 w-64 h-64 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/4" />
 
@@ -457,7 +457,7 @@ const DetailKelompok = () => {
                                         {members.map((member, index) => (
                                             <div key={member.id} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex-shrink-0">
+                                                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 shrink-0">
                                                         <span className="text-xs font-semibold">{index + 1}</span>
                                                     </div>
                                                     <div>
@@ -499,7 +499,7 @@ const DetailKelompok = () => {
 
                                     <div className="flex gap-3">
 
-                                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex-shrink-0">
+                                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
                                             <GraduationCap className="w-4 h-4" />
                                         </div>
 
@@ -686,11 +686,10 @@ const DetailKelompok = () => {
                                     onClick={() =>
                                         setActiveTab('logbook')
                                     }
-                                    className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                                        activeTab === 'logbook'
+                                    className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'logbook'
                                             ? 'text-emerald-700'
                                             : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                                        }`}
                                 >
                                     <BookOpen className="w-4 h-4" />
 
@@ -711,11 +710,10 @@ const DetailKelompok = () => {
                                     onClick={() =>
                                         setActiveTab('laporan')
                                     }
-                                    className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                                        activeTab === 'laporan'
+                                    className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'laporan'
                                             ? 'text-emerald-700'
                                             : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                                        }`}
                                 >
                                     <ClipboardList className="w-4 h-4" />
 

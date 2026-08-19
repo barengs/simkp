@@ -40,13 +40,13 @@ const Nilai = () => {
 
     const groups = useMemo(() =>
         Array.isArray(groupsRaw) ? groupsRaw
-        : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
-    [groupsRaw]);
+            : Array.isArray(groupsRaw?.data) ? groupsRaw.data : [],
+        [groupsRaw]);
 
     const grades = useMemo(() =>
         Array.isArray(gradesRaw) ? gradesRaw
-        : Array.isArray(gradesRaw?.data) ? gradesRaw.data : [],
-    [gradesRaw]);
+            : Array.isArray(gradesRaw?.data) ? gradesRaw.data : [],
+        [gradesRaw]);
 
     const filteredGroups = useMemo(() => {
         return groups.filter(group => {
@@ -281,7 +281,7 @@ const Nilai = () => {
                 }} title="Input Nilai Kelompok" size="lg">
                     <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
-                            <Users className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                            <Users className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                             <span>Input nilai untuk kelompok <strong>{selectedGroup.id || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
                         </div>
 

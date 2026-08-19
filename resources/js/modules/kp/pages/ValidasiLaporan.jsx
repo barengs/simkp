@@ -52,7 +52,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, submitting, type }) => {
         <Modal isOpen={isOpen} onClose={handleClose} title={isApprove ? 'Setujui Laporan' : 'Kembalikan untuk Revisi'} size="md">
             <div className="space-y-4">
                 <div className={`rounded-lg p-3 text-sm flex gap-2 ${isApprove ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                     <span>
                         {isApprove
                             ? 'Konfirmasi bahwa laporan ini telah divalidasi dan disetujui.'
@@ -129,16 +129,16 @@ const ValidasiLaporan = () => {
 
     const reports = useMemo(() =>
         reportsRaw?.data || [],
-    [reportsRaw]);
+        [reportsRaw]);
 
     const totalRows = useMemo(() =>
         reportsRaw?.meta?.total || 0,
-    [reportsRaw]);
+        [reportsRaw]);
 
     const criteria = useMemo(() =>
         Array.isArray(criteriaRaw) ? criteriaRaw
-        : Array.isArray(criteriaRaw?.data) ? criteriaRaw.data : [],
-    [criteriaRaw]);
+            : Array.isArray(criteriaRaw?.data) ? criteriaRaw.data : [],
+        [criteriaRaw]);
 
     const stats = useMemo(() => {
         const responseStats = reportsRaw?.meta?.stats;
@@ -445,7 +445,7 @@ const ValidasiLaporan = () => {
                 }} title="Input Nilai Laporan" size="lg">
                     <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
-                            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                             <span>Input nilai untuk laporan kelompok <strong>{gradingReport.kp_group?.id || '-'}</strong>. Nilai akan diterapkan ke seluruh anggota kelompok.</span>
                         </div>
 

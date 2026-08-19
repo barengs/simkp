@@ -224,7 +224,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onPlot, isProcessing,
                 {data.rejection_note && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                         <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
                             <div>
                                 <p className="text-xs font-medium text-red-800 uppercase tracking-wide mb-1">
                                     Catatan Penolakan
@@ -306,7 +306,7 @@ const RejectModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
         >
             <div className="space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800 flex gap-2">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-600" />
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
                     <span>Konfirmasi penolakan pendaftaran KP.</span>
                 </div>
 
@@ -367,7 +367,7 @@ const ApproveModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
         >
             <div className="space-y-4">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-800 flex gap-2">
-                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-600" />
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
                     <span>Pendaftaran akan disetujui dan mahasiswa dapat melanjutkan ke tahap berikutnya.</span>
                 </div>
 
@@ -433,7 +433,7 @@ const PlottingModal = ({ isOpen, onClose, onConfirm, submitting, data, lecturers
         >
             <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
-                    <UserPlus className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                    <UserPlus className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />
                     <span>Pilih dosen pembimbing untuk kelompok ini.</span>
                 </div>
 
@@ -502,13 +502,13 @@ const VerifikasiPendaftaran = () => {
     // Process data
     const verifikasi = useMemo(() =>
         Array.isArray(verifikasiRaw) ? verifikasiRaw
-        : Array.isArray(verifikasiRaw?.data) ? verifikasiRaw.data : [],
-    [verifikasiRaw]);
+            : Array.isArray(verifikasiRaw?.data) ? verifikasiRaw.data : [],
+        [verifikasiRaw]);
 
     const lecturers = useMemo(() =>
         Array.isArray(lecturersRaw) ? lecturersRaw
-        : Array.isArray(lecturersRaw?.data) ? lecturersRaw.data : [],
-    [lecturersRaw]);
+            : Array.isArray(lecturersRaw?.data) ? lecturersRaw.data : [],
+        [lecturersRaw]);
 
     const filtered = useMemo(() =>
         verifikasi.filter(item => {
@@ -521,7 +521,7 @@ const VerifikasiPendaftaran = () => {
 
             return matchSearch && matchStatus;
         }),
-    [verifikasi, debouncedSearch, filterStatus]);
+        [verifikasi, debouncedSearch, filterStatus]);
 
     const paginatedData = useMemo(() => {
         const start = (page - 1) * perPage;
@@ -551,7 +551,7 @@ const VerifikasiPendaftaran = () => {
                 refetch();
                 setPage(1);
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     const handleApprove = (notes) => {
@@ -562,7 +562,7 @@ const VerifikasiPendaftaran = () => {
                 refetch();
                 setPage(1);
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     const handlePlotting = (lecturerId) => {
