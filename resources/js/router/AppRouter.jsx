@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Login from '../modules/auth/pages/Login';
+import Register from '../modules/auth/pages/Register';
 import AppShell from '../layouts/AppShell';
 import Dashboard from '../modules/shared/pages/Dashboard';
 import ProtectedRoute from './ProtectedRoute';
@@ -33,6 +34,7 @@ function AppRouter() {
         <Routes>
             {/* Public route */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             {/* Forbidden */}
             <Route path="/403" element={<Forbidden />} />
@@ -100,12 +102,12 @@ function AppRouter() {
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/kelompok" element={
-                    <ProtectedRoute permission="kp.kelompok.create">
+                    <ProtectedRoute permission="kp.pendaftaran-kelompok">
                         <PendaftaranKelompok />
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/logbook" element={
-                    <ProtectedRoute permission="kp.kelompok.create">
+                    <ProtectedRoute permission="kp.pendaftaran-kelompok">
                         <Logbook />
                     </ProtectedRoute>
                 } />
@@ -115,7 +117,7 @@ function AppRouter() {
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/laporan" element={
-                    <ProtectedRoute permission="kp.kelompok.create">
+                    <ProtectedRoute permission="kp.pendaftaran-kelompok">
                         <Laporan />
                     </ProtectedRoute>
                 } />

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -67,6 +69,34 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return response()->json($this->userResponse($request->user()));
+    }
+
+    public function register(RegisterRequest $request)
+    {
+        $data = $request->validated();
+
+        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+
+            $student = \App\Models\Student::create([
+                'user_id' => $user->id,
+                'nim' => $data['nim'],
+                'study_program_id' => $data['study_program_id'],
+                'is_active' => true,
+            ]);
+
+            $user->syncRoles(['mahasiswa']);
+
+            return $user;
+        });
+
+        Auth::login($user);
+
+        return response()->json($this->userResponse($user), 201);
     }
 
     public function logout(Request $request)

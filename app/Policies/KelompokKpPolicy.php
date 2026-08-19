@@ -23,7 +23,7 @@ class KpGroupPolicy
 
     public function create(User $user)
     {
-        return $user->can('kp.kelompok.create');
+        return $user->can('kp.pendaftaran-kelompok');
     }
 
     public function update(User $user, KelompokKp $kelompok)

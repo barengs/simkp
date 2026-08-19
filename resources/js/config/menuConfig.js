@@ -40,7 +40,7 @@ export const menuConfig = [
     {
         label: 'Pendaftaran Kelompok',
         path: '/kp/kelompok',
-        permission: 'kp.kelompok.create',
+        permission: 'kp.pendaftaran-kelompok',
         icon: UserPlus,
     },
     {
@@ -52,37 +52,37 @@ export const menuConfig = [
     {
         label: 'Logbook',
         path: '/kp/logbook',
-        permission: 'kp.kelompok.create',
+        permission: 'kp.logbook',
         icon: BookOpen,
     },
     {
         label: 'Validasi Logbook',
         path: '/kp/logbook/validasi',
-        permission: 'kp.logbook.approve',
+        permission: 'kp.validasi-logbook',
         icon: ClipboardList,
     },
     {
         label: 'Laporan KP',
         path: '/kp/laporan',
-        permission: 'kp.kelompok.create',
+        permission: 'kp.laporan',
         icon: FileText,
     },
     {
         label: 'Validasi Laporan',
         path: '/kp/laporan/validasi',
-        permission: 'kp.laporan.approve',
+        permission: 'kp.validasi-laporan',
         icon: ClipboardList,
     },
     {
         label: 'Nilai KP',
         path: '/kp/nilai',
-        permission: 'kp.nilai.input',
+        permission: 'kp.nilai',
         icon: CheckCircle,
     },
     {
         label: 'Nilai Saya',
         path: '/kp/nilai-saya',
-        permission: 'kp.nilai.view',
+        permission: 'kp.nilai-saya',
         icon: Award,
     },
     {

@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\UserController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::get('/setting/public', [SettingController::class, 'public']);
 
 // Authenticated routes

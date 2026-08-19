@@ -21,7 +21,7 @@ class ReportController extends Controller
     {
         $user = $request->user();
 
-        if ($user->can('kp.laporan.approve')) {
+        if ($user->can('kp.validasi-laporan')) {
             $groupId = $request->query('group_id');
 
             if ($groupId) {

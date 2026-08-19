@@ -42,11 +42,11 @@ class KpGroupController extends Controller
     }
 
     /**
-     * Hanya mahasiswa dengan permission kp.kelompok.create yang boleh membuat kelompok.
+     * Hanya mahasiswa dengan permission kp.pendaftaran-kelompok yang boleh membuat kelompok.
      */
     public function store(StoreKpGroupRequest $request)
     {
-        if (!$request->user()->can('kp.kelompok.create')) {
+        if (!$request->user()->can('kp.pendaftaran-kelompok')) {
             abort(403, 'Anda tidak memiliki izin untuk mendaftar kelompok KP.');
         }
 

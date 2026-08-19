@@ -33,6 +33,30 @@ import {
 // ---------------------------------------------------------------------------
 const permissionLabel = (name) => {
     if (!name) return '-';
+    const labelMap = {
+        'pengaturan.manage': 'Manajemen Pengguna',
+        'master-data.manage': 'Master Data',
+        'role.manage': 'Manajemen Peran',
+        'permission.manage': 'Permission',
+        'kp.verifikasi-pendaftaran': 'Verifikasi Pendaftaran',
+        'kp.pendaftaran-kelompok': 'Pendaftaran Kelompok',
+        'kp.daftar-kelompok': 'Daftar Kelompok',
+        'kp.plotting-dosen': 'Plotting Dosen',
+        'kp.logbook': 'Logbook',
+        'kp.validasi-logbook': 'Validasi Logbook',
+        'kp.laporan': 'Laporan KP',
+        'kp.validasi-laporan': 'Validasi Laporan',
+        'kp.nilai': 'Nilai KP',
+        'kp.nilai-saya': 'Nilai Saya',
+        'ta.pengajuan': 'Pengajuan TA',
+        'ta.verifikasi-judul': 'Verifikasi Judul',
+        'ta.plotting-dosen': 'Plotting Dosen TA',
+        'ta.bimbingan': 'Bimbingan TA',
+        'ta.nilai': 'Nilai TA',
+        'repository.publish': 'Repository',
+        'repository.view': 'Repository',
+    };
+    if (labelMap[name]) return labelMap[name];
     const parts = name.split('.');
     const last = parts[parts.length - 1].replace(/-/g, ' ');
     return last.charAt(0).toUpperCase() + last.slice(1);

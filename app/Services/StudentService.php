@@ -97,7 +97,7 @@ class StudentService
             ]);
 
             // Auto-assign role mahasiswa agar user langsung dapat permission yang sesuai
-            // (kp.kelompok.create, kp.logbook.input, ta.pengajuan.create, dst.)
+            // (kp.pendaftaran-kelompok, kp.logbook, ta.pengajuan, dst.)
             $user->syncRoles(['mahasiswa']);
 
             // Create student record linked to user

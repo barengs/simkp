@@ -23,7 +23,7 @@ class KpGradeController extends Controller
     {
         $user = $request->user();
 
-        if ($user->can('kp.nilai.input')) {
+        if ($user->can('kp.nilai')) {
             $groupId = $request->query('group_id');
 
             if ($groupId) {

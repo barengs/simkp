@@ -31,53 +31,37 @@ class RolePermissionSeeder extends Seeder
         // =====================================================================
         $allPermissions = [
             // ── Pengaturan Aplikasi ──────────────────────────────────────────
-            // Admin: ubah app_name, logo, favicon, jumlah anggota kelompok
             'pengaturan.manage',
 
             // ── Master Data ──────────────────────────────────────────────────
-            // Admin: kelola prodi, periode, ruangan, perusahaan KP, tema KP,
-            //        jenis dokumen, dosen, mahasiswa
             'master-data.manage',
 
             // ── Manajemen Role & Permission (RBAC) ───────────────────────────
-            // Admin: buat/edit/hapus role dan assignment permission
             'role.manage',
             'permission.manage',
 
-            // ── Modul KP — Kelompok ──────────────────────────────────────────
-            'kp.kelompok.create',   // Mahasiswa: buat kelompok KP
-            'kp.kelompok.view',     // Koordinator / Dosen / Admin: lihat daftar kelompok
+            // ── Modul KP ────────────────────────────────────────────────────
+            'kp.verifikasi-pendaftaran',
+            'kp.pendaftaran-kelompok',
+            'kp.daftar-kelompok',
+            'kp.plotting-dosen',
+            'kp.logbook',
+            'kp.validasi-logbook',
+            'kp.laporan',
+            'kp.validasi-laporan',
+            'kp.nilai',
+            'kp.nilai-saya',
 
-            // ── Modul KP — Verifikasi & Plotting ────────────────────────────
-            'kp.verifikasi-pendaftaran', // Admin, Koordinator: verifikasi pendaftaran kelompok
-            'kp.plotting-dosen',         // Koordinator: assign dosen pembimbing ke kelompok
-
-            // ── Modul KP — Logbook ───────────────────────────────────────────
-            'kp.logbook.input',    // Mahasiswa: input entri logbook
-            'kp.logbook.approve',  // Dosen (jika pembimbing kelompok): approve logbook
-
-            // ── Modul KP — Laporan ───────────────────────────────────────────
-            'kp.laporan.input',    // Mahasiswa: ajukan laporan KP
-            'kp.laporan.approve',  // Dosen (jika pembimbing kelompok): approve laporan KP
-
-            // ── Modul KP — Nilai ─────────────────────────────────────────────
-            'kp.nilai.input',      // Dosen (jika pembimbing kelompok): input nilai KP
-            'kp.nilai.view',       // Mahasiswa: lihat nilai KP sendiri
-
-            // ── Modul TA — Pengajuan & Verifikasi ───────────────────────────
-            'ta.pengajuan.create',   // Mahasiswa: ajukan judul TA
-            'ta.verifikasi-judul',   // Koordinator: verifikasi / tolak judul TA
-            'ta.plotting-dosen',     // Koordinator: assign dosen pembimbing & penguji TA
-
-            // ── Modul TA — Bimbingan ─────────────────────────────────────────
-            'ta.bimbingan.approve',  // Dosen (jika pembimbing): approve sesi bimbingan TA
-
-            // ── Modul TA — Nilai ─────────────────────────────────────────────
-            'ta.nilai.input',        // Dosen (jika penguji): input nilai ujian TA
+            // ── Modul TA ────────────────────────────────────────────────────
+            'ta.pengajuan',
+            'ta.verifikasi-judul',
+            'ta.plotting-dosen',
+            'ta.bimbingan',
+            'ta.nilai',
 
             // ── Repository ───────────────────────────────────────────────────
-            'repository.publish',  // Admin, Koordinator: publikasi dokumen TA
-            'repository.view',     // Semua role: lihat repository publik
+            'repository.publish',
+            'repository.view',
         ];
 
         foreach ($allPermissions as $name) {
@@ -107,7 +91,7 @@ class RolePermissionSeeder extends Seeder
         // Koordinator → verifikasi & plotting KP/TA, monitoring, repository
         $roleKoordinator->syncPermissions([
             'kp.verifikasi-pendaftaran',
-            'kp.kelompok.view',
+            'kp.daftar-kelompok',
             'kp.plotting-dosen',
             'ta.verifikasi-judul',
             'ta.plotting-dosen',
@@ -118,23 +102,23 @@ class RolePermissionSeeder extends Seeder
         // Dosen → aksi pada kelompok/mahasiswa yang dibimbing/diuji
         // (validasi kepemilikan relasi spesifik tetap di backend via Policy)
         $roleDosen->syncPermissions([
-            'kp.kelompok.view',
-            'kp.logbook.approve',
-            'kp.laporan.approve',
-            'kp.nilai.input',
-            'ta.bimbingan.approve',
-            'ta.nilai.input',
+            'kp.daftar-kelompok',
+            'kp.validasi-logbook',
+            'kp.validasi-laporan',
+            'kp.nilai',
+            'ta.bimbingan',
+            'ta.nilai',
             'repository.view',
         ]);
 
         // Mahasiswa → aksi di KP dan TA milik sendiri / kelompoknya
         $roleMahasiswa->syncPermissions([
-            'kp.kelompok.create',
-            'kp.kelompok.view',
-            'kp.logbook.input',
-            'kp.laporan.input',
-            'kp.nilai.view',
-            'ta.pengajuan.create',
+            'kp.pendaftaran-kelompok',
+            'kp.daftar-kelompok',
+            'kp.logbook',
+            'kp.laporan',
+            'kp.nilai-saya',
+            'ta.pengajuan',
             'repository.view',
         ]);
 
@@ -176,7 +160,7 @@ class RolePermissionSeeder extends Seeder
                 'role'     => 'dosen',
                 // Hak akses: kp.kelompok.view, kp.logbook.approve,
                 //            kp.laporan.approve, kp.nilai.input,
-                //            ta.bimbingan.approve, ta.nilai.input, repository.view
+                //            ta.bimbingan, ta.nilai, repository.view
                 // Catatan: berlaku hanya untuk kelompok/mahasiswa yang dibimbing
                 //          (divalidasi di backend via Policy, bukan hanya permission)
             ],
@@ -186,7 +170,7 @@ class RolePermissionSeeder extends Seeder
                 'password' => 'password',
                 'role'     => 'mahasiswa',
                 // Hak akses: kp.kelompok.create, kp.kelompok.view,
-                //            kp.logbook.input, ta.pengajuan.create, repository.view
+                //            kp.logbook.input, ta.pengajuan, repository.view
             ],
         ];
 

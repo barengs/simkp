@@ -19,7 +19,7 @@ class KpGradePolicy
 
     public function create(User $user)
     {
-        return $user->hasRole('dosen') && $user->can('kp.nilai.input');
+        return $user->hasRole('dosen') && $user->can('kp.nilai');
     }
 
     public function update(User $user, KpGrade $kpGrade)

@@ -21,7 +21,7 @@ class LogbookPolicy
 
     public function create(User $user)
     {
-        return $user->can('kp.logbook.input');
+        return $user->can('kp.logbook');
     }
 
     public function update(User $user, Logbook $logbook)

@@ -19,7 +19,7 @@ class ReportPolicy
 
     public function create(User $user)
     {
-        return $user->hasRole('mahasiswa') && $user->can('kp.laporan.input');
+        return $user->hasRole('mahasiswa') && $user->can('kp.laporan');
     }
 
     public function update(User $user, Report $report)

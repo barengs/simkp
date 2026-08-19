@@ -22,7 +22,7 @@ class LogbookController extends Controller
     {
         $user = $request->user();
 
-        if ($user->can('kp.logbook.approve')) {
+        if ($user->can('kp.validasi-logbook')) {
             $groupId = $request->query('group_id');
 
             if ($groupId) {

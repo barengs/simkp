@@ -80,7 +80,7 @@ class LecturerService
             ]);
 
             // Auto-assign role dosen agar user langsung dapat permission yang sesuai
-            // (kp.logbook.approve, kp.laporan.approve, kp.nilai.input, ta.*, dst.)
+            // (kp.validasi-logbook, kp.validasi-laporan, kp.nilai, ta.*, dst.)
             $user->syncRoles(['dosen']);
 
             // Create lecturer record linked to user
