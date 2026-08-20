@@ -112,7 +112,7 @@ function AppRouter() {
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/logbook/validasi" element={
-                    <ProtectedRoute permission="kp.logbook.approve">
+                    <ProtectedRoute permission="kp.validasi-logbook">
                         <LogbookValidation />
                     </ProtectedRoute>
                 } />
@@ -122,17 +122,17 @@ function AppRouter() {
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/laporan/validasi" element={
-                    <ProtectedRoute permission="kp.laporan.approve">
+                    <ProtectedRoute permission="kp.validasi-laporan">
                         <ValidasiLaporan />
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/nilai" element={
-                    <ProtectedRoute permission="kp.nilai.input">
+                    <ProtectedRoute permission="kp.nilai">
                         <Nilai />
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/nilai-saya" element={
-                    <ProtectedRoute permission="kp.nilai.view">
+                    <ProtectedRoute permission="kp.nilai-saya">
                         <NilaiSaya />
                     </ProtectedRoute>
                 } />

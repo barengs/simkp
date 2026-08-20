@@ -158,43 +158,133 @@ const Laporan = () => {
     const renderDetail = () => {
         if (!currentReport) return null;
 
+        const statusConfig = {
+            pending: {
+                label: 'Menunggu Review',
+                icon: AlertCircle,
+                bg: 'bg-yellow-50',
+                border: 'border-yellow-200',
+                text: 'text-yellow-700',
+            },
+            approved: {
+                label: 'Disetujui',
+                icon: CheckCircle2,
+                bg: 'bg-emerald-50',
+                border: 'border-emerald-200',
+                text: 'text-emerald-700',
+            },
+            rejected: {
+                label: 'Perlu Revisi',
+                icon: AlertCircle,
+                bg: 'bg-red-50',
+                border: 'border-red-200',
+                text: 'text-red-700',
+            },
+        };
+
+        const status = statusConfig[currentReport.status] || statusConfig.pending;
+        const StatusIcon = status.icon;
+
         return (
             <Card>
-                <div className="p-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Detail Laporan</h3>
-                        {getStatusBadge(currentReport.status)}
+                <div className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-gray-100">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <FileText className="w-5 h-5 text-emerald-600" />
+                                <h3 className="text-lg font-semibold text-gray-900">Detail Laporan</h3>
+                            </div>
+                            <p className="text-sm text-gray-500">Informasi laporan Kerja Praktek yang telah Anda ajukan.</p>
+                        </div>
+                        <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${status.bg} ${status.border} ${status.text}`}>
+                            <StatusIcon className="w-4 h-4" />
+                            <span className="text-sm font-medium">{status.label}</span>
+                        </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Judul</p>
-                            <p className="text-sm font-medium text-gray-900">{currentReport.title || '-'}</p>
+                    <div className="mt-6">
+                        <div className="p-5 rounded-xl bg-gray-50 border border-gray-100">
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Judul Laporan</p>
+                            <h4 className="text-base font-semibold text-gray-900 leading-relaxed">
+                                {currentReport.title || '-'}
+                            </h4>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Deskripsi</p>
-                            <p className="text-sm text-gray-900 whitespace-pre-wrap">{currentReport.description || '-'}</p>
+
+                        <div className="mt-5">
+                            <p className="text-sm font-semibold text-gray-900 mb-2">Deskripsi</p>
+                            <div className="rounded-xl border border-gray-200 bg-white p-4">
+                                <p className="text-sm text-gray-600 leading-6 whitespace-pre-wrap">
+                                    {currentReport.description || 'Tidak ada deskripsi laporan.'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Dokumen</p>
+
+                        <div className="mt-5">
+                            <p className="text-sm font-semibold text-gray-900 mb-2">Dokumen Laporan</p>
+
                             {currentReport.file_url ? (
-                                <a
-                                    href={currentReport.file_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-emerald-600 hover:text-emerald-800"
-                                >
-                                    Lihat Dokumen
-                                </a>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-white hover:border-emerald-200 transition-colors">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-emerald-50 flex-shrink-0">
+                                            <FileText className="w-5 h-5 text-emerald-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                                Dokumen Laporan KP
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Dokumen yang telah diunggah
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <a
+                                        href={currentReport.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                    >
+                                        Lihat Dokumen
+                                    </a>
+                                </div>
                             ) : (
-                                <p className="text-sm text-gray-500">Belum ada dokumen</p>
+                                <div className="p-4 rounded-xl border border-dashed border-gray-300 bg-gray-50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100">
+                                            <FileText className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-700">Belum ada dokumen</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">Dokumen laporan belum diunggah.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
+
+                        {currentReport.status === 'rejected' && currentReport.rejection_note && (
+                            <div className="mt-5 p-4 rounded-xl bg-red-50 border border-red-200">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-100 flex-shrink-0">
+                                        <AlertCircle className="w-5 h-5 text-red-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-red-800">Catatan Revisi</p>
+                                        <p className="mt-1 text-sm text-red-700 leading-6 whitespace-pre-wrap">
+                                            {currentReport.rejection_note}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {currentReport.status === 'rejected' && (
-                        <div className="mt-6 flex justify-end">
-                            <Button onClick={openReuploadForm}>
+                        <div className="mt-6 pt-5 border-t border-gray-100 flex justify-end">
+                            <Button
+                                onClick={openReuploadForm}
+                                icon={Upload}
+                            >
                                 Upload Ulang
                             </Button>
                         </div>
