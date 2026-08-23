@@ -12,12 +12,12 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->foreignId('student_id')->constrained('student')->cascadeOnDelete();
-            $table->foreignId('lecturer_id')->nullable()->constrained('lecturer')->nullOnDelete();
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
+            $table->foreignId('periode_id')->nullable()->constrained('academic_period')->nullOnDelete();
+            $table->string('judul_disetujui')->nullable();
+            $table->date('tanggal_pengajuan')->nullable();
+            $table->text('catatan_penolakan')->nullable();
+            $table->foreignId('mahasiswa_id')->constrained('student')->cascadeOnDelete();
             $table->string('status')->default('draft');
-            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

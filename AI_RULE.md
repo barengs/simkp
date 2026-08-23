@@ -148,7 +148,46 @@ Permission baru **wajib** mengikuti pola `domain.aksi` yang sudah dipakai di blu
 
 ---
 
-## 6. Aturan State Management (Redux Toolkit) & Persistensi Halaman
+## 6. Aturan Pengambilan Data — Dilarang "Get All", Ambil Sesuai Kebutuhan
+
+**Prinsip:** setiap endpoint dan setiap query frontend hanya boleh mengambil kolom dan baris data yang benar-benar dipakai oleh tampilan yang memanggilnya. Pola "ambil semua data dulu (semua kolom, semua baris), lalu filter/pilih di frontend" **dilarang** — ini boros bandwidth, memperlambat render, dan berisiko membocorkan kolom yang tidak seharusnya dilihat user tersebut (misalnya kolom internal atau milik user lain ikut terkirim walau tidak ditampilkan).
+
+### 6.1 Backend — Select Kolom Eksplisit, Bukan Model Penuh
+
+- Query Eloquent yang menyuplai API wajib memilih kolom secara eksplisit (`select([...])` atau lewat API Resource yang membatasi field), **bukan** `Model::all()` atau `Model::get()` tanpa seleksi kolom yang kemudian dikirim mentah lewat Resource yang meng-`export` semua atribut.
+- API Resource **wajib mendefinisikan field satu per satu** (`return ['id' => $this->id, 'nama' => $this->nama, ...]`), bukan `return $this->toArray()` atau `return $this->only(...)` dengan daftar kolom yang meniru seluruh tabel begitu saja. Field yang tidak dipakai di UI terkait tidak boleh ikut dikirim.
+- Kalau satu tabel dipakai oleh beberapa tampilan dengan kebutuhan kolom berbeda (misalnya `dosen` dipakai di dropdown pilih pembimbing vs di halaman detail profil dosen), buat **Resource/endpoint terpisah** untuk tiap kebutuhan tampilan (`DosenSelectResource` hanya `id`+`nama`, vs `DosenDetailResource` lengkap) — jangan satu Resource "serba lengkap" dipakai di semua tempat dengan asumsi frontend akan mengambil sebagian saja.
+- Endpoint untuk data referensi/dropdown (misalnya daftar dosen untuk plotting, daftar tema KP untuk pilihan) wajib berupa endpoint ringan tersendiri yang cuma mengembalikan `id` + label tampil, **bukan** endpoint utama yang me-return seluruh kolom lalu dipangkas di frontend.
+- List/tabel yang menampilkan data dalam jumlah banyak wajib pakai pagination (`paginate()`), bukan mengembalikan seluruh baris sekaligus.
+- Kalau memang dibutuhkan fleksibilitas kolom (satu endpoint dipakai beberapa varian tampilan), boleh menerima query param eksplisit seperti `?fields=id,nama,status` yang divalidasi terhadap whitelist kolom yang diizinkan — bukan menerima input bebas yang langsung dipetakan ke `select()` (celah SQL injection/kolom sensitif ikut ter-expose).
+
+### 6.2 Frontend — Endpoint RTK Query Granular Sesuai Kebutuhan Komponen
+
+- Setiap `useXxxQuery` didefinisikan untuk **kebutuhan tampilan spesifik**, bukan satu query generik "getAll" yang dipakai di banyak komponen berbeda lalu tiap komponen mengambil sebagian field dari hasilnya. Kalau komponen A cuma butuh nama+status, dan komponen B butuh data lengkap, itu dua endpoint/query berbeda, bukan satu `useGetAllDosenQuery` yang dipanggil di dua tempat.
+- Dilarang menulis kode seperti: 
+  ```
+  // DILARANG — ambil semua lalu filter di clientconst { data } = useGetAllDosenQuery();const dropdownOptions = data.map(d => ({ id: d.id, label: d.nama })); // kolom lain ikut kebawa & terbuang percuma
+
+  ```
+  Gantikan dengan endpoint yang memang didesain ringan: 
+  ```
+  // BENAR — endpoint sudah didesain hanya kirim field yang dipakaiconst { data } = useGetDosenOptionsQuery(); // backend Resource sudah cuma id+nama
+
+  ```
+- Untuk pencarian/filter/paginasi, kirim parameter ke backend (`useGetKelompokQuery({ page, search, status })`) supaya backend yang menyaring, **bukan** ambil seluruh data lalu di-`.filter()`/`.search()` di JavaScript sisi klien.
+- Saat mendesain endpoint baru untuk suatu halaman, tentukan dulu kolom apa saja yang benar-benar tampil di UI tersebut, lalu minta backend menyediakan Resource yang persis sesuai itu — jangan minta "kirim semua saja biar aman", karena justru itu yang dilarang aturan ini.
+
+### 6.3 Checklist Tambahan — Field Selection
+
+- \[ ] Tidak ada endpoint yang mengembalikan seluruh kolom tabel secara default tanpa Resource yang membatasi field.
+- \[ ] Tidak ada komponen frontend yang memanggil query "get all" lalu memangkas/mem-filter hasilnya sendiri di JavaScript.
+- \[ ] Data untuk dropdown/referensi memakai endpoint/Resource ringan terpisah dari endpoint detail.
+- \[ ] List data besar memakai pagination di backend, bukan dikirim penuh sekaligus.
+- \[ ] Filter/pencarian dikirim sebagai parameter ke backend, bukan dilakukan di sisi klien terhadap data yang sudah diambil penuh.
+
+---
+
+## 7. Aturan State Management (Redux Toolkit) & Persistensi Halaman
 
 **Prinsip:** data yang sudah pernah dimuat ke Redux store dianggap tetap tersedia selama sesi aplikasi berjalan (SPA tidak full-reload). Berpindah halaman lalu kembali lagi **tidak boleh** memicu tampilan loading/skeleton ulang jika data yang relevan sudah ada di store dan belum ditandai stale/invalid.
 
@@ -192,7 +231,7 @@ Permission baru **wajib** mengikuti pola `domain.aksi` yang sudah dipakai di blu
 
 ---
 
-## 7. Checklist Sebelum AI Menyelesaikan Task
+## 8. Checklist Sebelum AI Menyelesaikan Task
 
 Sebelum menyatakan sebuah task selesai, AI wajib memastikan:
 
@@ -203,20 +242,69 @@ Sebelum menyatakan sebuah task selesai, AI wajib memastikan:
 - \[ ] Jika ada entitas/endpoint/permission baru yang terpaksa dibuat di luar blueprint awal, blueprint sudah diperbarui atau minimal dilaporkan eksplisit ke user sebagai perubahan scope.
 - \[ ] Validasi krusial ada di backend, bukan cuma di frontend.
 - \[ ] Tidak ada hardcode role check (`if role === '...'`) — semua lewat permission.
-- \[ ] Data fetching halaman memakai RTK Query dan tidak menampilkan skeleton ulang saat user kembali ke halaman yang datanya sudah pernah dimuat (lihat bagian 6).
-
----
-
+- \[ ] Data fetching halaman memakai RTK Query dan tidak menampilkan skeleton ulang saat user kembali ke halaman yang datanya sudah pernah dimuat (lihat bagian 7).
+- \[ ] Tidak ada endpoint/query yang mengambil seluruh kolom/baris lalu difilter di frontend — data yang diambil sudah sesuai kebutuhan tampilan saja (lihat bagian 6).
 
 
-| <br /> | <br /> | <br /> |
-|:---|:---|:---|
 
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
-| <br /> | <br /> | <br /> |
+
+
+| <br /> |
+|:---|
+| <br /> |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

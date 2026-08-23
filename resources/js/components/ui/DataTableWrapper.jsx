@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import DataTable from 'react-data-table-component';
 
 const customStyles = {
@@ -45,16 +45,33 @@ const customStyles = {
     },
 };
 
-const DataTableWrapper = ({ columns, data, loading, ...props }) => {
+const DataTableWrapper = ({ columns, data, loading, emptyMessage, ...props }) => {
+    const mappedColumns = useMemo(() => {
+        return columns.map((col) => ({
+            ...col,
+            id: col.id || col.key,
+            name: col.name || col.label,
+            cell: col.cell || col.render,
+            selector: col.selector || (col.key ? (row) => row[col.key] : undefined),
+        }));
+    }, [columns]);
+
+    const noDataComponent = emptyMessage ? (
+        <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+            {emptyMessage}
+        </div>
+    ) : undefined;
+
     return (
         <DataTable
-            columns={columns}
+            columns={mappedColumns}
             data={data || []}
             customStyles={customStyles}
             highlightOnHover
             pointerOnHover
             responsive
             progressPending={loading}
+            noDataComponent={noDataComponent}
             {...props}
         />
     );

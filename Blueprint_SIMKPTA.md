@@ -1,6 +1,10 @@
 # BLUEPRINT APLIKASI SIM-KPTA
+
 ## Sistem Informasi Manajemen Kerja Praktek & Tugas Akhir
+
 ### Dokumen Spesifikasi Teknis
+
+> **Riwayat Revisi:** Bagian 5, 7.3, 7.4, 9, dan 10 direvisi untuk melengkapi alur bisnis Modul Tugas Akhir (TA), yang sebelumnya baru berupa diagram status ringkas. Referensi awal diambil dari `Blueprint_Sistem_Tata_Kelola_Tugas_Akhir.pdf`, namun disesuaikan agar konsisten dengan arsitektur yang sudah dipakai Modul KP — terutama pola tabel bersama polymorphic di bagian 7.4 (bukan tabel terpisah per modul seperti di draf PDF tersebut).
 
 ---
 
@@ -11,7 +15,7 @@ SIM-KPTA adalah aplikasi web yang mengelola dua proses akademik: **Kerja Praktek
 **Tumpukan Teknologi**
 
 | Komponen | Teknologi |
-|---|---|
+|:---|:---|
 | Backend | Laravel 12, REST API |
 | Frontend | React (Vite), source di `resources/js`, di-mount sebagai SPA dari `resources/views/index.blade.php` |
 | Autentikasi | Laravel Sanctum (SPA cookie/session-based) |
@@ -26,14 +30,14 @@ SIM-KPTA adalah aplikasi web yang mengelola dua proses akademik: **Kerja Praktek
 ## 2. Aktor & Hak Akses (RBAC)
 
 | Role | Deskripsi |
-|---|---|
+|:---|:---|
 | **Admin** | Data master, pengguna, role & permission, pengaturan aplikasi (branding, jumlah anggota kelompok). |
 | **Koordinator** | Verifikasi pendaftaran KP & judul TA, plotting dosen, monitoring. |
 | **Dosen** | Satu role tunggal. Status pembimbing/penguji ditentukan dari tabel relasi (`dosen_pembimbing`, `dosen_penguji`), bukan role terpisah. |
 | **Mahasiswa** | Kelompok KP, pengajuan TA individu, logbook, laporan. |
 
 | Permission | Admin | Koordinator | Dosen | Mahasiswa |
-|---|:---:|:---:|:---:|:---:|
+|:---|:---|:---|:---|:---|
 | `pengaturan.manage` | ✅ | – | – | – |
 | `master-data.manage` | ✅ | – | – | – |
 | `kp.verifikasi-pendaftaran` | ✅ | ✅ | – | – |
@@ -86,13 +90,14 @@ resources/js/
 │   ├── pengaturan/    pages, components, api       # branding & jumlah anggota kelompok (Admin)
 │   └── shared/        Bimbingan, JadwalUjian, Nilai, Notifikasi
 └── components/ui/
+
 ```
 
 ### 3.3 Dua Lapis Kontrol Akses
 
 **Lapis 1 — Menu (`menuConfig.js`):** setiap item menu memiliki atribut `permission` yang dibutuhkan. Sidebar melakukan filter array ini terhadap permission milik user yang sedang login.
 
-```js
+```
 // config/menuConfig.js
 export const menuConfig = [
   { label: 'Dashboard', path: '/dashboard', permission: null }, // semua role
@@ -102,22 +107,25 @@ export const menuConfig = [
   { label: 'Pengaturan Aplikasi', path: '/pengaturan', permission: 'pengaturan.manage' },
   // seluruh menu didaftarkan sekali di sini
 ];
+
 ```
 
-```jsx
+```
 // layouts/AppShell.jsx (sidebar)
 const { permissions } = useSelector(s => s.auth);
 const visibleMenu = menuConfig.filter(m => !m.permission || permissions.includes(m.permission));
+
 ```
 
 **Lapis 2 — Route guard (`ProtectedRoute.jsx`):** mencegah akses langsung lewat URL walaupun menu tidak ditampilkan.
 
-```jsx
+```
 function ProtectedRoute({ permission, children }) {
   const { permissions } = useSelector(s => s.auth);
   if (permission && !permissions.includes(permission)) return <Navigate to="/403" />;
   return children;
 }
+
 ```
 
 **Catatan penting:** pengecekan permission di frontend hanya berfungsi untuk UX (menyembunyikan menu/tombol yang tidak relevan) dan **bukan pengganti keamanan backend**. Otorisasi sesungguhnya tetap wajib diterapkan di backend melalui middleware (`->middleware('permission:kp.verifikasi-pendaftaran')`) dan Laravel Policy untuk validasi relasi spesifik (misalnya memastikan seorang dosen benar merupakan pembimbing dari kelompok yang diaksesnya).
@@ -157,25 +165,81 @@ draft ─▶ diajukan ─▶ ditolak ─(revisi)─▶ draft
                                           │
                                           ▼
                                        dinilai ─▶ selesai
+
 ```
 
 ---
 
 ## 5. Modul Tugas Akhir (TA) — Alur Bisnis
 
-Dijalankan secara individu oleh mahasiswa.
+Dijalankan secara individu oleh mahasiswa. **Modul TA tidak memiliki tabel relasi tersendiri untuk pembimbing, penguji, bimbingan, dan jadwal ujian** — seluruhnya memakai ulang tabel bersama (polymorphic) yang sama dengan yang dipakai KP di bagian 7.4. Setiap baris baru cukup diisi `*able_type = 'App\Models\TugasAkhir'` dan `*able_id = tugas_akhir.id`.
+
+### 5.1 Prasyarat
+
+Admin memastikan `periode_akademik` yang aktif (`is_active = true`) sudah ada, dan data `mahasiswa`/`dosen` terkait sudah terdaftar. Tanpa periode aktif, pengajuan judul tidak boleh bisa disubmit.
+
+### 5.2 Pengajuan Judul (Mahasiswa)
+
+Mahasiswa mengisi form pengajuan → insert baris baru ke `tugas_akhir`: `mahasiswa_id`, `periode_id` (dari periode aktif), `judul_diajukan`, `latar_belakang_singkat`, `status = 'pengajuan'`, `tanggal_pengajuan`. Notifikasi otomatis terkirim ke Koordinator.
+
+> **Asumsi:** satu judul per pengajuan (bukan multi-alternatif). Jika ke depan dibutuhkan beberapa alternatif judul sekaligus, perlu tabel tambahan `tugas_akhir_judul_alternatif` — di luar cakupan revisi ini.
+
+### 5.3 Verifikasi & Plotting Dosen Pembimbing (Koordinator)
+
+Koordinator meninjau antrean (`status = 'pengajuan'`):
+
+- **Ditolak** → `status` menjadi `'revisi_judul'`, alasan diisi ke `catatan_penolakan` (kolom baru, lihat 7.3). Mahasiswa mengedit dan mengajukan ulang → `status` kembali ke `'pengajuan'`.
+- **Diterima** → `judul_disetujui` diisi, `status` menjadi `'bimbingan'`. Koordinator menunjuk dosen pembimbing → insert ke `dosen_pembimbing` (`pembimbingable_type = TugasAkhir`, `peran = 'pembimbing_1'`, opsional `'pembimbing_2'`). Notifikasi terkirim ke dosen dan mahasiswa.
+
+### 5.4 Bimbingan (Iteratif)
+
+Mahasiswa upload progres → insert ke `bimbingan` (`bimbingable_type/id = TugasAkhir`, `dosen_id`, `aktivitas`, `file`, `status = 'pending'`). Dosen meninjau → `status` menjadi `'diterima'` atau `'revisi'` + `catatan_dosen`. Siklus ini berulang sampai dosen menilai mahasiswa layak sidang.
+
+> **Asumsi kebijakan:** jika ada dua dosen pembimbing, **keduanya** harus memberi ACC sebelum mahasiswa boleh mendaftar sidang — bukan cukup salah satu. Silakan koreksi jika kebijakan institusi Anda berbeda (misalnya cukup pembimbing 1 saja).
+
+Layak sidang ditandai lewat `dosen_pembimbing.status_acc_ujian = true` (per baris dosen pembimbing).
+
+### 5.5 Pendaftaran & Penjadwalan Ujian
+
+**Prasyarat:** seluruh baris `dosen_pembimbing` milik `tugas_akhir` tersebut sudah `status_acc_ujian = true` (lihat asumsi 5.4).
+
+Mahasiswa mendaftar sidang: upload dokumen syarat (KRS, TOEFL, dll.) → insert ke `dokumen_persyaratan` (tabel baru, lihat 7.3). `status` di `tugas_akhir` menjadi `'daftar_sidang'`.
+
+Koordinator membuat jadwal: insert ke `jadwal_ujian` (`ujianable_type/id = TugasAkhir`, `ruangan_id`, `jenis_ujian` — proposal/hasil/sidang\_akhir, `tanggal`, `waktu`, `link_online` jika daring) dan menunjuk penguji lewat `dosen_penguji` (`peran = 'ketua_penguji'`/`'anggota_penguji'`). Notifikasi/undangan terkirim ke seluruh pihak terkait.
+
+### 5.6 Pelaksanaan Ujian & Penilaian
+
+Ujian berlangsung. Dosen penguji (dan pembimbing, jika ikut menilai sesuai kebijakan) input nilai per kriteria dari `evaluation_criteria` (`jenis = 'ujian_ta'`) ke `nilai_ujian` (`jadwal_ujian_id`, `dosen_id`, `kriteria_id`, `nilai_angka`, `catatan`). Setelah ujian selesai, `status` di `tugas_akhir` menjadi `'revisi_sidang'` — hampir selalu ada revisi setelah sidang, sehingga tidak langsung lompat ke `'lulus'`.
+
+### 5.7 Revisi Pasca Ujian
+
+Mahasiswa melihat catatan revisi, memperbaiki, dan upload ulang lewat tabel `bimbingan` yang sama (`aktivitas = 'revisi_sidang'`).
+
+Persetujuan revisi dipisahkan dari persetujuan "layak ujian" di tahap 5.4, karena keduanya adalah keputusan yang berbeda dan terjadi di waktu berbeda. Untuk itu, ditambahkan kolom `status_acc_revisi` di `dosen_pembimbing` **dan** `dosen_penguji` (lihat revisi tabel 7.4) — bukan memakai kolom `status_acc_revisi` yang sebelumnya menempel di `nilai_ujian`, karena satu baris `nilai_ujian` mewakili nilai per kriteria, bukan status persetujuan per dosen.
+
+`status` di `tugas_akhir` tetap `'revisi_sidang'` sampai **seluruh** dosen pembimbing dan penguji yang terlibat memberi `status_acc_revisi = true`.
+
+### 5.8 Finalisasi & Repository
+
+Setelah seluruh ACC revisi terpenuhi, mahasiswa upload dokumen final (buku TA, jurnal, source code) → insert ke `repository` (`tugas_akhir_id`, `abstrak_id`/`abstrak_en`, `kata_kunci`, `file_pdf_full`/`file_jurnal`/`file_source_code`). Admin/koordinator memvalidasi → `tugas_akhir.status` menjadi `'lulus'` → `repository.is_public` diaktifkan sesuai kebijakan visibilitas (lihat permission `repository.publish` di bagian 2).
+
+### 5.9 Diagram Status Tugas Akhir
 
 ```
-pengajuan ─(revisi_judul)─▶ diajukan ulang
-     │
-     ▼
-diterima ─▶ bimbingan (loop upload draft & catatan sampai "ACC Ujian")
-     │
-     ▼
-daftar_sidang ─▶ jadwal_ujian (proposal / hasil / sidang_akhir)
-     │
-     ▼
-revisi_sidang ─(ACC revisi)─▶ lulus ─▶ masuk Repository
+pengajuan ─(ditolak)─▶ revisi_judul ─(ajukan ulang)─▶ pengajuan
+    │
+    ▼ (disetujui koordinator + dosen pembimbing di-plot)
+bimbingan (loop upload & review, sampai seluruh dosen pembimbing ACC)
+    │
+    ▼
+daftar_sidang ─(dijadwalkan koordinator)─▶ ujian_berlangsung
+    │
+    ▼
+revisi_sidang (loop revisi, sampai seluruh pembimbing & penguji ACC)
+    │
+    ▼
+lulus ─▶ masuk Repository
+
 ```
 
 ---
@@ -185,7 +249,7 @@ revisi_sidang ─(ACC revisi)─▶ lulus ─▶ masuk Repository
 ### 6.1 Item yang Dibuat Dinamis
 
 | Item | Dipakai di | Diatur oleh |
-|---|---|---|
+|:---|:---|:---|
 | Nama aplikasi (App Name) | `<title>` browser, sidebar, header email notifikasi | Admin |
 | Logo | Sidebar, halaman login | Admin |
 | Favicon | Tab browser | Admin |
@@ -201,9 +265,10 @@ pengaturan_aplikasi
 - key (unique)      -- 'app_name', 'logo_path', 'favicon_path', 'kp_jumlah_anggota_default'
 - value (text, nullable)
 - timestamps
+
 ```
 
-```php
+```
 class Pengaturan
 {
     public static function get(string $key, $default = null)
@@ -219,6 +284,7 @@ class Pengaturan
         Cache::forget("pengaturan.$key");
     }
 }
+
 ```
 
 Nilai di-cache dengan `Cache::rememberForever` karena `app_name` dan `logo_path` dibaca pada hampir setiap request (layout & halaman login), sehingga menghindari query tambahan yang tidak perlu.
@@ -230,19 +296,20 @@ Agar perubahan jumlah anggota tidak berdampak retroaktif pada kelompok yang suda
 - **Default global** → `pengaturan_aplikasi` dengan key `kp_jumlah_anggota_default` (misalnya 3).
 - **Override per periode** → kolom `periode_akademik.jumlah_anggota_kp` (nullable int). Jika diisi, angka ini digunakan untuk periode tersebut; jika kosong, fallback ke default global.
 
-```php
+```
 $jumlahAnggota = $kelompok->periode->jumlah_anggota_kp
     ?? Pengaturan::get('kp_jumlah_anggota_default', 3);
+
 ```
 
 Dengan mekanisme ini, perubahan kebijakan (misalnya menjadi 4 orang di tahun berikutnya) cukup diatur pada periode baru, tanpa mengganggu kelompok yang sudah berjalan di periode sebelumnya.
 
 ### 6.4 Alur Teknis Logo, Favicon, dan App Name
 
-- **Favicon & judul tab browser:** `index.blade.php` di-render Laravel di server pada setiap request (bukan file statis), sehingga dapat langsung diisi dari `Pengaturan::get()` — favicon dan judul sudah benar sejak halaman pertama kali dimuat, tanpa menunggu JavaScript berjalan:
-  ```blade
-  <link rel="icon" href="{{ Pengaturan::get('favicon_path', '/favicon-default.ico') }}">
-  <title>{{ Pengaturan::get('app_name', 'SIM-KPTA') }}</title>
+- **Favicon & judul tab browser:** `index.blade.php` di-render Laravel di server pada setiap request (bukan file statis), sehingga dapat langsung diisi dari `Pengaturan::get()` — favicon dan judul sudah benar sejak halaman pertama kali dimuat, tanpa menunggu JavaScript berjalan: 
+  ```
+  <link rel="icon" href="{{ Pengaturan::get('favicon_path', '/favicon-default.ico') }}"><title>{{ Pengaturan::get('app_name', 'SIM-KPTA') }}</title>
+
   ```
 - **Logo di sidebar & app name di UI:** diambil lewat `GET /api/pengaturan/public` (tanpa autentikasi, karena halaman login juga membutuhkan logo), disimpan di `settingsSlice` Redux saat aplikasi pertama kali dimuat, dan dipakai di `AppShell.jsx`.
 - **Update dari Admin:** dilakukan lewat halaman `modules/pengaturan/pages/PengaturanUmum.jsx` — form upload logo/favicon (disimpan ke S3/MinIO lewat `PengaturanController@update`, dengan validasi tipe dan ukuran file) serta input teks untuk App Name dan jumlah anggota kelompok default.
@@ -254,48 +321,53 @@ Dengan mekanisme ini, perubahan kebijakan (misalnya menjadi 4 orang di tahun ber
 ### 7.1 Master Data
 
 | Tabel | Kolom Inti |
-|---|---|
-| `users` | id, name, email, password, is_active *(tanpa kolom role)* |
-| `program_studi` | id, kode_prodi, nama_prodi, fakultas |
-| `periode_akademik` | id, nama_periode, tanggal_mulai, tanggal_selesai, is_active, jumlah_anggota_kp (nullable) |
-| `mahasiswa` | id, user_id (FK), prodi_id (FK), nim (unique), angkatan, no_hp |
-| `dosen` | id, user_id (FK), prodi_id (FK), nidn (unique), jabatan_fungsional, kuota_bimbingan_kp, kuota_bimbingan_ta |
-| `ruangan` | id, nama_ruangan, lokasi |
-| `perusahaan_kp` | id, nama, alamat, contact_person, is_verified, diinput_oleh (nullable FK user) |
-| `tema_kp` | id, nama_tema, deskripsi, is_active |
-| `jenis_dokumen_kp` | id, nama_dokumen, is_wajib, urutan |
+|:---|:---|
+| `users` | id, name, email, password, is\_active *(tanpa kolom role)* |
+| `program_studi` | id, kode\_prodi, nama\_prodi, fakultas |
+| `periode_akademik` | id, nama\_periode, tanggal\_mulai, tanggal\_selesai, is\_active, jumlah\_anggota\_kp (nullable) |
+| `mahasiswa` | id, user\_id (FK), prodi\_id (FK), nim (unique), angkatan, no\_hp |
+| `dosen` | id, user\_id (FK), prodi\_id (FK), nidn (unique), jabatan\_fungsional, kuota\_bimbingan\_kp, kuota\_bimbingan\_ta |
+| `ruangan` | id, nama\_ruangan, lokasi |
+| `perusahaan_kp` | id, nama, alamat, contact\_person, is\_verified, diinput\_oleh (nullable FK user) |
+| `tema_kp` | id, nama\_tema, deskripsi, is\_active |
+| `jenis_dokumen_kp` | id, nama\_dokumen, is\_wajib, urutan |
 | `pengaturan_aplikasi` | id, key (unique), value, timestamps |
 
 ### 7.2 Modul KP
 
 | Tabel | Kolom Inti |
-|---|---|
-| `kelompok_kp` | id, periode_id (FK), tema_id (FK), perusahaan_id (FK), ketua_mahasiswa_id (FK), status, catatan_penolakan, tanggal_pengajuan |
-| `anggota_kelompok_kp` | id, kelompok_kp_id (FK), mahasiswa_id (FK), is_ketua (bool) |
-| `dokumen_kp` | id, kelompok_kp_id (FK), jenis_dokumen_id (FK), file_path, status_validasi |
+|:---|:---|
+| `kelompok_kp` | id, periode\_id (FK), tema\_id (FK), perusahaan\_id (FK), ketua\_mahasiswa\_id (FK), status, catatan\_penolakan, tanggal\_pengajuan |
+| `anggota_kelompok_kp` | id, kelompok\_kp\_id (FK), mahasiswa\_id (FK), is\_ketua (bool) |
+| `dokumen_kp` | id, kelompok\_kp\_id (FK), jenis\_dokumen\_id (FK), file\_path, status\_validasi |
 
 ### 7.3 Modul TA
 
 | Tabel | Kolom Inti |
-|---|---|
-| `tugas_akhir` | id, mahasiswa_id (FK), periode_id (FK), judul_diajukan, judul_disetujui, latar_belakang_singkat, status, tanggal_pengajuan |
+|:---|:---|
+| `tugas_akhir` | id, mahasiswa\_id (FK), periode\_id (FK), judul\_diajukan, judul\_disetujui, latar\_belakang\_singkat, status, **catatan\_penolakan** *(baru)*, tanggal\_pengajuan |
+| `dokumen_persyaratan` *(baru)* | id, tugas\_akhir\_id (FK), nama\_dokumen, file\_path, status\_validasi |
+
+`status` pada `tugas_akhir` memakai enum sesuai diagram 5.9: `pengajuan`, `revisi_judul`, `bimbingan`, `daftar_sidang`, `ujian_berlangsung`, `revisi_sidang`, `lulus`.
+
+`dokumen_persyaratan` menampung syarat pendaftaran sidang yang sifatnya fleksibel (KRS, bukti TOEFL, dll.) — dipisah dari `tugas_akhir` karena jumlah dan jenis dokumen syarat bisa berbeda antar periode/kebijakan, mengikuti pola yang sama seperti `jenis_dokumen_kp`/`dokumen_kp` di modul KP.
 
 ### 7.4 Tabel Bersama (Polymorphic)
 
 | Tabel | Kolom Inti | Catatan |
-|---|---|---|
-| `dosen_pembimbing` | pembimbingable_type/id, dosen_id, peran, status_acc_ujian | KP: 1 baris/kelompok. TA: 1–2 baris/mahasiswa |
-| `dosen_penguji` | pengujiable_type/id, dosen_id, peran | TA (opsional untuk KP) |
-| `bimbingan` | bimbingable_type/id, mahasiswa_id (nullable), dosen_id, tanggal, aktivitas, file, catatan_dosen, status | KP: `mahasiswa_id` diisi (logbook per anggota) |
-| `laporan` | laporanable_type/id, jenis, file_laporan, status, catatan_dosen, tanggal_submit/keputusan | KP & TA |
-| `jadwal_ujian` | ujianable_type/id, ruangan_id, jenis_ujian, tanggal, waktu, link_online, status | TA |
-| `evaluation_criteria` | jenis, nama_kriteria, bobot | Rubrik dinamis |
-| `nilai_kp` | kelompok_kp_id, mahasiswa_id (nullable), dosen_id, kriteria_id, nilai_angka, catatan | Kelompok/individu |
-| `nilai_ujian` | jadwal_ujian_id, dosen_id, kriteria_id, nilai_angka, catatan_revisi, status_acc_revisi | TA |
-| `repository` | tugas_akhir_id, abstrak_id/en, kata_kunci, file_pdf_full/jurnal/source_code, is_public | TA |
-| `notifikasi` | user_id, title, message, type, url_action, is_read | Bersama |
-| `status_histories` | historyable_type/id, status_from/to, changed_by, notes | Audit trail status |
-| `log_aktivitas` | user_id, action, subject_type/id, ip_address, user_agent | Audit umum |
+|:---|:---|:---|
+| `dosen_pembimbing` | pembimbingable\_type/id, dosen\_id, peran, status\_acc\_ujian, **status\_acc\_revisi** *(baru)* | KP: 1 baris/kelompok. TA: 1–2 baris/mahasiswa. `status_acc_ujian` = ACC layak sidang (tahap 5.4); `status_acc_revisi` = ACC revisi pasca sidang (tahap 5.7) — dua keputusan terpisah |
+| `dosen_penguji` | pengujiable\_type/id, dosen\_id, peran, **status\_acc\_revisi** *(baru)* | TA (opsional untuk KP). `status_acc_revisi` sejajar dengan kolom yang sama di `dosen_pembimbing`, dipakai di tahap 5.7 |
+| `bimbingan` | bimbingable\_type/id, mahasiswa\_id (nullable), dosen\_id, tanggal, aktivitas, file, catatan\_dosen, status | KP: `mahasiswa_id` diisi (logbook per anggota). TA: `mahasiswa_id` boleh null karena `tugas_akhir` sudah 1:1 dengan mahasiswa; `aktivitas` dipakai untuk membedakan bimbingan reguler vs revisi pasca sidang (lihat 5.7) |
+| `laporan` | laporanable\_type/id, jenis, file\_laporan, status, catatan\_dosen, tanggal\_submit/keputusan | KP & TA |
+| `jadwal_ujian` | ujianable\_type/id, ruangan\_id, jenis\_ujian, tanggal, waktu, link\_online, status | TA |
+| `evaluation_criteria` | jenis, nama\_kriteria, bobot | Rubrik dinamis. TA memakai `jenis = 'ujian_ta'` |
+| `nilai_kp` | kelompok\_kp\_id, mahasiswa\_id (nullable), dosen\_id, kriteria\_id, nilai\_angka, catatan | Kelompok/individu |
+| `nilai_ujian` | jadwal\_ujian\_id, dosen\_id, kriteria\_id, nilai\_angka, catatan | TA. **Kolom** **`status_acc_revisi`** **dipindah ke** **`dosen_pembimbing`/`dosen_penguji`** (lihat baris di atas) — tabel ini murni menyimpan skor per kriteria, bukan status persetujuan |
+| `repository` | tugas\_akhir\_id, abstrak\_id/en, kata\_kunci, file\_pdf\_full/jurnal/source\_code, is\_public | TA |
+| `notifikasi` | user\_id, title, message, type, url\_action, is\_read | Bersama |
+| `status_histories` | historyable\_type/id, status\_from/to, changed\_by, notes | Audit trail status |
+| `log_aktivitas` | user\_id, action, subject\_type/id, ip\_address, user\_agent | Audit umum |
 
 ### 7.5 Tabel RBAC (auto dari package)
 
@@ -308,7 +380,7 @@ Dengan mekanisme ini, perubahan kebijakan (misalnya menjadi 4 orang di tahun ber
 ### 8.1 Admin
 
 | Menu | Penjelasan |
-|---|---|
+|:---|:---|
 | Pengaturan Aplikasi | Ubah App Name, upload logo & favicon, atur jumlah anggota kelompok default. |
 | Master Data | Kelola data program studi, periode akademik, ruangan, perusahaan KP, tema KP, jenis dokumen. |
 | Manajemen Pengguna | Kelola akun user (mahasiswa, dosen, koordinator, admin). |
@@ -321,7 +393,7 @@ Dengan mekanisme ini, perubahan kebijakan (misalnya menjadi 4 orang di tahun ber
 Struktur menu untuk ketiga role ini mengikuti permission masing-masing sebagaimana didefinisikan pada tabel RBAC di bagian 2, dirender melalui `menuConfig.js` sesuai mekanisme yang dijelaskan pada bagian 3.3. Ringkasannya:
 
 | Role | Menu Utama |
-|---|---|
+|:---|:---|
 | Koordinator | Verifikasi Pendaftaran KP, Verifikasi Judul TA, Plotting Dosen (KP & TA), Monitoring KP/TA, Repository |
 | Dosen | Bimbingan KP/TA (kelompok/mahasiswa yang dibimbing), Approve Logbook, Approve Laporan, Input Nilai, Jadwal Ujian (sebagai penguji) |
 | Mahasiswa | Kelompok Saya (KP), Pengajuan TA, Logbook, Upload Laporan, Jadwal Sidang |
@@ -352,6 +424,9 @@ GET    /api/ta/pengajuan
 POST   /api/ta/pengajuan
 PUT    /api/ta/pengajuan/{id}/verifikasi-judul
 PUT    /api/ta/pengajuan/{id}/plotting-dosen
+POST   /api/ta/pengajuan/{id}/dokumen-persyaratan
+PUT    /api/ta/pengajuan/{id}/acc-ujian          # dosen pembimbing: status_acc_ujian
+PUT    /api/ta/pengajuan/{id}/acc-revisi         # dosen pembimbing/penguji: status_acc_revisi
 
 # Endpoint bersama (Bimbingan, Laporan, Jadwal Ujian, Nilai, Notifikasi, Repository)
 GET    /api/bimbingan
@@ -359,9 +434,13 @@ POST   /api/bimbingan
 GET    /api/laporan
 POST   /api/laporan
 GET    /api/jadwal-ujian
+POST   /api/jadwal-ujian
+POST   /api/dosen-penguji                        # assign penguji ke jadwal_ujian
 POST   /api/nilai
 GET    /api/notifikasi
 GET    /api/repository
+POST   /api/repository
+
 ```
 
 ---
@@ -371,7 +450,97 @@ GET    /api/repository
 1. **Jumlah anggota kelompok** diasumsikan sebagai angka tetap per periode (bukan rentang, misalnya "3 sampai 5"). Jika yang dibutuhkan adalah rentang di mana mahasiswa bebas memilih jumlah anggota, tabel `periode_akademik` perlu ditambah dua kolom (`jumlah_anggota_min`, `jumlah_anggota_maks`) menggantikan satu kolom angka tetap.
 2. **Favicon dan logo** disimpan sebagai path/URL ke file di storage (S3/MinIO), bukan sebagai data biner di database, agar tidak membebani query settings yang sering diakses.
 3. **Perubahan App Name/logo bersifat global** untuk seluruh pengguna sistem (bukan per program studi atau per fakultas). Kebutuhan branding berbeda per prodi/fakultas memerlukan desain multi-tenant terpisah, di luar cakupan dokumen ini.
+4. **Judul TA diasumsikan tunggal per pengajuan** (bukan multi-alternatif). Lihat catatan di bagian 5.2 — jika dibutuhkan multi-alternatif, perlu tabel tambahan di luar cakupan revisi ini.
+5. **ACC layak sidang dan ACC revisi mensyaratkan persetujuan dari seluruh dosen pembimbing/penguji yang terlibat**, bukan cukup salah satu (lihat 5.4 dan 5.7). Ini asumsi kebijakan yang perlu dikonfirmasi kesesuaiannya dengan aturan institusi Anda — jika ternyata cukup satu pembimbing yang ber-ACC, logic validasi di backend perlu disesuaikan (cek salah satu `true`, bukan seluruhnya).
+6. **Tabel** **`dosen_pembimbing`,** **`dosen_penguji`,** **`bimbingan`,** **`jadwal_ujian`** **diasumsikan sudah berbentuk polymorphic di database saat ini** (mengikuti desain bagian 7.4 sejak modul KP dibangun). Sebelum implementasi modul TA dimulai, ini **wajib diverifikasi langsung ke migration yang sudah berjalan** — lihat `AUDIT_PROMPT_KP.md` bagian 3. Jika ternyata tabel-tabel tersebut di database masih berbentuk foreign key langsung (bukan polymorphic), bagian 5 dan 7.4 dokumen ini perlu direvisi ulang menyesuaikan kenyataan sebelum modul TA mulai dikerjakan.
 
 ---
 
 *Dokumen ini merupakan acuan spesifikasi teknis SIM-KPTA dan digunakan sebagai referensi tunggal untuk pengembangan sistem.*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

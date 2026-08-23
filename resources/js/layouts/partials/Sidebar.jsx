@@ -16,11 +16,20 @@ const Sidebar = ({ isOpen = true }) => {
   const appName = settings?.app_name || 'SIM-KPTA';
   const logoPath = settings?.logo_path || null;
 
-  const visibleMenu = menuConfig.filter(
-    (item) => !item.permission || permissions.includes(item.permission)
-  );
+  const visibleMenu = menuConfig.filter((item) => {
+    if (item.permission && !permissions.includes(item.permission)) {
+      return false;
+    }
+    if (item.children && item.children.length > 0) {
+      return item.children.some(
+        (child) => !child.permission || permissions.includes(child.permission)
+      );
+    }
+    return true;
+  });
 
   const isActive = (path) => {
+    if (!path) return false;
     if (path === '/dashboard') return location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
   };
@@ -79,10 +88,50 @@ const Sidebar = ({ isOpen = true }) => {
       {/* Navigation Menu */}
       <nav className="flex-1 py-5 space-y-1.5 overflow-y-auto custom-scroll px-0">
         {visibleMenu.map((item) => {
+          if (item.type === 'section') {
+            const visibleChildren = item.children.filter(
+              (child) => !child.permission || permissions.includes(child.permission)
+            );
+            if (visibleChildren.length === 0) return null;
+
+            return (
+              <div key={item.label} className="space-y-1">
+                {/* Section Header - tidak klikable */}
+                <div
+                  className={`px-6 py-2 text-xs font-bold uppercase tracking-wider text-emerald-300/80 ${!isOpen ? 'text-center' : ''
+                    }`}
+                >
+                  {isOpen && item.label}
+                </div>
+
+                {/* Children sebagai menu item biasa */}
+                {visibleChildren.map((child) => {
+                  const childActive = location.pathname === child.path;
+                  const ChildIcon = child.icon;
+                  return (
+                    <Link
+                      key={child.path}
+                      to={child.path}
+                      title={isOpen ? child.label : undefined}
+                      className={`flex items-center gap-3 px-6 py-2.5 text-sm font-medium transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
+                        } ${childActive
+                          ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-md'
+                          : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'
+                        }`}
+                    >
+                      {ChildIcon && <ChildIcon className="w-4 h-4 shrink-0" />}
+                      {isOpen && <span className="whitespace-nowrap">{child.label}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          }
+
           const Icon = item.icon;
           const active = isActive(item.path);
           const hasChildren = item.children && item.children.length > 0;
-          const isOpenSubmenu = openMenus[item.label] || active;
+          const isOpenSubmenu = openMenus[item.label] || active || (hasChildren && item.children.some((child) => location.pathname === child.path));
 
           if (hasChildren) {
             return (
@@ -121,21 +170,25 @@ const Sidebar = ({ isOpen = true }) => {
                     }`}
                 >
                   <div className="overflow-hidden space-y-1">
-                    {item.children.map((child) => {
-                      const childActive = location.pathname === child.path;
-                      return (
-                        <Link
-                          key={child.path}
-                          to={child.path}
-                          className={`block pl-16 pr-6 py-2.5 text-sm transition-all rounded-none ${childActive
-                              ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-sm'
-                              : 'text-emerald-200/70 hover:text-white hover:bg-emerald-900/20'
-                            }`}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
+                    {item.children
+                      .filter((child) => !child.permission || permissions.includes(child.permission))
+                      .map((child) => {
+                        const childActive = location.pathname === child.path;
+                        const ChildIcon = child.icon;
+                        return (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            className={`flex items-center gap-3 pl-16 pr-6 py-2.5 text-sm transition-all rounded-none ${childActive
+                                ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-sm'
+                                : 'text-emerald-200/70 hover:text-white hover:bg-emerald-900/20'
+                              }`}
+                          >
+                            {ChildIcon && <ChildIcon className="w-4 h-4 shrink-0" />}
+                            {child.label}
+                          </Link>
+                        );
+                      })}
                   </div>
                 </div>
               </div>

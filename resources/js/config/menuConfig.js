@@ -15,6 +15,9 @@ import {
     UsersRound,
     Award,
     User,
+    GraduationCap,
+    BookMarked,
+    FolderOpen,
 } from 'lucide-react';
 
 export const menuConfig = [
@@ -31,82 +34,43 @@ export const menuConfig = [
             { label: 'Tema KP', path: '/master-data/tema', permission: 'master-data.manage' },
         ],
     },
+
     {
-        label: 'Verifikasi Pendaftaran',
-        path: '/kp/verifikasi',
-        permission: 'kp.verifikasi-pendaftaran',
-        icon: CheckCircle,
+        label: 'Kerja Praktek',
+        type: 'section',
+        children: [
+            { label: 'Verifikasi Pendaftaran', path: '/kp/verifikasi', permission: 'kp.verifikasi-pendaftaran', icon: CheckCircle },
+            { label: 'Pendaftaran Kelompok', path: '/kp/kelompok', permission: 'kp.pendaftaran-kelompok', icon: UserPlus },
+            { label: 'Daftar Kelompok', path: '/kp/daftar-kelompok', permission: 'kp.plotting-dosen', icon: UsersRound },
+            { label: 'Logbook', path: '/kp/logbook', permission: 'kp.logbook', icon: BookOpen },
+            { label: 'Validasi Logbook', path: '/kp/logbook/validasi', permission: 'kp.validasi-logbook', icon: ClipboardList },
+            { label: 'Laporan KP', path: '/kp/laporan', permission: 'kp.laporan', icon: FileText },
+            { label: 'Validasi Laporan', path: '/kp/laporan/validasi', permission: 'kp.validasi-laporan', icon: ClipboardList },
+            { label: 'Nilai KP', path: '/kp/nilai', permission: 'kp.nilai', icon: CheckCircle },
+            { label: 'Nilai Saya', path: '/kp/nilai-saya', permission: 'kp.nilai-saya', icon: Award },
+        ],
     },
+
     {
-        label: 'Pendaftaran Kelompok',
-        path: '/kp/kelompok',
-        permission: 'kp.pendaftaran-kelompok',
-        icon: UserPlus,
+        label: 'Tugas Akhir',
+        type: 'section',
+        children: [
+            { label: 'Pengajuan Judul', path: '/ta/pengajuan', permission: 'ta.pengajuan', icon: BookOpen },
+            { label: 'Verifikasi Judul', path: '/ta/verifikasi-judul', permission: 'ta.verifikasi-judul', icon: CheckCircle },
+            { label: 'Plotting Dosen', path: '/ta/plotting-dosen', permission: 'ta.plotting-dosen', icon: UsersRound },
+            { label: 'Bimbingan', path: '/ta/bimbingan', permission: 'ta.bimbingan', icon: BookMarked },
+            { label: 'Laporan', path: '/ta/laporan', permission: 'ta.laporan', icon: FileText },
+        ],
     },
+
     {
-        label: 'Daftar Kelompok',
-        path: '/kp/daftar-kelompok',
-        permission: 'kp.plotting-dosen',
-        icon: UsersRound,
-    },
-    {
-        label: 'Logbook',
-        path: '/kp/logbook',
-        permission: 'kp.logbook',
-        icon: BookOpen,
-    },
-    {
-        label: 'Validasi Logbook',
-        path: '/kp/logbook/validasi',
-        permission: 'kp.validasi-logbook',
-        icon: ClipboardList,
-    },
-    {
-        label: 'Laporan KP',
-        path: '/kp/laporan',
-        permission: 'kp.laporan',
-        icon: FileText,
-    },
-    {
-        label: 'Validasi Laporan',
-        path: '/kp/laporan/validasi',
-        permission: 'kp.validasi-laporan',
-        icon: ClipboardList,
-    },
-    {
-        label: 'Nilai KP',
-        path: '/kp/nilai',
-        permission: 'kp.nilai',
-        icon: CheckCircle,
-    },
-    {
-        label: 'Nilai Saya',
-        path: '/kp/nilai-saya',
-        permission: 'kp.nilai-saya',
-        icon: Award,
-    },
-    {
-        label: 'Manajemen Pengguna',
-        path: '/users',
-        permission: 'pengaturan.manage',
-        icon: UserCog,
-    },
-    {
-        label: 'Manajemen Peran',
-        path: '/roles',
-        permission: 'pengaturan.manage',
-        icon: Shield,
-    },
-    {
-        label: 'Repository',
-        path: '/repository',
-        permission: 'repository.publish',
-        icon: Briefcase,
-    },
-        {
         label: 'Pengaturan',
-        path: '/pengaturan',
-        permission: 'pengaturan.manage',
-        icon: Settings,
+        type: 'section',
+        children: [
+            { label: 'Manajemen Pengguna', path: '/users', permission: 'pengaturan.manage', icon: UserCog },
+            { label: 'Manajemen Peran', path: '/roles', permission: 'pengaturan.manage', icon: Shield },
+            { label: 'Repository', path: '/repository', permission: 'repository.publish', icon: Briefcase },
+            { label: 'Pengaturan Umum', path: '/pengaturan', permission: 'pengaturan.manage', icon: Settings },
+        ],
     },
 ];

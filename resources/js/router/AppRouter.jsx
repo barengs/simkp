@@ -29,6 +29,14 @@ import DaftarKelompok from '../modules/kp/pages/DaftarKelompok';
 import DetailKelompok from '../modules/kp/pages/DetailKelompok';
 import RoleManagement from '../modules/role-management/pages/RoleManagement';
 
+// TA Module
+import PengajuanTA from '../modules/ta/pages/PengajuanTA';
+import VerifikasiJudulTA from '../modules/ta/pages/VerifikasiJudulTA';
+import PlottingDosenTA from '../modules/ta/pages/PlottingDosenTA';
+import BimbinganTA from '../modules/ta/pages/BimbinganTA';
+import DetailBimbinganTA from '../modules/ta/pages/DetailBimbinganTA';
+import LaporanTA from '../modules/ta/pages/LaporanTA';
+
 function AppRouter() {
     return (
         <Routes>
@@ -153,6 +161,38 @@ function AppRouter() {
                 <Route path="/kp/daftar-kelompok" element={
                     <ProtectedRoute permission="kp.plotting-dosen">
                         <DaftarKelompok />
+                    </ProtectedRoute>
+                } />
+
+                {/* TA (Tugas Akhir) Module */}
+                <Route path="/ta/pengajuan" element={
+                    <ProtectedRoute permission="ta.pengajuan">
+                        <PengajuanTA />
+                    </ProtectedRoute>
+                } />
+                <Route path="/ta/verifikasi-judul" element={
+                    <ProtectedRoute permission="ta.verifikasi-judul">
+                        <VerifikasiJudulTA />
+                    </ProtectedRoute>
+                } />
+                <Route path="/ta/plotting-dosen" element={
+                    <ProtectedRoute permission="ta.plotting-dosen">
+                        <PlottingDosenTA />
+                    </ProtectedRoute>
+                } />
+                <Route path="/ta/bimbingan" element={
+                    <ProtectedRoute permission="ta.bimbingan">
+                        <BimbinganTA />
+                    </ProtectedRoute>
+                } />
+                <Route path="/ta/bimbingan/:id" element={
+                    <ProtectedRoute permission="ta.bimbingan">
+                        <DetailBimbinganTA />
+                    </ProtectedRoute>
+                } />
+                <Route path="/ta/laporan" element={
+                    <ProtectedRoute permission="ta.laporan">
+                        <LaporanTA />
                     </ProtectedRoute>
                 } />
 

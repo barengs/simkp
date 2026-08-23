@@ -98,4 +98,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('notification', NotificationController::class);
     Route::apiResource('status-history', StatusHistoryController::class);
     Route::apiResource('activity-log', ActivityLogController::class);
+
+    // TA (Tugas Akhir) Module
+    Route::apiResource('ta/pengajuan', \App\Http\Controllers\Api\FinalProjectController::class)->only(['index', 'store']);
+    Route::put('ta/pengajuan/{id}/verifikasi-judul', [\App\Http\Controllers\Api\FinalProjectController::class, 'verify']);
+    Route::put('ta/pengajuan/{id}/plotting-dosen', [\App\Http\Controllers\Api\FinalProjectController::class, 'assignSupervisor']);
+    Route::get('ta/bimbingan/{finalProjectId}', [\App\Http\Controllers\Api\FinalProjectController::class, 'getBimbingan']);
+    Route::post('ta/bimbingan/{finalProjectId}', [\App\Http\Controllers\Api\FinalProjectController::class, 'addBimbingan']);
+    Route::put('ta/bimbingan/{finalProjectId}/{bimbinganId}', [\App\Http\Controllers\Api\FinalProjectController::class, 'updateBimbingan']);
+    Route::delete('ta/bimbingan/{finalProjectId}/{bimbinganId}', [\App\Http\Controllers\Api\FinalProjectController::class, 'deleteBimbingan']);
 });

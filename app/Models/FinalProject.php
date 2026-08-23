@@ -4,20 +4,48 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class FinalProject extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kelompok_kp_id', 'judul', 'deskripsi', 'status', 'tanggal_mulai', 'tanggal_selesai'];
+    protected $table = 'final_project';
 
-    public function kelompokKp()
+    protected $fillable = [
+        'title',
+        'description',
+        'mahasiswa_id',
+        'periode_id',
+        'judul_disetujui',
+        'catatan_penolakan',
+        'tanggal_pengajuan',
+        'status',
+    ];
+
+    protected $casts = [
+        'tanggal_pengajuan' => 'date',
+    ];
+
+    public function mahasiswa(): BelongsTo
     {
-        return $this->belongsTo(KelompokKp::class);
+        return $this->belongsTo(Student::class, 'mahasiswa_id');
     }
 
-    public function bimbingan()
+    public function periode(): BelongsTo
     {
-        return $this->morphMany(Bimbingan::class, 'bimbable');
+        return $this->belongsTo(AcademicPeriod::class);
+    }
+
+    public function dosenPembimbing(): MorphMany
+    {
+        return $this->morphMany(DosenPembimbing::class, 'pembimbingable');
+    }
+
+    public function bimbingan(): MorphMany
+    {
+        return $this->morphMany(Bimbingan::class, 'bimbingable');
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date');
+            $table->integer('total_members')->nullable();
             $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
