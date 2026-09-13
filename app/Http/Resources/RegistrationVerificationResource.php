@@ -12,9 +12,11 @@ class RegistrationVerificationResource extends JsonResource
             'id' => $this->id,
             'status' => $this->status,
             'rejection_note' => $this->rejection_note,
+            'document_revision_note' => $this->document_revision_note,
             'academic_period' => $this->whenLoaded('academicPeriod', fn () => [
                 'id' => $this->academicPeriod->id,
                 'name' => $this->academicPeriod->name,
+                'total_members' => $this->academicPeriod->total_members,
             ]),
             'kp_theme' => $this->whenLoaded('kpTheme', fn () => [
                 'id' => $this->kpTheme->id,

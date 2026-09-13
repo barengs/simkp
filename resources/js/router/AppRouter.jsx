@@ -154,12 +154,12 @@ function AppRouter() {
 
                 {/* Daftar Kelompok (Admin: semua kelompok terplotting, Dosen: kelompok bimbingannya) */}
                 <Route path="/kp/daftar-kelompok/:id" element={
-                    <ProtectedRoute permission="kp.plotting-dosen">
+                    <ProtectedRoute permission="kp.detail-kelompok">
                         <DetailKelompok />
                     </ProtectedRoute>
                 } />
                 <Route path="/kp/daftar-kelompok" element={
-                    <ProtectedRoute permission="kp.plotting-dosen">
+                    <ProtectedRoute permission="kp.detail-kelompok">
                         <DaftarKelompok />
                     </ProtectedRoute>
                 } />

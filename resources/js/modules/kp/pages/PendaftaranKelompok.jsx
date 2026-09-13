@@ -23,13 +23,14 @@ import Card from '../../../components/ui/Card';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import Modal from '../../../components/ui/Modal';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Skeleton from '../../../components/ui/Skeleton';
 import {
     UserPlus, Check, ChevronRight, ChevronLeft,
     Building2, BookOpen, Users, CalendarDays, Pencil,
     AlertCircle, CheckCircle2, Search, X, GraduationCap,
-    Plus, MapPin, Phone, ArrowLeft, Crown, UserCheck, FileText,
+    Plus, MapPin, Phone, ArrowLeft, Crown, UserCheck, FileText, Save,
 } from 'lucide-react';
 
 // ─── Langkah stepper ─────────────────────────────────────────────────────────
@@ -551,6 +552,9 @@ const Step4Dokumen = ({ form, onChange, documentTypes = [], uploads = {}, existi
                                             </span>
                                         </div>
                                         {renderDocumentUpload(doc)}
+                                    {doc.notes && (
+                                        <p className="mt-2 text-sm text-gray-600"><strong>Catatan Revisi:</strong> {doc.notes}</p>
+                                    )}
                                     </div>
                                 ))}
                             </div>
@@ -665,9 +669,13 @@ const Step5Preview = ({ form, periodeList, perusahaanList, temaList, studentList
 
 // ─── Status badge label ───────────────────────────────────────────────────────
 const STATUS_LABEL = {
-    draft: 'Draft', submitted: 'Diajukan', rejected: 'Ditolak',
-    approved: 'Disetujui', ongoing: 'Berjalan',
-    grading: 'Dinilai', finished: 'Selesai',
+    draft: 'Draft',
+    submitted: 'Diajukan',
+    rejected: 'Ditolak',
+    approved: 'Disetujui',
+    ongoing: 'Berjalan',
+    grading: 'Dinilai',
+    finished: 'Selesai',
 };
 
 // ─── Kartu undangan: tampil di halaman mahasiswa yang diundang ────────────────
@@ -790,6 +798,183 @@ const KartuUndangan = ({ group, myStudentId, onAccept, onDecline }) => {
     );
 };
 
+// ─── Document Revision Modal ────────────────────────────────────────────────
+const DocumentRevisionModal = ({ isOpen, onClose, group, documentTypes, uploads, setUploads, existingDocuments, setExistingDocuments, removedDocumentIds, setRemovedDocumentIds, onSubmit, loading, onUploadChange }) => {
+    const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
+    const optionalDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => !dt.is_required);
+
+    const renderDocumentUpload = (doc) => {
+        const existingDoc = existingDocuments[doc.id];
+        const uploadedFile = uploads[doc.id];
+        const hasDocument = existingDoc || uploadedFile;
+
+        const handleFileChange = (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                setUploads(prev => ({ ...prev, [doc.id]: file }));
+            } else {
+                setUploads(prev => {
+                    const updated = { ...prev };
+                    delete updated[doc.id];
+                    return updated;
+                });
+            }
+        };
+
+        const handleRemove = () => {
+            if (uploadedFile) {
+                setUploads(prev => {
+                    const updated = { ...prev };
+                    delete updated[doc.id];
+                    return updated;
+                });
+            } else if (existingDoc) {
+                setRemovedDocumentIds(prev => [...prev, existingDoc.id]);
+                setExistingDocuments(prev => {
+                    const updated = { ...prev };
+                    delete updated[doc.id];
+                    return updated;
+                });
+            }
+        };
+
+        return (
+            <div className="mt-3" key={doc.id}>
+                <label className={`flex items-center justify-center w-full px-4 py-3 border-2 rounded-lg cursor-pointer transition-colors ${hasDocument
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                    <div className="text-center">
+                        <FileText className={`w-5 h-5 mx-auto mb-1 ${hasDocument ? 'text-emerald-500' : 'text-gray-400'}`} />
+                        {uploadedFile ? (
+                            <div>
+                                <p className="text-sm text-emerald-600 font-medium">{uploadedFile.name}</p>
+                                <p className="text-xs text-gray-500">
+                                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                            </div>
+                        ) : existingDoc ? (
+                            <div>
+                                <p className="text-sm text-emerald-600 font-medium">{existingDoc.title || 'Dokumen tersimpan'}</p>
+                                {existingDoc.file_url && (
+                                    <a href={existingDoc.file_url} target="_blank" rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 hover:text-blue-800 underline">
+                                        Lihat dokumen
+                                    </a>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-gray-600">Klik untuk unggah atau seret berkas</p>
+                                <p className="text-xs text-gray-500 mt-0.5">PDF, DOC, DOCX (Max 10 MB)</p>
+                            </>
+                        )}
+                    </div>
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                    />
+                </label>
+                {hasDocument && (
+                    <button type="button"
+                        onClick={handleRemove}
+                        className="mt-2 text-xs text-red-600 hover:text-red-800 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        Hapus dokumen
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Revisi Dokumen"
+            size="lg"
+        >
+            <div className="space-y-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 flex gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-orange-600" />
+                    <span>Pendaftaran sudah disetujui. Silakan perbaiki dokumen yang diminta, kemudian kirim ulang.</span>
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Catatan Revisi</h4>
+                    <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                        {group?.document_revision_note || '-'}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span className="text-red-500">*</span> Dokumen Wajib
+                    </h4>
+                    <div className="space-y-3">
+                        {requiredDocs.map(doc => (
+                            <div key={doc.id} className="border border-gray-200 rounded-lg p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                                        {doc.description && (
+                                            <p className="text-xs text-gray-500 mt-1">{doc.description}</p>
+                                        )}
+                                    </div>
+                                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-700">
+                                        Wajib
+                                    </span>
+                                </div>
+                                {renderDocumentUpload(doc)}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {optionalDocs.length > 0 && (
+                    <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Dokumen Opsional</h4>
+                        <div className="space-y-3">
+                            {optionalDocs.map(doc => (
+                                <div key={doc.id} className="border border-gray-200 rounded-lg p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                                            {doc.description && (
+                                                <p className="text-xs text-gray-500 mt-1">{doc.description}</p>
+                                            )}
+                                        </div>
+                                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
+                                            Opsional
+                                        </span>
+                                    </div>
+                                    {renderDocumentUpload(doc)}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-gray-200">
+                <Button variant="secondary" onClick={onClose}>
+                    Batal
+                </Button>
+                <Button
+                    variant="primary"
+                    icon={Save}
+                    onClick={onSubmit}
+                    loading={loading}
+                >
+                    Simpan Revisi Dokumen
+                </Button>
+            </div>
+        </Modal>
+    );
+};
+
 // ─── Initial form ─────────────────────────────────────────────────────────────
 const EMPTY = { academic_period_id: '', kp_company_id: '', kp_theme_id: '', start_date: '', end_date: '', anggota_ids: [] };
 
@@ -874,6 +1059,16 @@ const PendaftaranKelompok = () => {
     const [submitting, setSubmitting] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
+    // State for document revision modal
+    const [showDocRevision, setShowDocRevision] = useState(false);
+    const [docRevisionGroup, setDocRevisionGroup] = useState(null);
+    const [docRevisionUploads, setDocRevisionUploads] = useState({});
+    const [docRevisionExistingDocs, setDocRevisionExistingDocs] = useState({});
+    const [docRevisionRemovedIds, setDocRevisionRemovedIds] = useState([]);
+    const [revisionFileMap, setRevisionFileMap] = useState({});
+    const [uploadingRevision, setUploadingRevision] = useState(null);
+    const [docRevisionSubmitting, setDocRevisionSubmitting] = useState(false);
+
     // Jumlah anggota maksimal dari periode yang dipilih
     const maxAnggota = useMemo(() => {
         const p = (periodeList || []).find(p => String(p.id) === String(form.academic_period_id));
@@ -943,11 +1138,53 @@ const PendaftaranKelompok = () => {
         setCompleted([]);
     };
 
-    const handleRemoveExistingDocument = (documentTypeId) => {
-        const existingDoc = existingDocuments[documentTypeId];
-        if (existingDoc?.id) {
-            setRemovedDocumentIds(prev => [...prev, existingDoc.id]);
+    const getStudentGroupId = (studentId) => {
+        // Check against all groups from the API
+        const groupsRaw = Array.isArray(kpGroups) ? kpGroups : (kpGroups?.data || []);
+        for (const group of groupsRaw) {
+            const member = group.members?.find(m => m.student_id === studentId && m.status === 'active' && 
+                ['submitted', 'approved', 'ongoing', 'grading'].includes(group.status));
+            if (member) return group.id;
         }
+        return null;
+    };
+
+    const validate = (step) => {
+        const e = {};
+        
+        // Step 1 validations
+        if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
+        if (step === 1 && !form.kp_company_id) e.kp_company_id = 'Pilih perusahaan tujuan KP';
+        
+        // Step 3 / 4 validation: check if added members are already in other groups
+        if (step === 3 || step === 4) {
+            const anggotaIds = form.anggota_ids || [];
+            for (const studentId of anggotaIds) {
+                const existingGroupId = getStudentGroupId(studentId);
+                const currentGroupId = form.kp_group_id || form.id;
+                if (existingGroupId && existingGroupId !== currentGroupId) {
+                    const student = studentList?.find(s => s.id === studentId);
+                    e.anggota_ids = `Mahasiswa ${student?.user?.name || studentId} sudah tergabung dalam kelompok KP lain (ID: ${existingGroupId})`;
+                    break;
+                }
+            }
+        }
+
+        // Step 4 document validation
+        if (step === 4) {
+            const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
+            for (const doc of requiredDocs) {
+                if (!uploads[doc.id] && !existingDocuments[doc.id]) {
+                    e.documents = 'Semua dokumen wajib belum diunggah.';
+                    break;
+                }
+            }
+        }
+        
+        return e;
+    };
+
+    const handleReplaceDocument = (documentTypeId) => {
         setExistingDocuments(prev => {
             const updated = { ...prev };
             delete updated[documentTypeId];
@@ -955,7 +1192,7 @@ const PendaftaranKelompok = () => {
         });
     };
 
-    const handleReplaceDocument = (documentTypeId) => {
+    const handleRemoveExisting = (documentTypeId) => {
         setExistingDocuments(prev => {
             const updated = { ...prev };
             delete updated[documentTypeId];
@@ -983,22 +1220,7 @@ const PendaftaranKelompok = () => {
         }
     };
 
-    // Validasi per langkah (untuk 5 steps)
-    const validate = (step) => {
-        const e = {};
-        if (step === 1 && !form.academic_period_id) e.academic_period_id = 'Pilih periode terlebih dahulu';
-        if (step === 1 && !form.kp_company_id) e.kp_company_id = 'Pilih perusahaan tujuan KP';
-        if (step === 4) {
-            const requiredDocs = (Array.isArray(documentTypes) ? documentTypes : []).filter(dt => dt.is_required);
-            for (const doc of requiredDocs) {
-                if (!uploads[doc.id] && !existingDocuments[doc.id]) {
-                    e.documents = 'Semua dokumen wajib belum diunggah.';
-                    break;
-                }
-            }
-        }
-        return e;
-    };
+
 
     const goNext = () => {
         const e = validate(currentStep);
@@ -1091,6 +1313,64 @@ const PendaftaranKelompok = () => {
 
     const currentGroup = hasKelompokSebagaiKetua ? kelompokSebagaiKetua[0] : kelompokSebagaiAnggota[0];
 
+    // Open document revision modal for approved groups
+    const openDocumentRevision = (group) => {
+        setDocRevisionGroup(group);
+        setDocRevisionUploads({});
+        const existing = {};
+        (group.kp_documents || []).forEach(doc => {
+            if (doc.document_type?.id) {
+                existing[doc.document_type.id] = doc;
+            }
+        });
+        setDocRevisionExistingDocs(existing);
+        setDocRevisionRemovedIds([]);
+        setShowDocRevision(true);
+    };
+
+    // Save document revisions for approved groups
+    const handleDocumentRevisionSubmit = async () => {
+        setDocRevisionSubmitting(true);
+        try {
+            const docTypes = Array.isArray(documentTypesRaw)
+                ? documentTypesRaw
+                : (Array.isArray(documentTypesRaw?.data) ? documentTypesRaw.data : []);
+
+            // Delete removed documents
+            for (const docId of docRevisionRemovedIds) {
+                try {
+                    await deleteKpDocument(docId).unwrap();
+                } catch (err) {
+                    handleApiError(err, 'Gagal menghapus dokumen');
+                }
+            }
+
+            // Upload new/updated documents
+            for (const [documentTypeId, file] of Object.entries(docRevisionUploads)) {
+                if (file) {
+                    const docType = docTypes.find(dt => String(dt.id) === String(documentTypeId));
+                    const formData = new FormData();
+                    formData.append('kp_group_id', String(docRevisionGroup.id));
+                    formData.append('document_type_id', String(documentTypeId));
+                    formData.append('title', docType?.name || 'Dokumen');
+                    formData.append('file', file);
+                    await uploadKpDocument(formData).unwrap();
+                }
+            }
+
+            // Clear document_revision_note
+            await updateKpGroup({ id: docRevisionGroup.id, document_revision_note: null }).unwrap();
+
+            handleApiSuccess('Revisi dokumen berhasil dikirim');
+            setShowDocRevision(false);
+            refetch();
+        } catch (err) {
+            handleApiError(err, 'Gagal menyimpan revisi dokumen');
+        } finally {
+            setDocRevisionSubmitting(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <PageHeader
@@ -1132,13 +1412,122 @@ const PendaftaranKelompok = () => {
                             </div>
                         </div>
 
-                        {/* Catatan penolakan */}
+                                                {/* ── Informasi Dokumen ── */}
+                        {currentGroup.kp_documents && currentGroup.kp_documents.length > 0 && (
+                            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                                <div className="mb-4 flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-gray-600" />
+                                    <h3 className="text-sm font-semibold text-gray-900">Informasi Dokumen</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(currentGroup.kp_documents || []).map((doc) => (
+                                        <div key={doc.id} className="flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                                                    <FileText className="h-4 w-4 text-gray-500" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                                        {doc.document_type?.name || doc.title || 'Dokumen'}
+                                                    </p>
+                                                    {doc.notes && (
+                                                        <p className="mt-0.5 text-xs text-orange-600 truncate">
+                                                            Catatan: {doc.notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0 ml-12 sm:ml-0">
+                                                <Badge
+                                                    status={
+                                                        doc.status === 'approved' ? 'approved'
+                                                        : doc.status === 'rejected' ? 'rejected'
+                                                        : doc.status === 'revision' ? 'warning'
+                                                        : 'submitted'
+                                                    }
+                                                >
+                                                    {doc.status === 'approved' ? 'Disetujui'
+                                                     : doc.status === 'rejected' ? 'Ditolak'
+                                                     : doc.status === 'revision' ? 'Perlu Revisi'
+                                                     : 'Menunggu'}
+                                                </Badge>
+                                                {doc.file_url && (
+                                                    <a
+                                                        href={doc.file_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-emerald-600 hover:underline"
+                                                    >
+                                                        Lihat
+                                                    </a>
+                                                )}
+                                                {doc.status === 'revision' && hasKelompokSebagaiKetua && (
+                                                    <div className="relative">
+                                                        <input
+                                                            type="file"
+                                                            id={`revise-file-${doc.id}`}
+                                                            className="hidden"
+                                                            accept=".pdf,.doc,.docx"
+                                                            onChange={async (e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (!file) return;
+                                                                setUploadingRevision(doc.id);
+                                                                try {
+                                                                    const formData = new FormData();
+                                                                    formData.append('kp_group_id', currentGroup.id);
+                                                                    formData.append('document_type_id', doc.document_type_id || doc.document_type?.id || '');
+                                                                    formData.append('title', doc.document_type?.name || doc.title || 'Dokumen');
+                                                                    formData.append('file', file);
+                                                                    await uploadKpDocument(formData).unwrap();
+                                                                    handleApiSuccess('Dokumen berhasil disubmit ulang');
+                                                                    refetch();
+                                                                } catch (err) {
+                                                                    handleApiError(err, 'Gagal mengupload dokumen revisi');
+                                                                } finally {
+                                                                    setUploadingRevision(null);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            variant="warning"
+                                                            size="sm"
+                                                            icon={uploadingRevision === doc.id ? null : Check}
+                                                            loading={uploadingRevision === doc.id}
+                                                            onClick={() => document.getElementById(`revise-file-${doc.id}`).click()}
+                                                        >
+                                                            {uploadingRevision === doc.id ? 'Mengupload...' : 'Submit Ulang'}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                                                 {/* ── Alert Penolakan Pendaftaran ── */}
                         {currentGroup.status === 'rejected' && currentGroup.rejection_note && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800 flex gap-2">
-                                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
-                                <div>
-                                    <p className="font-semibold mb-1">Catatan Penolakan:</p>
-                                    <p>{currentGroup.rejection_note}</p>
+                            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex gap-2">
+                                    <AlertCircle className="w-5 h-4 mt-0.5 shrink-0 text-red-600" />
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-red-800 mb-1">Pendaftaran Ditolak</p>
+                                        <p className="text-sm text-red-700 whitespace-pre-wrap">{currentGroup.rejection_note}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Alert Revisi Dokumen ── */}
+                        {currentGroup.status === 'approved' && currentGroup.document_revision_note && (
+                            <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <div className="flex gap-2">
+                                    <AlertCircle className="w-5 h-4 mt-0.5 shrink-0 text-orange-600" />
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-orange-800 mb-1">Dokumen Perlu Revisi</p>
+                                        <p className="text-sm text-orange-700 whitespace-pre-wrap">{currentGroup.document_revision_note}</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1178,9 +1567,19 @@ const PendaftaranKelompok = () => {
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                            {(currentGroup.status === 'draft' || currentGroup.status === 'rejected') && hasKelompokSebagaiKetua && (
+                            {currentGroup.status === 'draft' && hasKelompokSebagaiKetua && (
                                 <Button variant="primary" icon={Pencil} onClick={() => openEdit(currentGroup)}>
-                                    {currentGroup.status === 'rejected' ? 'Ajukan Ulang Pendaftaran' : 'Edit Pendaftaran'}
+                                    Edit Pendaftaran
+                                </Button>
+                            )}
+                            {currentGroup.status === 'rejected' && hasKelompokSebagaiKetua && (
+                                <Button variant="primary" icon={Pencil} onClick={() => openEdit(currentGroup)}>
+                                    Ajukan Ulang Pendaftaran
+                                </Button>
+                            )}
+                            {currentGroup.status === 'approved' && currentGroup.document_revision_note && hasKelompokSebagaiKetua && (
+                                <Button variant="warning" icon={Pencil} onClick={() => openDocumentRevision(currentGroup)}>
+                                    Revisi Dokumen
                                 </Button>
                             )}
                         </div>
@@ -1209,6 +1608,20 @@ const PendaftaranKelompok = () => {
                                 </button>
                             )}
                         </div>
+
+                        {/* Notifikasi penolakan saat mengedit kelompok yang ditolak */}
+                        {editing?.status === 'rejected' && editing?.rejection_note && (
+                            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex gap-2">
+                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
+                                    <div>
+                                        <p className="font-semibold text-red-800 mb-1">Pendaftaran Ditolak</p>
+                                        <p className="text-sm text-red-700 whitespace-pre-wrap">{editing.rejection_note}</p>
+                                        <p className="text-xs text-red-600 mt-2">Silakan perbaiki data di bawah sesuai catatan, kemudian kirim ulang pendaftaran.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <StepperHeader currentStep={currentStep} completedSteps={completedSteps} />
 
@@ -1239,7 +1652,7 @@ const PendaftaranKelompok = () => {
                                     uploads={uploads}
                                     existingDocuments={existingDocuments}
                                     onUploadChange={setUploads}
-                                    onRemoveExisting={handleRemoveExistingDocument}
+                                    onRemoveExisting={handleRemoveExisting}
                                     onReplace={handleReplaceDocument}
                                 />
                             )}
@@ -1314,6 +1727,24 @@ const PendaftaranKelompok = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ── Document Revision Modal ── */}
+            {showDocRevision && (
+                <DocumentRevisionModal
+                    isOpen={showDocRevision}
+                    onClose={() => setShowDocRevision(false)}
+                    group={docRevisionGroup}
+                    documentTypes={documentTypes}
+                    uploads={docRevisionUploads}
+                    setUploads={setDocRevisionUploads}
+                    existingDocuments={docRevisionExistingDocs}
+                    setExistingDocuments={setDocRevisionExistingDocs}
+                    removedDocumentIds={docRevisionRemovedIds}
+                    setRemovedDocumentIds={setDocRevisionRemovedIds}
+                    onSubmit={handleDocumentRevisionSubmit}
+                    loading={docRevisionSubmitting}
+                />
             )}
 
         </div>

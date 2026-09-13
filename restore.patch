@@ -1,0 +1,346 @@
+--- resources/js/modules/kp/pages/VerifikasiPendaftaran.jsx
++++ resources/js/modules/kp/pages/VerifikasiPendaftaran.jsx
+@@ -219,6 +219,30 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onReviseDocument, onP
+                     )}
+                 </div>
+ 
++                {/* Catatan Penolakan Pendaftaran */}
++                {data.rejection_note && (
++                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
++                        <div className="flex items-start gap-2">
++                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
++                            <div>
++                                <p className="font-semibold text-red-800 mb-0.5">Catatan Penolakan Pendaftaran</p>
++                                <p className="text-sm text-red-700">{data.rejection_note}</p>
++                            </div>
++                        </div>
++                    </div>
++                )}
++
++                {/* Catatan Revisi Dokumen */}
++                {data.document_revision_note && (
++                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
++                        <div className="flex items-start gap-2">
++                            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-orange-600" />
++                            <div>
++                                <p className="font-semibold text-orange-800 mb-0.5">Catatan Revisi Dokumen</p>
++                                <p className="text-sm text-orange-700">{data.document_revision_note}</p>
++                            </div>
++                        </div>
++                    </div>
++                )}
+             </div>
+ 
+             {/* Actions */}
+@@ -231,18 +255,34 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onReviseDocument, onP
+                         </Button>
+                         <Button
+                             variant="danger"
+-                            icon={X}
++                            icon={XCircle}
+                             onClick={onReject}
+                             loading={isProcessing}
+                         >
+-                            Tolak
++                            Tolak Pendaftaran
+                         </Button>
+-                        <Button
+-                            variant="primary"
+-                            icon={Check}
+-                            onClick={onApprove}
+-                            loading={isProcessing}
+-                        >
+-                            Setuju
+-                        </Button>
++                        {!data.document_revision_note && (
++                            <Button
++                                variant="warning"
++                                icon={AlertCircle}
++                                onClick={onReviseDocument}
++                                loading={isProcessing}
++                            >
++                                Revisi Dokumen
++                            </Button>
++                        )}
++                        {canPlot && (
++                            <Button
++                                variant="primary"
++                                icon={UserPlus}
++                                onClick={onPlot}
++                                loading={isProcessing}
++                            >
++                                Plotting Dosen
++                            </Button>
++                        )}
+                     </>
+                 )}
+                 {data.status === 'approved' && (
+@@ -250,6 +290,16 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onReviseDocument, onP
+                         <Button variant="secondary" onClick={onClose}>
+                             Tutup
+                         </Button>
++                        {!data.document_revision_note && (
++                            <Button
++                                variant="warning"
++                                icon={AlertCircle}
++                                onClick={onReviseDocument}
++                                loading={isProcessing}
++                            >
++                                Revisi Dokumen
++                            </Button>
++                        )}
+                         {canPlot && (
+                             <Button
+                                 variant="primary"
+@@ -268,7 +318,7 @@ const DetailModal = ({ data, onClose, onApprove, onReject, onReviseDocument, onP
+ };
+ 
+-// ─── Reject Modal ─────────────────────────────────────────────────────────────
+-const RejectModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
++// ─── Reject Registration Modal ──────────────────────────────────────────────────
++const RejectRegistrationModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
+     const [reason, setReason] = useState('');
+ 
+     const handleConfirm = () => {
+@@ -288,14 +338,14 @@ const RejectModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
+             isOpen={isOpen}
+             onClose={handleClose}
+             title="Tolak Pendaftaran KP"
+             size="md"
+         >
+             <div className="space-y-4">
+                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800 flex gap-2">
+                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-600" />
+-                    <span>Konfirmasi penolakan pendaftaran KP.</span>
++                    <span>Pendaftaran KP ini akan ditolak. Mahasiswa tidak dapat melanjutkan hingga mendaftar ulang.</span>
+                 </div>
+ 
+                 <div>
+@@ -308,10 +358,10 @@ const RejectModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
+                 </div>
+ 
+                 <Textarea
+-                    label="Catatan Penolakan"
++                    label="Catatan Penolakan Pendaftaran"
+                     value={reason}
+                     onChange={(e) => setReason(e.target.value)}
+-                    placeholder="Jelaskan alasan penolakan..."
++                    placeholder="Jelaskan alasan penolakan pendaftaran..."
+                     rows={4}
+                     required
+                 />
+@@ -322,18 +372,79 @@ const RejectModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
+                     Batal
+                 </Button>
+                 <Button
+                     variant="danger"
+-                    icon={X}
++                    icon={XCircle}
+                     onClick={handleConfirm}
+                     loading={submitting}
+                     disabled={!reason.trim()}
+                 >
+-                    Tolak
++                    Tolak Pendaftaran
+                 </Button>
+             </div>
+         </Modal>
+     );
+ };
+ 
++// ─── Document Revision Modal ──────────────────────────────────────────────────
++const DocumentRevisionModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
++    const [reason, setReason] = useState('');
++
++    const handleConfirm = () => {
++        onConfirm(reason);
++        setReason('');
++    };
++
++    const handleClose = () => {
++        setReason('');
++        onClose();
++    };
++
++    return (
++        <Modal
++            isOpen={isOpen}
++            onClose={handleClose}
++            title="Revisi Dokumen"
++            size="md"
++        >
++            <div className="space-y-4">
++                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 flex gap-2">
++                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-orange-600" />
++                    <span>Dokumen pendaftaran perlu direvisi. Pendaftaran diterima, namun dokumen wajib diperbaiki.</span>
++                </div>
++
++                <div>
++                    <p className="text-sm text-gray-600 mb-2">
++                        Dokumen dari <strong>{data?.student?.name}</strong> ({data?.student?.nim}) perlu revisi.
++                    </p>
++                </div>
++
++                <Textarea
++                    label="Catatan Revisi Dokumen"
++                    value={reason}
++                    onChange={(e) => setReason(e.target.value)}
++                    placeholder="Jelaskan dokumen apa yang perlu diperbaiki..."
++                    rows={4}
++                    required
++                />
++            </div>
++
++            <div className="flex justify-end gap-3 pt-6">
++                <Button variant="secondary" onClick={handleClose}>
++                    Batal
++                </Button>
++                <Button
++                    variant="warning"
++                    icon={AlertCircle}
++                    onClick={handleConfirm}
++                    loading={submitting}
++                    disabled={!reason.trim()}
++                >
++                    Minta Revisi Dokumen
++                </Button>
++            </div>
++        </Modal>
++    );
++};
++
+ // ─── Approve Modal ────────────────────────────────────────────────────────────
+ const ApproveModal = ({ isOpen, onClose, onConfirm, submitting, data }) => {
+@@ -488,6 +599,7 @@ const VerifikasiPendaftaran = () => {
+     const [selectedData, setSelectedData] = useState(null);
+     const [showDetail, setShowDetail] = useState(false);
+     const [showReject, setShowReject] = useState(false);
++    const [showReviseDocument, setShowReviseDocument] = useState(false);
+     const [showApprove, setShowApprove] = useState(false);
+     const [showPlotting, setShowPlotting] = useState(false);
+ 
+@@ -542,9 +654,9 @@ const VerifikasiPendaftaran = () => {
+         setShowDetail(true);
+     };
+ 
+-    const handleReject = (reason) => {
++    const handleReject = async (reason) => {
+         if (!reason.trim()) return;
+-        submitVerification(selectedData.id, 'rejected', reason)
++        await submitVerification(selectedData.id, 'rejected', reason)
+             .then(() => {
+                 setShowReject(false);
+                 setShowDetail(false);
+@@ -554,6 +666,18 @@ const VerifikasiPendaftaran = () => {
+             .catch(() => { });
+     };
+ 
++    const handleReviseDocument = async (note) => {
++        if (!note.trim()) return;
++        await submitDocumentRevision(selectedData.id, note)
++            .then(() => {
++                setShowReviseDocument(false);
++                setShowDetail(false);
++                refetch();
++                setPage(1);
++            })
++            .catch(() => { });
++    };
++
+     const handleApprove = (notes) => {
+         submitVerification(selectedData.id, 'approved', notes)
+             .then(() => {
+@@ -571,16 +695,37 @@ const VerifikasiPendaftaran = () => {
+ 
+     const submitVerification = async (id, status, notes) => {
+         try {
+-            await updateVerifikasi({ id, status, rejection_note: notes }).unwrap();
+-            handleApiSuccess(status === 'approved'
+-                ? 'Pendaftaran berhasil disetujui'
+-                : 'Pendaftaran ditolak');
++            const payload = { id, status };
++            if (status === 'rejected') {
++                payload.rejection_note = notes;
++            } else if (status === 'approved') {
++                payload.notes = notes;
++            }
++
++            await updateVerifikasi(payload).unwrap();
++            handleApiSuccess(
++                status === 'approved'
++                    ? 'Pendaftaran berhasil disetujui'
++                    : status === 'rejected'
++                        ? 'Pendaftaran ditolak'
++                        : 'Pendaftaran berhasil disetujui'
++            );
+         } catch (err) {
+             handleApiError(err, 'Gagal memproses verifikasi');
+             throw err;
+         }
+     };
+ 
++    const submitDocumentRevision = async (id, note) => {
++        try {
++            await updateVerifikasi({ id, document_revision_note: note }).unwrap();
++            handleApiSuccess('Permintaan revisi dokumen berhasil dikirim');
++        } catch (err) {
++            handleApiError(err, 'Gagal meminta revisi dokumen');
++            throw err;
++        }
++    };
++
+     const submitPlotting = async (id, lecturerId) => {
+         try {
+             await assignSupervisor({ kp_group_id: id, lecturer_id: lecturerId }).unwrap();
+@@ -682,6 +827,17 @@ const VerifikasiPendaftaran = () => {
+                             />
+                         </>
+                     )}
++                    {row.status === 'approved' && (
++                        <Button
++                            size="sm"
++                            variant="warning"
++                            icon={AlertCircle}
++                            onClick={() => {
++                                setSelectedData(row);
++                                setShowReviseDocument(true);
++                            }}
++                        />
++                    )}
+                     {row.status === 'approved' && (
+                         <Button
+                             size="sm"
+@@ -818,6 +974,7 @@ const VerifikasiPendaftaran = () => {
+                     onClose={() => setShowDetail(false)}
+                     onApprove={() => setShowApprove(true)}
+                     onReject={() => setShowReject(true)}
++                    onReviseDocument={() => setShowReviseDocument(true)}
+                     onPlot={() => setShowPlotting(true)}
+                     isProcessing={isUpdating}
+                     canPlot={true}
+@@ -825,7 +982,7 @@ const VerifikasiPendaftaran = () => {
+             )}
+ 
+             {showReject && (
+-                <RejectModal
++                <RejectRegistrationModal
+                     isOpen={showReject}
+                     onClose={() => setShowReject(false)}
+                     onConfirm={handleReject}
+@@ -834,6 +991,16 @@ const VerifikasiPendaftaran = () => {
+                 />
+             )}
+ 
++            {showReviseDocument && (
++                <DocumentRevisionModal
++                    isOpen={showReviseDocument}
++                    onClose={() => setShowReviseDocument(false)}
++                    onConfirm={handleReviseDocument}
++                    submitting={isUpdating}
++                    data={selectedData}
++                />
++            )}
++
+             {showApprove && (
+                 <ApproveModal
+                     isOpen={showApprove}

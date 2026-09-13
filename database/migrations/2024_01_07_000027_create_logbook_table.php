@@ -13,11 +13,9 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('student')->cascadeOnDelete();
             $table->foreignId('kp_group_id')->nullable()->constrained('kp_group')->nullOnDelete();
             $table->date('date');
-            $table->string('attachment')->nullable();
             $table->string('evidence_photo')->nullable();
             $table->text('activity');
             $table->enum('status', ['pending', 'approved'])->default('pending');
-            $table->text('rejection_note')->nullable();
             $table->timestamps();
         });
     }

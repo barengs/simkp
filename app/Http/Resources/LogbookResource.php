@@ -13,7 +13,6 @@ class LogbookResource extends JsonResource
             'kp_group_id' => $this->kp_group_id,
             'student_id' => $this->student_id,
             'date' => $this->date,
-            'attachment' => $this->attachment ? '/storage/' . ltrim($this->attachment, '/') : null,
             'activity' => $this->activity,
             'evidence_photo' => $this->evidence_photo ? '/storage/' . ltrim($this->evidence_photo, '/') : null,
             'status' => $this->status,

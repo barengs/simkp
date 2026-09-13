@@ -14,6 +14,7 @@ class RegistrationVerificationService
                 'id',
                 'status',
                 'rejection_note',
+                'document_revision_note',
                 'description',
                 'academic_period_id',
                 'kp_theme_id',
@@ -102,11 +103,70 @@ class RegistrationVerificationService
                 $kelompok->rejection_note = $data['rejection_note'];
             }
 
+            if (isset($data['document_revision_note'])) {
+                $kelompok->document_revision_note = $data['document_revision_note'];
+            }
+
             $kelompok->save();
 
             return $this->baseQuery()
                 ->with($this->withRelations())
                 ->find($kelompok->id);
+        });
+    }
+
+    public function addMember(int $kpGroupId, int $studentId): KpGroup
+    {
+        return DB::transaction(function () use ($kpGroupId, $studentId) {
+            $kelompok = KpGroup::findOrFail($kpGroupId);
+
+            // Check if student is already a member
+            $existingMember = \App\Models\KpGroupMember::where('kp_group_id', $kpGroupId)
+                ->where('student_id', $studentId)
+                ->first();
+
+            if ($existingMember) {
+                throw new \InvalidArgumentException('Mahasiswa sudah menjadi anggota kelompok ini.');
+            }
+
+            // Get max members from academic_period (total_members field)
+            $academicPeriod = $kelompok->academicPeriod;
+            $maxMembers = $academicPeriod?->total_members ?? 5;
+
+            // Count current members
+            $currentMembersCount = \App\Models\KpGroupMember::where('kp_group_id', $kpGroupId)->count();
+
+            if ($currentMembersCount >= $maxMembers) {
+                throw new \InvalidArgumentException("Maksimal anggota kelompok adalah {$maxMembers} orang.");
+            }
+
+            // Add as anggota with inactive status (needs invitation acceptance)
+            \App\Models\KpGroupMember::create([
+                'kp_group_id' => $kpGroupId,
+                'student_id'  => $studentId,
+                'role'        => 'anggota',
+                'join_date'   => now()->toDateString(),
+                'status'      => 'inactive',
+            ]);
+
+            return $this->getById($kpGroupId);
+        });
+    }
+
+    public function removeMember(int $kpGroupId, int $memberId): KpGroup
+    {
+        return DB::transaction(function () use ($kpGroupId, $memberId) {
+            $member = \App\Models\KpGroupMember::where('kp_group_id', $kpGroupId)
+                ->where('id', $memberId)
+                ->firstOrFail();
+
+            if ($member->role === 'ketua') {
+                throw new \InvalidArgumentException('Ketua kelompok tidak dapat dikeluarkan.');
+            }
+
+            $member->delete();
+
+            return $this->getById($kpGroupId);
         });
     }
 }

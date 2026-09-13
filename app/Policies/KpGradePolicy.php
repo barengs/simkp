@@ -19,7 +19,7 @@ class KpGradePolicy
 
     public function create(User $user)
     {
-        return $user->hasRole('dosen') && $user->can('kp.nilai');
+        return $user->can('kp.nilai');
     }
 
     public function update(User $user, KpGrade $kpGrade)
@@ -33,6 +33,10 @@ class KpGradePolicy
                 ->whereNotNull('supervisor_lecturer_id')
                 ->where('supervisor_lecturer_id', optional($user->lecturer)->id)
                 ->exists();
+        }
+
+        if ($user->can('kp.nilai')) {
+            return true;
         }
 
         return false;

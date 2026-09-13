@@ -25,4 +25,30 @@ class UpdateKpGroupRequest extends FormRequest
             'status'             => ['sometimes', 'in:draft,submitted,approved,rejected,ongoing,grading,finished'],
         ];
     }
+
+    protected function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $anggotaIds = $this->input('anggota_ids', []);
+
+            // Check existing group membership for added members (only for new additions)
+            if (!empty($anggotaIds)) {
+                $existingMemberships = \App\Models\KpGroupMember::whereIn('student_id', $anggotaIds)
+                    ->whereHas('kpGroup', function($q) {
+                        $q->whereIn('status', ['submitted', 'approved', 'ongoing', 'grading']);
+                    })
+                    ->pluck('student_id')
+                    ->toArray();
+
+                if (!empty($existingMemberships)) {
+                    $students = \App\Models\Student::whereIn('id', $existingMemberships)->with('user')->get();
+                    $names = $students->pluck('user.name')->implode(', ');
+                    $validator->errors()->add(
+                        'anggota_ids',
+                        "Mahasiswa {$names} sudah tergabung dalam kelompok KP lain."
+                    );
+                }
+            }
+        });
+    }
 }

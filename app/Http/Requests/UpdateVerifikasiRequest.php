@@ -16,6 +16,7 @@ class UpdateVerifikasiRequest extends FormRequest
         return [
             'status' => ['sometimes', 'required', 'string', 'in:submitted,rejected,approved'],
             'rejection_note' => ['nullable', 'required_if:status,rejected', 'string', 'max:1000'],
+            'document_revision_note' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -28,6 +29,8 @@ class UpdateVerifikasiRequest extends FormRequest
             'rejection_note.required_if' => 'Catatan penolakan wajib diisi saat menolak pendaftaran.',
             'rejection_note.string' => 'Catatan penolakan harus berupa teks.',
             'rejection_note.max' => 'Catatan penolakan maksimal 1000 karakter.',
+            'document_revision_note.string' => 'Catatan revisi dokumen harus berupa teks.',
+            'document_revision_note.max' => 'Catatan revisi dokumen maksimal 1000 karakter.',
         ];
     }
 }

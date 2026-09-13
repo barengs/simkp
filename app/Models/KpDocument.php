@@ -19,7 +19,7 @@ class KpDocument extends Model
         'file_url',
         'submitted_at',
         'status',
-        'remarks',
+        'notes',
     ];
 
     protected $casts = [

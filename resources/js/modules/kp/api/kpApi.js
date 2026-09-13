@@ -224,6 +224,21 @@ export const kpApi = createApi({
             }),
             invalidatesTags: ['Verifikasi', 'KpGroup'],
         }),
+        removeGroupMember: builder.mutation({
+            query: ({ groupId, memberId }) => ({
+                url: `/registration-verification/${groupId}/members/${memberId}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['Verifikasi', 'KpGroup'],
+        }),
+        addGroupMember: builder.mutation({
+            query: ({ groupId, studentId }) => ({
+                url: `/registration-verification/${groupId}/members`,
+                method: 'POST',
+                body: { student_id: studentId },
+            }),
+            invalidatesTags: ['Verifikasi', 'KpGroup'],
+        }),
 
         // ── Plotting Dosen Pembimbing ──────────────────────────────────────────
         getUnassignedGroups: builder.query({
@@ -278,6 +293,24 @@ export const kpApi = createApi({
             query: (id) => ({ url: `/kp-document/${id}`, method: 'DELETE' }),
             invalidatesTags: ['KpDocument'],
         }),
+
+        // ── Approval Dokumen ──────────────────────────────────────────────────
+        approveKpDocument: builder.mutation({
+            query: (id) => ({ url: `/kp-document/${id}/approve`, method: 'POST' }),
+            invalidatesTags: ['KpDocument', 'KpGroup'],
+        }),
+        rejectKpDocument: builder.mutation({
+            query: (id) => ({ url: `/kp-document/${id}/reject`, method: 'POST' }),
+            invalidatesTags: ['KpDocument', 'KpGroup'],
+        }),
+        submitDocumentRevision: builder.mutation({
+            query: ({ groupId, documentId, notes }) => ({
+                url: `/kp-document/${documentId}/revise`,
+                method: 'POST',
+                body: { notes, group_id: groupId },
+            }),
+            invalidatesTags: ['KpDocument', 'KpGroup'],
+        }),
     }),
 });
 
@@ -310,6 +343,8 @@ export const {
     useGetEvaluationCriteriaQuery,
     useGetVerifikasiQuery,
     useUpdateVerifikasiMutation,
+    useRemoveGroupMemberMutation,
+    useAddGroupMemberMutation,
     useGetUnassignedGroupsQuery,
     useGetAssignedGroupsQuery,
     useGetAvailableLecturersQuery,
@@ -318,6 +353,9 @@ export const {
     useRemoveSupervisorMutation,
     useUploadKpDocumentMutation,
     useDeleteKpDocumentMutation,
+    useApproveKpDocumentMutation,
+    useRejectKpDocumentMutation,
+    useSubmitDocumentRevisionMutation,
     useAcceptInvitationMutation,
     useDeclineInvitationMutation,
 } = kpApi;

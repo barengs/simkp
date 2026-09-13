@@ -19,11 +19,14 @@ class KpGroup extends Model
         'academic_period_id',
         'status',
         'rejection_note',
+        'document_revision_note',
         'description',
     ];
 
     protected $casts = [
         'status' => 'string',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     // ── Relasi ────────────────────────────────────────────────────────────────

@@ -14,8 +14,8 @@ class StudyProgramController extends Controller
     public function __construct(
         private readonly StudyProgramService $sService
     ) {
-        $this->middleware('auth:sanctum');
-        // index & show boleh diakses semua role terautentikasi (mahasiswa, dosen, dst.)
+        // index boleh diakses publik untuk dropdown registrasi
+        $this->middleware('auth:sanctum')->except(['index']);
         // Hanya CUD yang memerlukan permission master-data.manage (Admin).
         $this->middleware('permission:master-data.manage')->only(['store', 'update', 'destroy']);
     }

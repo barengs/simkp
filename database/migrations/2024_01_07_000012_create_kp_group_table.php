@@ -21,6 +21,7 @@ return new class extends Migration
             ])->default('draft');
             $table->text('description')->nullable();
             $table->text('rejection_note')->nullable();
+            $table->text('document_revision_note')->nullable();
             $table->timestamps();
         });
     }

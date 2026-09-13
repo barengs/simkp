@@ -86,15 +86,23 @@ class KpGroupController extends Controller
             abort(403, 'Hanya ketua kelompok yang dapat mengubah data pendaftaran.');
         }
 
-        // Izinkan edit jika masih draft atau sudah ditolak (untuk revisi/ajukan ulang)
-        if (!in_array($kelompok->status, ['draft', 'rejected'])) {
-            abort(422, 'Pendaftaran yang sudah disetujui tidak dapat diubah.');
+        // Izinkan edit jika masih draft, ditolak (untuk revisi/ajukan ulang),
+        // atau sudah disetujui dengan catatan revisi dokumen
+        if (!in_array($kelompok->status, ['draft', 'rejected', 'approved']) ||
+            ($kelompok->status === 'approved' && empty($kelompok->document_revision_note))) {
+            abort(422, 'Pendaftaran yang sudah disetujui tanpa catatan revisi dokumen tidak dapat diubah.');
         }
 
-        // Jika sedang mengajukan ulang dari status ditolak, reset ke diajukan dan hapus catatan penolakan
+        // Jika mengajukan ulang dari status ditolak, reset ke submitted dan hapus catatan penolakan
         $data = $request->validated();
         if ($kelompok->status === 'rejected' && ($data['status'] ?? null) === 'submitted') {
             $data['rejection_note'] = null;
+        }
+
+        // Jika sudah disetujui dan ada catatan revisi dokumen, hapus catatan saat dokumen di-update
+        if ($kelompok->status === 'approved' && $kelompok->document_revision_note) {
+            $data['document_revision_note'] = null;
+            unset($data['status']);
         }
 
         $updated = $this->kpGroupService->update($id, $data);

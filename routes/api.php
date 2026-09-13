@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\UserController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/setting/public', [SettingController::class, 'public']);
+Route::get('/study-program', [StudyProgramController::class, 'index']);
 
 // Authenticated routes
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -48,7 +49,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/setting', [SettingController::class, 'update']);
 
     // Master Data
-    Route::apiResource('study-program', StudyProgramController::class);
+    Route::apiResource('study-program', StudyProgramController::class)->except(['index']);
     Route::apiResource('student', StudentController::class);
     Route::apiResource('lecturer', LecturerController::class);
     Route::apiResource('kp-company', KpCompanyController::class);
@@ -73,7 +74,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('kp-group', KpGroupController::class);
     Route::post('/kp-group/{id}/accept-invitation', [KpGroupController::class, 'acceptInvitation']);
     Route::post('/kp-group/{id}/decline-invitation', [KpGroupController::class, 'declineInvitation']);
+    Route::post('/kp-document/{id}/approve', [KpDocumentController::class, 'approve']);
+    Route::post('/kp-document/{id}/reject', [KpDocumentController::class, 'reject']);
+    Route::post('/kp-document/{id}/revise', [KpDocumentController::class, 'revise']);
     Route::apiResource('kp-document', KpDocumentController::class)->only(['store', 'destroy']);
+    Route::delete('/registration-verification/{id}/members/{memberId}', [RegistrationVerificationController::class, 'removeMember']);
+    Route::post('/registration-verification/{id}/members', [RegistrationVerificationController::class, 'addMember']);
     Route::apiResource('registration-verification', RegistrationVerificationController::class)
         ->only(['index', 'show', 'update']);
 

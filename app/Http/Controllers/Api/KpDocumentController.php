@@ -17,6 +17,7 @@ class KpDocumentController extends Controller
     /**
      * Upload dokumen untuk kelompok KP.
      * Mahasiswa yang menjadi anggota kelompok atau dosen pembimbing dapat mengupload.
+     * Jika dokumen sama (jenisnya) sudah ada dengan status 'revision', update dokumen tersebut dan ubah status ke 'submitted'.
      */
     public function store(Request $request)
     {
@@ -46,7 +47,7 @@ class KpDocumentController extends Controller
             ->exists();
 
         // Dosen pembimbing juga bisa upload
-        $isSupervisor = $user->hasRole('dosen') && 
+        $isSupervisor = $user->hasRole('dosen') &&
             $kpGroup->members()
                 ->where('supervisor_lecturer_id', $user->lecturer?->id)
                 ->exists();
@@ -55,25 +56,66 @@ class KpDocumentController extends Controller
             abort(403, 'Anda tidak memiliki izin untuk mengupload dokumen.');
         }
 
-        // Simpan file
-        $file = $request->file('file');
-        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('kp-documents', $filename, 'public');
+        // Cek apakah sudah ada dokumen dengan tipe yang sama dan status 'revision'
+        // Jika ada, update dokumen tersebut (re-submission revisi)
+        $existingDocument = KpDocument::where('kp_group_id', $request->kp_group_id)
+            ->where('document_type_id', $request->document_type_id)
+            ->where('status', 'revision')
+            ->first();
 
-        $document = KpDocument::create([
-            'kp_group_id' => $request->kp_group_id,
-            'document_type_id' => $request->document_type_id,
-            'student_id' => $student?->id,
-            'title' => $request->title,
-            'file_url' => Storage::url($path),
-            'submitted_at' => now(),
-            'status' => 'submitted',
-        ]);
+        $isResubmission = false;
+        $oldStatus = null;
+
+        if ($existingDocument) {
+            // Re-submission: update dokumen yang sudah ada
+            $isResubmission = true;
+            $oldStatus = $existingDocument->status;
+
+            // Hapus file lama
+            if ($existingDocument->file_url) {
+                $fullPath = str_replace('/storage', 'app/public', $existingDocument->file_url);
+                Storage::delete($fullPath);
+            }
+
+            // Simpan file baru
+            $file = $request->file('file');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('kp-documents', $filename, 'public');
+
+            $existingDocument->update([
+                'title' => $request->title,
+                'file_url' => Storage::url($path),
+                'submitted_at' => now(),
+                'status' => 'submitted',
+                'notes' => null, // Clear notes saat re-submission
+            ]);
+
+            $document = $existingDocument;
+            $message = 'Dokumen revisi berhasil disubmit ulang';
+        } else {
+            // Upload baru
+            $file = $request->file('file');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('kp-documents', $filename, 'public');
+
+            $document = KpDocument::create([
+                'kp_group_id' => $request->kp_group_id,
+                'document_type_id' => $request->document_type_id,
+                'student_id' => $student?->id,
+                'title' => $request->title,
+                'file_url' => Storage::url($path),
+                'submitted_at' => now(),
+                'status' => 'submitted',
+            ]);
+
+            $message = 'Dokumen berhasil diupload';
+        }
 
         return response()->json([
-            'message' => 'Dokumen berhasil diupload',
+            'message' => $message,
             'document' => $document,
-        ], 201);
+            'is_resubmission' => $isResubmission,
+        ], $isResubmission ? 200 : 201);
     }
 
     /**
@@ -88,7 +130,7 @@ class KpDocumentController extends Controller
         // Cek apakah user有权 delete (pengupload, dosen pembimbing, atau admin)
         $student = $user->student;
         $isOwner = $student && $document->student_id === $student->id;
-        $isSupervisor = $user->hasRole('dosen') && 
+        $isSupervisor = $user->hasRole('dosen') &&
             $kpGroup->members()
                 ->where('supervisor_lecturer_id', $user->lecturer?->id)
                 ->exists();
@@ -106,5 +148,95 @@ class KpDocumentController extends Controller
         $document->delete();
 
         return response()->json(['message' => 'Dokumen berhasil dihapus']);
+    }
+
+    /**
+     * Setujui dokumen KP.
+     */
+    public function approve(Request $request, int $id)
+    {
+        $document = KpDocument::findOrFail($id);
+        $kpGroup = $document->kpGroup;
+        $user = $request->user();
+
+        $isSupervisor = $user->hasRole('dosen') &&
+            $kpGroup->members()
+                ->where('supervisor_lecturer_id', $user->lecturer?->id)
+                ->exists();
+
+        if (!$isSupervisor && !$user->can('master-data.manage')) {
+            abort(403, 'Anda tidak memiliki izin untuk menyetujui dokumen ini.');
+        }
+
+        $document->update([
+            'status' => 'approved',
+            'notes' => $request->input('notes'),
+        ]);
+
+        return response()->json([
+            'message' => 'Dokumen berhasil disetujui',
+            'document' => $document,
+            'group' => $kpGroup->load(['members.student', 'kpDocuments.documentType', 'kpDocuments.student']),
+        ]);
+    }
+
+    /**
+     * Tolak dokumen KP.
+     */
+    public function reject(Request $request, int $id)
+    {
+        $document = KpDocument::findOrFail($id);
+        $kpGroup = $document->kpGroup;
+        $user = $request->user();
+
+        $isSupervisor = $user->hasRole('dosen') &&
+            $kpGroup->members()
+                ->where('supervisor_lecturer_id', $user->lecturer?->id)
+                ->exists();
+
+        if (!$isSupervisor && !$user->can('master-data.manage')) {
+            abort(403, 'Anda tidak memiliki izin untuk menolak dokumen ini.');
+        }
+
+        $document->update([
+            'status' => 'revision',
+            'notes' => $request->input('notes'),
+        ]);
+
+        return response()->json([
+            'message' => 'Dokumen ditolak',
+            'document' => $document,
+            'group' => $kpGroup->load(['members.student', 'kpDocuments.documentType', 'kpDocuments.student']),
+        ]);
+    }
+
+    /**
+     * Minta revisi dokumen KP.
+     */
+    public function revise(Request $request, int $id)
+    {
+        $document = KpDocument::findOrFail($id);
+        $kpGroup = $document->kpGroup;
+        $user = $request->user();
+
+        $isSupervisor = $user->hasRole('dosen') &&
+            $kpGroup->members()
+                ->where('supervisor_lecturer_id', $user->lecturer?->id)
+                ->exists();
+
+        if (!$isSupervisor && !$user->can('master-data.manage')) {
+            abort(403, 'Anda tidak memiliki izin untuk meminta revisi dokumen ini.');
+        }
+
+        $document->update([
+            'status' => 'revision',
+            'notes' => $request->input('notes'),
+        ]);
+
+        return response()->json([
+            'message' => 'Permintaan revisi dikirim',
+            'document' => $document,
+            'group' => $kpGroup->load(['members.student', 'kpDocuments.documentType', 'kpDocuments.student']),
+        ]);
     }
 }

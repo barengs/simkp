@@ -109,13 +109,9 @@ class LogbookController extends Controller
         }
 
         $data = $request->validated();
-        $data['student_id'] = $student->id;
+        $data['date'] = $data['date'] ?? now()->toDateString();
         $data['kp_group_id'] = $approvedGroup->kp_group_id;
-
-        if ($request->hasFile('attachment')) {
-            $data['attachment'] = $request->file('attachment')->store('logbooks', 'public');
-        }
-
+        $data['student_id'] = $student->id;
         if ($request->hasFile('evidence_photo')) {
             $data['evidence_photo'] = $request->file('evidence_photo')->store('logbooks', 'public');
         }
@@ -139,21 +135,13 @@ class LogbookController extends Controller
         $this->authorize('update', $logbook);
 
         $data = $request->validated();
-
-        if ($request->hasFile('attachment')) {
-            if ($logbook->attachment && Storage::disk('public')->exists($logbook->attachment)) {
-                Storage::disk('public')->delete($logbook->attachment);
-            }
-            $data['attachment'] = $request->file('attachment')->store('logbooks', 'public');
-        }
-
-        if ($request->hasFile('evidence_photo')) {
+        $data['date'] = $data['date'] ?? now()->toDateString();
+        if ($request->hasFile("evidence_photo")) {
             if ($logbook->evidence_photo && Storage::disk('public')->exists($logbook->evidence_photo)) {
                 Storage::disk('public')->delete($logbook->evidence_photo);
             }
             $data['evidence_photo'] = $request->file('evidence_photo')->store('logbooks', 'public');
         }
-
         $updated = $this->logbookService->update($id, $data);
 
         return response()->json(new LogbookResource($updated));
@@ -163,10 +151,6 @@ class LogbookController extends Controller
     {
         $logbook = $this->logbookService->getById($id);
         $this->authorize('delete', $logbook);
-
-        if ($logbook->attachment && Storage::disk('public')->exists($logbook->attachment)) {
-            Storage::disk('public')->delete($logbook->attachment);
-        }
 
         if ($logbook->evidence_photo && Storage::disk('public')->exists($logbook->evidence_photo)) {
             Storage::disk('public')->delete($logbook->evidence_photo);

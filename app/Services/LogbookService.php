@@ -43,7 +43,6 @@ class LogbookService
                 "{$logbookTable}.kp_group_id",
                 "{$logbookTable}.date",
                 "{$logbookTable}.activity",
-                "{$logbookTable}.attachment",
                 "{$logbookTable}.evidence_photo",
                 "{$logbookTable}.status"
             ])
@@ -102,7 +101,7 @@ class LogbookService
 
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'attachment', 'evidence_photo', 'status'])
+        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'evidence_photo', 'status'])
             ->with([
                 'student' => fn($q) => $q->select(['id', 'user_id', 'nim']),
                 'student.user' => fn($q) => $q->select(['id', 'name']),
@@ -113,7 +112,7 @@ class LogbookService
 
     public function getByKpGroup(int $kpGroupId): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'attachment', 'evidence_photo', 'status'])
+        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'evidence_photo', 'status'])
             ->with([
                 'student' => fn($q) => $q->select(['id', 'user_id', 'nim']),
                 'student.user' => fn($q) => $q->select(['id', 'name']),
@@ -127,7 +126,7 @@ class LogbookService
 
     public function getByKpGroupIds(array $kpGroupIds): \Illuminate\Database\Eloquent\Collection
     {
-        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'attachment', 'evidence_photo', 'status'])
+        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'evidence_photo', 'status'])
             ->with([
                 'student' => fn($q) => $q->select(['id', 'user_id', 'nim']),
                 'student.user' => fn($q) => $q->select(['id', 'name']),
@@ -141,7 +140,7 @@ class LogbookService
 
     public function getById(int $id): Logbook
     {
-        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'attachment', 'evidence_photo', 'status'])
+        return Logbook::select(['id', 'student_id', 'kp_group_id', 'date', 'activity', 'evidence_photo', 'status'])
             ->with([
                 'student' => fn($q) => $q->select(['id', 'user_id', 'nim']),
                 'student.user' => fn($q) => $q->select(['id', 'name']),

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
     useGetLogbookQuery,
     useCreateLogbookMutation,
@@ -18,7 +19,7 @@ import Textarea from '../../../components/ui/Textarea';
 import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import {
-    FileText, Search, Plus, Upload, Trash2, Pencil, CalendarDays, Clock, CheckCircle2,
+    FileText, Search, Plus, Upload, Trash2, Pencil, CalendarDays, Clock, CheckCircle2, UserRound, ClipboardList, Eye,
 } from 'lucide-react';
 
 
@@ -49,6 +50,7 @@ const isImageFile = (url) => {
 };
 
 const Logbook = () => {
+    const navigate = useNavigate();
     const authUser = useSelector(s => s.auth.user);
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -136,37 +138,71 @@ const Logbook = () => {
 
     const columns = [
         {
-            name: 'No',
-            selector: (r, i) => i + 1,
-            width: '60px',
-            center: true,
-        },
-        {
-            name: 'Nama Ketua',
-            selector: r => r.kp_group?.members?.find(m => m.role === 'ketua')?.student?.user?.name || r.student?.user?.name || '-',
-            sortable: true,
+            name: 'Mahasiswa',
+            selector: (row) => row.student?.user?.name || '-',
+            sortable: false,
             wrap: true,
-        },
-        {
-            name: 'Kegiatan',
-            selector: r => r.activity || '-',
-            sortable: true,
-            wrap: true,
+            width: '190px',
+            cell: (row) => (
+                <div className="flex items-center gap-3 py-2">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                        <UserRound className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-gray-900">
+                            {row.student?.user?.name || '-'}
+                        </p>
+
+                        <p className="font-mono text-xs text-gray-400">
+                            {row.student?.nim || '-'}
+                        </p>
+                    </div>
+                </div>
+            ),
         },
         {
             name: 'Tanggal',
-            selector: r => r.date || '-',
+            selector: (row) => row.date,
             sortable: true,
+            width: '140px',
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-gray-400" />
+
+                    <span className="text-sm text-gray-700">
+                        {row.date ? new Date(row.date).toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric',
+                        }) : '-'}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            name: 'Kegiatan',
+            selector: (row) => row.activity,
+            sortable: false,
             wrap: true,
-            cell: r => r.date ? new Date(r.date).toLocaleDateString('id-ID') : '-',
+            cell: (row) => (
+                <div className="flex items-start gap-2 py-3">
+                    <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+
+                    <p className="line-clamp-3 text-sm leading-5 text-gray-700">
+                        {row.activity || '-'}
+                    </p>
+                </div>
+            ),
         },
         {
             name: 'Status',
-            selector: r => r.status,
-            width: '120px',
+            selector: (row) => row.status,
+            sortable: true,
+            width: '170px',
             center: true,
-            cell: r => {
-                const config = STATUS_CONFIG[r.status] || STATUS_CONFIG.draft;
+            cell: (row) => {
+                const config = STATUS_CONFIG[row.status] || STATUS_CONFIG.pending;
                 return <Badge status={config.color}>{config.label}</Badge>;
             },
         },
@@ -174,15 +210,18 @@ const Logbook = () => {
             name: 'Aksi',
             width: '120px',
             center: true,
-            cell: r => (
+            cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
-                    {r.status === 'pending' && authUser?.student?.id === r.student_id && (
+                    {row.status === 'pending' && authUser?.student?.id === row.student_id && (
                         <>
-                            <Button size="sm" variant="secondary" icon={Pencil} onClick={() => handleEdit(r)} />
-                            <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleDelete(r.id)} />
+                            <Button size="sm" variant="secondary" icon={Pencil} onClick={() => handleEdit(row)} />
+                            <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleDelete(row.id)} />
                         </>
                     )}
+                    {/* Detail button */}
+                    <Button size="sm" variant="secondary" icon={Eye} onClick={() => navigate(`/kp/daftar-kelompok/${row.kp_group_id}`)} />
                 </div>
+
             ),
         },
     ];
@@ -265,15 +304,7 @@ const Logbook = () => {
 
                 {/* Table */}
                 <Card>
-                    <div className="
-                        flex flex-col
-                        gap-4
-                        border-b border-gray-100
-                        p-5
-                        sm:flex-row
-                        sm:items-center
-                        sm:justify-between
-                    ">
+                    <div className="flex flex-col gap-4 border-b border-gray-100 p-5 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h3 className="text-base font-semibold text-gray-900">
                                 Daftar Logbook
@@ -284,7 +315,8 @@ const Logbook = () => {
                                     : `${filtered.length} entri`}
                             </p>
                         </div>
-                        <div className="flex gap-2">
+
+                        <div className="flex flex-col gap-2 sm:flex-row">
                             <div className="w-full sm:w-80">
                                 <Input
                                     placeholder="Cari mahasiswa atau kegiatan..."
@@ -293,28 +325,52 @@ const Logbook = () => {
                                     icon={Search}
                                 />
                             </div>
-                            <div className="w-full sm:w-48">
+
+                            <div className="w-full sm:w-52">
                                 <select
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
-                                    <option value="">Semua Status</option>
-                                    {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                                        <option key={key} value={key}>{config.label}</option>
-                                    ))}
+                                    <option value="">
+                                        Semua Status
+                                    </option>
+
+                                    {Object.entries(STATUS_CONFIG).map(
+                                        ([key, config]) => (
+                                            <option
+                                                key={key}
+                                                value={key}
+                                            >
+                                                {config.label}
+                                            </option>
+                                        )
+                                    )}
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div className="overflow-hidden">
                         {isLoading ? (
-                            <Skeleton className="h-64" />
+                            <div className="p-5">
+                                <Skeleton className="h-64 rounded-lg" />
+                            </div>
                         ) : filtered.length === 0 ? (
-                            <div className="text-center py-12">
-                                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                <p className="text-gray-500">
-                                    {search || filterStatus ? 'Tidak ada hasil pencarian' : 'Belum ada logbook'}
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                                    <FileText className="h-7 w-7 text-gray-400" />
+                                </div>
+
+                                <p className="text-sm font-medium text-gray-700">
+                                    {search || filterStatus
+                                        ? 'Tidak ada hasil pencarian'
+                                        : 'Belum ada logbook'}
+                                </p>
+
+                                <p className="mt-1 text-xs text-gray-400">
+                                    {search || filterStatus
+                                        ? 'Coba ubah kata kunci atau filter status.'
+                                        : 'Belum terdapat aktivitas logbook.'}
                                 </p>
                             </div>
                         ) : (
@@ -448,7 +504,6 @@ const LogbookModal = ({ isOpen, onClose, onSubmit, kpGroupId }) => {
     const [form, setForm] = useState({
         date: '',
         activity: '',
-        attachment: null,
         evidence_photo: null,
     });
     const [errors, setErrors] = useState({});
@@ -480,9 +535,6 @@ const LogbookModal = ({ isOpen, onClose, onSubmit, kpGroupId }) => {
             formData.append('date', form.date);
             formData.append('activity', form.activity);
             formData.append('status', 'pending');
-            if (form.attachment) {
-                formData.append('attachment', form.attachment);
-            }
             if (form.evidence_photo) {
                 formData.append('evidence_photo', form.evidence_photo);
             }
@@ -523,22 +575,13 @@ const LogbookModal = ({ isOpen, onClose, onSubmit, kpGroupId }) => {
                     required
                     error={errors.activity}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FileDropZone
-                        label="Lampiran (Opsional)"
-                        accept=".pdf,.doc,.docx"
-                        file={form.attachment}
-                        onChange={(file) => setForm(prev => ({ ...prev, attachment: file }))}
-                        error={errors.attachment}
-                    />
-                    <FileDropZone
-                        label="Foto Bukti (Opsional)"
-                        accept="image/*"
-                        file={form.evidence_photo}
-                        onChange={(file) => setForm(prev => ({ ...prev, evidence_photo: file }))}
-                        error={errors.evidence_photo}
-                    />
-                </div>
+                <FileDropZone
+                    label="Foto Bukti (Opsional)"
+                    accept="image/*"
+                    file={form.evidence_photo}
+                    onChange={(file) => setForm(prev => ({ ...prev, evidence_photo: file }))}
+                    error={errors.evidence_photo}
+                />
             </div>
 
             <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
@@ -555,7 +598,6 @@ const LogbookEditModal = ({ isOpen, onClose, onSubmit, logbook, kpGroupId }) => 
     const [form, setForm] = useState({
         date: '',
         activity: '',
-        attachment: null,
         evidence_photo: null,
     });
     const [errors, setErrors] = useState({});
@@ -568,7 +610,6 @@ const LogbookEditModal = ({ isOpen, onClose, onSubmit, logbook, kpGroupId }) => 
             setForm({
                 date: formatDateForInput(logbook.date),
                 activity: logbook.activity || '',
-                attachment: null,
                 evidence_photo: null,
             });
         }
@@ -597,9 +638,6 @@ const LogbookEditModal = ({ isOpen, onClose, onSubmit, logbook, kpGroupId }) => 
             formData.append('date', form.date);
             formData.append('activity', form.activity);
             formData.append('status', 'pending');
-            if (form.attachment) {
-                formData.append('attachment', form.attachment);
-            }
             if (form.evidence_photo) {
                 formData.append('evidence_photo', form.evidence_photo);
             }
@@ -640,41 +678,23 @@ const LogbookEditModal = ({ isOpen, onClose, onSubmit, logbook, kpGroupId }) => 
                     required
                     error={errors.activity}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Lampiran (Opsional)
-                        </label>
-                        <FileDropZone
-                            accept=".pdf,.doc,.docx"
-                            file={form.attachment}
-                            onChange={(file) => setForm(prev => ({ ...prev, attachment: file }))}
-                            error={errors.attachment}
-                        />
-                        {logbook.attachment && !form.attachment && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Foto Bukti (Opsional)
+                    </label>
+                    <FileDropZone
+                        accept="image/*"
+                        file={form.evidence_photo}
+                        onChange={(file) => setForm(prev => ({ ...prev, evidence_photo: file }))}
+                        error={errors.evidence_photo}
+                    />
+                    {logbook.evidence_photo && !form.evidence_photo && (
+                        <div className="mt-2">
                             <p className="text-xs text-gray-500 mt-1">
-                                File saat ini: <a href={logbook.attachment} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800">Lihat Lampiran</a>
+                                Foto saat ini: <a href={logbook.evidence_photo} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800">Lihat Foto Bukti</a>
                             </p>
-                        )}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Foto Bukti (Opsional)
-                        </label>
-                        <FileDropZone
-                            accept="image/*"
-                            file={form.evidence_photo}
-                            onChange={(file) => setForm(prev => ({ ...prev, evidence_photo: file }))}
-                            error={errors.evidence_photo}
-                        />
-                        {logbook.evidence_photo && !form.evidence_photo && (
-                            <div className="mt-2">
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Foto saat ini: <a href={logbook.evidence_photo} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800">Lihat Foto Bukti</a>
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

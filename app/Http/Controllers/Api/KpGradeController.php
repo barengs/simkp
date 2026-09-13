@@ -130,7 +130,7 @@ class KpGradeController extends Controller
             ->where('supervisor_lecturer_id', $lecturerId)
             ->exists();
 
-        if (!$isSupervisor && !$user->can('master-data.manage')) {
+        if (!$isSupervisor && !$user->can('master-data.manage') && !$user->can('kp.nilai')) {
             abort(403, 'Anda tidak diizinkan menilai kelompok ini.');
         }
 
@@ -146,25 +146,29 @@ class KpGradeController extends Controller
     {
         $user = request()->user();
 
-        if (!$user->hasRole('dosen')) {
-            abort(403, 'Hanya dosen yang dapat mengakses data ini.');
+        if (!$user->hasRole('dosen') && !$user->can('kp.nilai')) {
+            abort(403, 'Anda tidak diizinkan mengakses data ini.');
         }
 
+        $isAdmin = $user->can('kp.nilai');
         $lecturerId = optional($user->lecturer)->id;
 
-        if (!$lecturerId) {
-            return response()->json([]);
-        }
-
-        $groups = \App\Models\KpGroup::whereHas('members', function ($q) use ($lecturerId) {
-            $q->where('supervisor_lecturer_id', $lecturerId)
-              ->where('status', 'active');
-        })
-        ->whereHas('reports', function ($q) {
+        $query = \App\Models\KpGroup::whereHas('reports', function ($q) {
             $q->where('status', 'approved');
         })
-        ->with(['members.student.user', 'reports', 'kpCompany', 'academicPeriod'])
-        ->get();
+        ->with(['members.student.user', 'reports', 'kpCompany', 'academicPeriod']);
+
+        if (!$isAdmin) {
+            if (!$lecturerId) {
+                return response()->json([]);
+            }
+            $query->whereHas('members', function ($q) use ($lecturerId) {
+                $q->where('supervisor_lecturer_id', $lecturerId)
+                  ->where('status', 'active');
+            });
+        }
+
+        $groups = $query->get();
 
         return response()->json(KpGroupResource::collection($groups));
     }

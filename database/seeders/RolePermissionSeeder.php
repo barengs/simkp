@@ -51,6 +51,7 @@ class RolePermissionSeeder extends Seeder
             'kp.validasi-laporan',
             'kp.nilai',
             'kp.nilai-saya',
+            'kp.detail-kelompok',
 
             // ── Modul TA ────────────────────────────────────────────────────
             'ta.pengajuan',
@@ -97,6 +98,7 @@ class RolePermissionSeeder extends Seeder
             'ta.plotting-dosen',
             'repository.publish',
             'repository.view',
+            'kp.detail-kelompok',
         ]);
 
         // Dosen → aksi pada kelompok/mahasiswa yang dibimbing/diuji
@@ -109,6 +111,7 @@ class RolePermissionSeeder extends Seeder
             'ta.bimbingan',
             'ta.nilai',
             'repository.view',
+            'kp.detail-kelompok',
         ]);
 
         // Mahasiswa → aksi di KP dan TA milik sendiri / kelompoknya

@@ -16,7 +16,6 @@ class Logbook extends Model
         'kp_group_id',
         'student_id',
         'date',
-        'attachment',
         'activity',
         'evidence_photo',
         'status',

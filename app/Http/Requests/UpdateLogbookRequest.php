@@ -16,10 +16,12 @@ class UpdateLogbookRequest extends FormRequest
         return [
             'kp_group_id' => ['sometimes', 'exists:kp_group,id'],
             'date' => ['sometimes', 'date'],
-            'attachment' => ['nullable', 'file', 'max:10240'],
+            'date' => ['sometimes', 'date'],
+            'date' => ['sometimes', 'date'],
+            'date' => ['sometimes', 'date'],
             'activity' => ['sometimes', 'string'],
-            'evidence_photo' => ['nullable', 'file', 'max:5120'],
-            'status' => ['sometimes', 'in:pending,approved'],
+            'evidence_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'status' => ['sometimes', 'string', 'in:pending,approved,rejected'],
         ];
     }
 }

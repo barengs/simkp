@@ -50,6 +50,27 @@ class StoreKpGroupRequest extends FormRequest
             $periodId = $this->input('academic_period_id');
             $startDate = $this->input('start_date');
             $endDate = $this->input('end_date');
+            $anggotaIds = $this->input('anggota_ids', []);
+
+            // Check existing group membership for added members
+            if (!empty($anggotaIds)) {
+                $existingMemberships = \App\Models\KpGroupMember::whereIn('student_id', $anggotaIds)
+                    ->whereHas('kpGroup', function($q) {
+                        // ignore rejected groups if needed, but usually any active/submitted/approved group blocks re-registration
+                        $q->whereIn('status', ['submitted', 'approved', 'ongoing', 'grading']);
+                    })
+                    ->pluck('student_id')
+                    ->toArray();
+
+                if (!empty($existingMemberships)) {
+                    $students = \App\Models\Student::whereIn('id', $existingMemberships)->with('user')->get();
+                    $names = $students->pluck('user.name')->implode(', ');
+                    $validator->errors()->add(
+                        'anggota_ids',
+                        "Mahasiswa {$names} sudah tergabung dalam kelompok KP lain."
+                    );
+                }
+            }
 
             if (!$periodId || !$startDate || !$endDate) {
                 return;

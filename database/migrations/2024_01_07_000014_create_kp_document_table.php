@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('file_url')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->enum('status', ['draft', 'submitted', 'approved', 'rejected'])->default('draft');
-            $table->text('remarks')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

@@ -15,11 +15,10 @@ class StoreLogbookRequest extends FormRequest
     {
         return [
             'kp_group_id' => ['required', 'exists:kp_group,id'],
-            'date' => ['required', 'date'],
-            'attachment' => ['nullable', 'file', 'max:10240'],
+            'date' => ['nullable', 'date'],
             'activity' => ['required', 'string'],
-            'evidence_photo' => ['nullable', 'file', 'max:5120'],
-            'status' => ['sometimes', 'in:pending,approved'],
+            'evidence_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'status' => ['required', 'string', 'in:pending,approved,rejected'],
         ];
     }
 }

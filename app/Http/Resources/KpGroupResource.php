@@ -12,6 +12,7 @@ class KpGroupResource extends JsonResource
             'id'             => $this->id,
             'status'         => $this->status,
             'rejection_note' => $this->rejection_note,
+            'document_revision_note' => $this->document_revision_note,
             'description'    => $this->description,
             'academic_period' => $this->whenLoaded('academicPeriod', fn () => [
                 'id'            => $this->academicPeriod->id,
