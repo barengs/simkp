@@ -133,6 +133,8 @@ const Register = () => {
     setServerError(null);
 
     try {
+      await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
+
       const { data } = await axios.post(
         '/api/register',
         form,
@@ -153,7 +155,7 @@ const Register = () => {
       );
 
       const settingsRes = await axios.get(
-        '/api/pengaturan/public',
+        '/api/setting/public',
         {
           withCredentials: true,
         }

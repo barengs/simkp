@@ -54,7 +54,6 @@ const App = () => {
             roles: data.roles || [],
             permissions: data.permissions || [],
           }));
-          store.dispatch(kpApi.util.invalidateTags(['Plotting']));
         }
       } catch (err) {
         console.debug('Auth hydration skipped:', err.message);

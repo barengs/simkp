@@ -34,7 +34,10 @@ export const pengaturanApi = createApi({
     reducerPath: 'pengaturanApi',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['DocumentType', 'Setting', 'Profile'],
-    keepUnusedDataFor: 300,
+    keepUnusedDataFor: 86400,
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     endpoints: (builder) => ({
         // Tipe Dokumen KP
         getDocumentTypes: builder.query({

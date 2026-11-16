@@ -37,6 +37,10 @@ export const roleManagementApi = createApi({
     reducerPath: 'roleManagementApi',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['Role', 'Permission'],
+    keepUnusedDataFor: 86400,
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     endpoints: (builder) => ({
         getRoles: builder.query({
             query: () => '/role',

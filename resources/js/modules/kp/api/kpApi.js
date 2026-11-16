@@ -34,7 +34,10 @@ export const kpApi = createApi({
     reducerPath: 'kpApi',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument', 'KpGrade', 'EvaluationCriteria', 'Plotting'],
-    keepUnusedDataFor: 300,
+    keepUnusedDataFor: 86400,
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     endpoints: (builder) => ({
 
         // ── Kelompok KP ────────────────────────────────────────────────────────

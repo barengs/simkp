@@ -96,7 +96,7 @@ const Login = () => {
       );
 
       const settingsRes = await axios.get(
-        '/api/pengaturan/public',
+        '/api/setting/public',
         {
           withCredentials: true,
         }

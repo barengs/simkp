@@ -34,7 +34,10 @@ export const taApi = createApi({
     reducerPath: 'taApi',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['TugasAkhir'],
-    keepUnusedDataFor: 120,  // data transaksional, cache lebih pendek
+    keepUnusedDataFor: 86400,
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     endpoints: (builder) => ({
 
         // ── Pengajuan Tugas Akhir ─────────────────────────────────────────────

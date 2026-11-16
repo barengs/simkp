@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\UserController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/setting/public', [SettingController::class, 'public']);
+Route::get('/pengaturan/public', [SettingController::class, 'public']);
 Route::get('/study-program', [StudyProgramController::class, 'index']);
 
 // Authenticated routes
@@ -95,15 +96,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('logbook', \App\Http\Controllers\Api\LogbookController::class);
     Route::apiResource('guidance', GuidanceController::class);
     Route::apiResource('report', ReportController::class);
-    Route::apiResource('exam-schedule', ExamScheduleController::class);
+    // Route::apiResource('exam-schedule', ExamScheduleController::class);
     Route::apiResource('evaluation-criteria', EvaluationCriteriaController::class);
     Route::post('/kp-grade/group', [KpGradeController::class, 'storeGroupGrade']);
     Route::get('/kp-grade/supervised-groups', [KpGradeController::class, 'getSupervisedGroups']);
     Route::apiResource('kp-grade', KpGradeController::class);
-    Route::apiResource('exam-grade', ExamGradeController::class);
-    Route::apiResource('notification', NotificationController::class);
-    Route::apiResource('status-history', StatusHistoryController::class);
-    Route::apiResource('activity-log', ActivityLogController::class);
+    // Route::apiResource('exam-grade', ExamGradeController::class);
+    // Route::apiResource('notification', NotificationController::class);
+    // Route::apiResource('status-history', StatusHistoryController::class);
+    // Route::apiResource('activity-log', ActivityLogController::class);
 
     // TA (Tugas Akhir) Module
     Route::apiResource('ta/pengajuan', \App\Http\Controllers\Api\FinalProjectController::class)->only(['index', 'store']);

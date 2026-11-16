@@ -21,6 +21,8 @@ import Skeleton from '../../../components/ui/Skeleton';
 import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Select from '../../../components/ui/Select';
+import StepperTimeline from '../../../components/ui/StepperTimeline';
+import CapacityGauge from '../../../components/ui/CapacityGauge';
 
 import {
     Users,
@@ -32,21 +34,26 @@ import {
     Award,
     Clock,
     TrendingUp,
+    Building2,
+    CheckCircle2,
+    AlertCircle,
+    ArrowRight,
+    UserPlus,
+    FileCheck,
+    ChevronRight,
+    Sparkles,
 } from 'lucide-react';
 
 import {
-    BarChart,
-    Bar,
+    ResponsiveContainer,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    LineChart,
-    Line,
     Legend,
 } from 'recharts';
-
 
 /* =========================================================
  * KONFIGURASI PERIODE
@@ -58,7 +65,6 @@ const PERIOD_OPTIONS = [
     { value: '30days', label: '30 Hari' },
     { value: 'year', label: 'Tahun Ini' },
 ];
-
 
 /* =========================================================
  * HELPER
@@ -90,7 +96,7 @@ const getDateRange = (period) => {
 
 const filterByDate = (items, period, dateField = 'created_at') => {
     const { start, end } = getDateRange(period);
-    return items.filter(item => {
+    return items.filter((item) => {
         if (!item?.[dateField]) return false;
         const itemDate = new Date(item[dateField]);
         return itemDate >= start && itemDate <= end;
@@ -116,18 +122,17 @@ const formatDateTime = (dateStr) => {
 
 const getStatusBadge = (status) => {
     const config = {
-        submitted: { label: 'Menunggu', color: 'bg-yellow-100 text-yellow-800' },
-        approved: { label: 'Disetujui', color: 'bg-green-100 text-green-800' },
-        rejected: { label: 'Ditolak', color: 'bg-red-100 text-red-800' },
-        pending: { label: 'Menunggu', color: 'bg-yellow-100 text-yellow-800' },
-        ongoing: { label: 'Berjalan', color: 'bg-blue-100 text-blue-800' },
-        grading: { label: 'Dinilai', color: 'bg-purple-100 text-purple-800' },
-        finished: { label: 'Selesai', color: 'bg-gray-100 text-gray-800' },
+        submitted: { label: 'Menunggu', color: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
+        approved: { label: 'Disetujui', color: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
+        rejected: { label: 'Ditolak', color: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200' },
+        pending: { label: 'Menunggu', color: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
+        ongoing: { label: 'Berjalan', color: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
+        grading: { label: 'Dinilai', color: 'bg-purple-50 text-purple-700 ring-1 ring-purple-200' },
+        finished: { label: 'Selesai', color: 'bg-slate-100 text-slate-700 ring-1 ring-slate-200' },
     };
-    const c = config[status] || { label: status || '-', color: 'bg-gray-100 text-gray-800' };
-    return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${c.color}`}>{c.label}</span>;
+    const c = config[status] || { label: status || '-', color: 'bg-slate-100 text-slate-700' };
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${c.color}`}>{c.label}</span>;
 };
-
 
 /* =========================================================
  * TREND PENDAFTARAN
@@ -137,7 +142,7 @@ const getTrendData = (items, period) => {
     const filtered = filterByDate(items, period, 'created_at');
     const groups = {};
 
-    filtered.forEach(item => {
+    filtered.forEach((item) => {
         const date = new Date(item.created_at);
         let label;
 
@@ -165,44 +170,6 @@ const getTrendData = (items, period) => {
     return Object.values(groups).sort((a, b) => new Date(a.name) - new Date(b.name));
 };
 
-
-/* =========================================================
- * DATA STATUS KELOMPOK
- * ========================================================= */
-
-const getKpGroupStatusData = (kpGroups) => {
-    const counts = {};
-    kpGroups.forEach(g => {
-        const status = g.status || 'unknown';
-        counts[status] = (counts[status] || 0) + 1;
-    });
-
-    const colorMap = {
-        submitted: '#f59e0b',
-        approved: '#3b82f6',
-        rejected: '#ef4444',
-        ongoing: '#8b5cf6',
-        grading: '#10b981',
-        finished: '#6b7280',
-    };
-
-    const labelMap = {
-        submitted: 'Menunggu',
-        approved: 'Disetujui',
-        rejected: 'Ditolak',
-        ongoing: 'Berjalan',
-        grading: 'Dinilai',
-        finished: 'Selesai',
-    };
-
-    return Object.entries(counts).map(([status, value]) => ({
-        name: labelMap[status] || status,
-        value,
-        color: colorMap[status] || '#6b7280',
-    }));
-};
-
-
 /* =========================================================
  * AKTIVITAS TERBARU
  * ========================================================= */
@@ -211,54 +178,55 @@ const RecentActivity = ({ items }) => {
     const columns = [
         {
             name: 'Nama',
-            selector: row => row.name,
+            selector: (row) => row.name,
             sortable: true,
             wrap: true,
         },
         {
             name: 'Tipe',
-            selector: row => row.type,
+            selector: (row) => row.type,
             sortable: true,
-            width: '120px',
+            width: '110px',
         },
         {
             name: 'Status',
-            selector: row => row.status,
+            selector: (row) => row.status,
             sortable: true,
-            width: '140px',
+            width: '130px',
             center: true,
-            cell: row => getStatusBadge(row.status),
+            cell: (row) => getStatusBadge(row.status),
         },
         {
             name: 'Tanggal',
-            selector: row => row.date,
+            selector: (row) => row.date,
             sortable: true,
-            width: '160px',
-            cell: row => formatDateTime(row.date),
+            width: '140px',
+            cell: (row) => formatDateTime(row.date),
         },
     ];
 
     if (!items || items.length === 0) {
         return (
             <Card>
-                <div className="px-6 py-5 border-b border-gray-200">
-                    <h3 className="text-base font-semibold text-gray-900">Aktivitas Terbaru</h3>
+                <div className="px-5 py-4 border-b border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-800">Aktivitas Terkini</h3>
                 </div>
-                <div className="p-8 text-center text-sm text-gray-500">
-                    Belum ada aktivitas pada periode ini.
+                <div className="p-8 text-center text-xs text-slate-400">
+                    Belum ada aktivitas baru pada rentang waktu ini.
                 </div>
             </Card>
         );
     }
 
     return (
-        <Card>
-            <div className="px-6 py-5 border-b border-gray-200">
-                <h3 className="text-base font-semibold text-gray-900">Aktivitas Terbaru</h3>
+        <Card className="overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-800">Aktivitas Terkini</h3>
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Audit Log</span>
             </div>
             <DataTableWrapper
                 columns={columns}
-                data={items.slice(0, 10)}
+                data={items.slice(0, 8)}
                 pagination={false}
                 responsive
             />
@@ -266,9 +234,8 @@ const RecentActivity = ({ items }) => {
     );
 };
 
-
 /* =========================================================
- * DASHBOARD
+ * DASHBOARD UTAMA
  * ========================================================= */
 
 const Dashboard = () => {
@@ -306,69 +273,178 @@ const Dashboard = () => {
 
     /* CHART DATA */
     const trendData = useMemo(() => getTrendData(kpGroups, period), [kpGroups, period]);
-    const statusChartData = useMemo(() => getKpGroupStatusData(filteredKpGroups), [filteredKpGroups]);
+
+    /* KELOMPOK SAYA (MAHASISWA) */
+    const myGroup = useMemo(() => {
+        if (!isMahasiswa) return null;
+        return (
+            kpGroups.find((g) => g.members?.some((m) => m.student_id === user?.student_id && m.role === 'ketua')) ||
+            kpGroups.find((g) => g.members?.some((m) => m.student_id === user?.student_id)) ||
+            null
+        );
+    }, [isMahasiswa, kpGroups, user]);
+
+    const myLogbooks = useMemo(() => {
+        if (!myGroup) return [];
+        return logbooks.filter((l) => l.kp_group_id === myGroup.id);
+    }, [myGroup, logbooks]);
+
+    const myReports = useMemo(() => {
+        if (!myGroup) return [];
+        return reports.filter((r) => r.kp_group_id === myGroup.id);
+    }, [myGroup, reports]);
+
+    const supervisorInfo = useMemo(() => {
+        if (!myGroup) return null;
+        const supervisorMember = myGroup.members?.find((m) => m.supervisor || m.supervisor_lecturer_id);
+        return supervisorMember?.supervisor || null;
+    }, [myGroup]);
+
+    /* LINIMASA STATUS UNTUK MAHASISWA */
+    const mahasiswaTimelineSteps = useMemo(() => {
+        if (!isMahasiswa) return [];
+
+        const hasGroup = !!myGroup;
+        const isSubmitted = myGroup?.status === 'submitted';
+        const isApproved = myGroup?.status === 'approved' || myGroup?.status === 'ongoing' || myGroup?.status === 'finished';
+        const isRejected = myGroup?.status === 'rejected';
+        const isRevision = myGroup?.status === 'revision';
+        const hasSupervisor = !!supervisorInfo;
+        const hasLogbooks = myLogbooks.length > 0;
+        const hasReport = myReports.length > 0;
+
+        return [
+            {
+                id: 'step-1',
+                title: '1. Pendaftaran',
+                subtitle: hasGroup ? (myGroup.kp_company?.name || 'Kelompok terdaftar') : 'Belum mendaftar',
+                status: hasGroup ? 'completed' : 'current',
+                actionLink: !hasGroup ? '/kp/kelompok' : null,
+                actionText: 'Daftar Sekarang',
+            },
+            {
+                id: 'step-2',
+                title: '2. Verifikasi Berkas',
+                subtitle: !hasGroup
+                    ? 'Menunggu pendaftaran'
+                    : isApproved
+                    ? 'Berkas disetujui'
+                    : isRevision
+                    ? 'Perlu perbaikan berkas'
+                    : isRejected
+                    ? 'Pendaftaran ditolak'
+                    : 'Menunggu review Koordinator',
+                status: isApproved
+                    ? 'completed'
+                    : isRevision
+                    ? 'warning'
+                    : isSubmitted
+                    ? 'current'
+                    : 'pending',
+                actionLink: isRevision ? '/kp/kelompok' : null,
+                actionText: 'Lihat Catatan',
+            },
+            {
+                id: 'step-3',
+                title: '3. Plotting Dosen',
+                subtitle: hasSupervisor
+                    ? supervisorInfo.name
+                    : isApproved
+                    ? 'Menunggu penugasan'
+                    : 'Tahap berikutnya',
+                status: hasSupervisor
+                    ? 'completed'
+                    : isApproved
+                    ? 'current'
+                    : 'pending',
+            },
+            {
+                id: 'step-4',
+                title: '4. Logbook & Magang',
+                subtitle: hasSupervisor
+                    ? `${myLogbooks.length} aktivitas dicatat`
+                    : 'Belum dimulai',
+                status: hasSupervisor
+                    ? hasLogbooks
+                        ? 'current'
+                        : 'current'
+                    : 'pending',
+                actionLink: hasSupervisor ? '/kp/logbook' : null,
+                actionText: 'Buka Logbook',
+            },
+            {
+                id: 'step-5',
+                title: '5. Laporan & Nilai',
+                subtitle: hasReport ? 'Laporan diunggah' : 'Menunggu laporan akhir',
+                status: hasReport ? 'completed' : 'pending',
+                actionLink: hasSupervisor ? '/kp/laporan' : null,
+                actionText: 'Unggah Laporan',
+            },
+        ];
+    }, [isMahasiswa, myGroup, supervisorInfo, myLogbooks, myReports]);
 
     /* STATISTIK */
     const stats = useMemo(() => {
         if (isAdmin) {
             return [
                 { title: 'Total Mahasiswa KP', value: students.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
-                { title: 'Total Dosen', value: lecturers.length, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
-                { title: 'Total Pendaftaran KP', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
+                { title: 'Total Dosen Terdaftar', value: lecturers.length, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Total Kelompok KP', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
             ];
         }
 
         if (isKoordinator) {
-            const submittedGroups = filteredKpGroups.filter(g => g.status === 'submitted').length;
-            const approvedGroups = filteredKpGroups.filter(g => g.status === 'approved').length;
+            const submittedGroups = filteredKpGroups.filter((g) => g.status === 'submitted').length;
+            const approvedGroups = filteredKpGroups.filter((g) => g.status === 'approved').length;
             return [
                 { title: 'Pendaftaran Baru', value: filteredKpGroups.length, icon: ClipboardList, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
-                { title: 'Menunggu Verifikasi', value: submittedGroups, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'bg-yellow-500' },
-                { title: 'Sudah Disetujui', value: approvedGroups, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Menunggu Verifikasi', value: submittedGroups, icon: Clock, iconClassName: 'text-amber-600', borderClassName: 'bg-amber-500' },
+                { title: 'Kelompok Disetujui', value: approvedGroups, icon: UserCheck, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
             ];
         }
 
         if (isDosen) {
             const totalStudents = supervisedGroups.reduce((sum, g) => sum + (g.members?.length || 0), 0);
-            const pendingLogbooks = filteredLogbooks.filter(l => supervisedGroups.some(g => g.id === l.kp_group_id) && l.status === 'pending').length;
-            const pendingReports = filteredReports.filter(r => supervisedGroups.some(g => g.id === r.kp_group_id) && r.status === 'pending').length;
+            const pendingLogbooks = filteredLogbooks.filter((l) => supervisedGroups.some((g) => g.id === l.kp_group_id) && l.status === 'pending').length;
+            const pendingReports = filteredReports.filter((r) => supervisedGroups.some((g) => g.id === r.kp_group_id) && r.status === 'pending').length;
             return [
                 { title: 'Kelompok Bimbingan', value: supervisedGroups.length, icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
-                { title: 'Total Mahasiswa', value: totalStudents, icon: GraduationCap, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
-                { title: 'Menunggu Verifikasi', value: pendingLogbooks + pendingReports, icon: Clock, iconClassName: 'text-yellow-600', borderClassName: 'bg-yellow-500' },
+                { title: 'Mahasiswa Dibimbing', value: totalStudents, icon: GraduationCap, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Perlu Divalidasi', value: pendingLogbooks + pendingReports, icon: Clock, iconClassName: 'text-amber-600', borderClassName: 'bg-amber-500' },
             ];
         }
 
         if (isMahasiswa) {
-            const myGroup = kpGroups.find(g => g.members?.some(m => m.student_id === user?.student_id && m.role === 'ketua')) ||
-                kpGroups.find(g => g.members?.some(m => m.student_id === user?.student_id));
-            const myGroupId = myGroup?.id;
-            const myLogbooks = filteredLogbooks.filter(l => l.kp_group_id === myGroupId);
-            const myReports = filteredReports.filter(r => r.kp_group_id === myGroupId);
             return [
-                { title: 'Status Kelompok', value: myGroup ? myGroup.status : 'Belum', icon: Users, iconClassName: 'text-blue-600', borderClassName: 'bg-blue-500' },
-                { title: 'Logbook Baru', value: myLogbooks.length, icon: BookOpen, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
-                { title: 'Laporan Baru', value: myReports.length, icon: FileText, iconClassName: 'text-orange-600', borderClassName: 'bg-orange-500' },
+                {
+                    title: 'Status Kelompok KP',
+                    value: myGroup ? (myGroup.status === 'approved' ? 'Disetujui' : myGroup.status === 'submitted' ? 'Diverifikasi' : myGroup.status) : 'Belum Ada',
+                    icon: Users,
+                    iconClassName: 'text-blue-600',
+                    borderClassName: 'bg-blue-500',
+                },
+                { title: 'Logbook Disetorkan', value: myLogbooks.length, icon: BookOpen, iconClassName: 'text-emerald-600', borderClassName: 'bg-emerald-500' },
+                { title: 'Laporan Akhir KP', value: myReports.length > 0 ? 'Sudah Submit' : 'Belum Submit', icon: FileText, iconClassName: 'text-purple-600', borderClassName: 'bg-purple-500' },
             ];
         }
 
         return [];
-    }, [isAdmin, isKoordinator, isDosen, isMahasiswa, kpGroups, supervisedGroups, filteredKpGroups, filteredLogbooks, filteredReports, students, lecturers, user]);
+    }, [isAdmin, isKoordinator, isDosen, isMahasiswa, kpGroups, supervisedGroups, filteredKpGroups, filteredLogbooks, filteredReports, students, lecturers, myGroup, myLogbooks, myReports]);
 
     /* RECENT ACTIVITIES */
     const recentActivities = useMemo(() => {
         const activities = [];
 
         const filteredGroups = filterByDate(kpGroups, period, 'created_at');
-        const filteredLogbooks = filterByDate(logbooks, period, 'created_at');
-        const filteredReports = filterByDate(reports, period, 'created_at');
+        const filteredLogb = filterByDate(logbooks, period, 'created_at');
+        const filteredReps = filterByDate(reports, period, 'created_at');
 
-        filteredGroups.forEach(group => {
-            const ketua = group.members?.find(m => m.role === 'ketua');
-            const name = ketua?.student?.user?.name || 'Kelompok';
+        filteredGroups.forEach((group) => {
+            const ketua = group.members?.find((m) => m.role === 'ketua');
+            const name = ketua?.student?.user?.name || 'Kelompok KP';
 
             if (group.status === 'submitted') {
-                activities.push({ name, status: 'Menunggu Validasi', type: 'Pendaftaran', date: group.created_at });
+                activities.push({ name, status: 'Menunggu', type: 'Pendaftaran', date: group.created_at });
             } else if (group.status === 'approved') {
                 activities.push({ name, status: 'Disetujui', type: 'Pendaftaran', date: group.updated_at });
             } else if (group.status === 'rejected') {
@@ -376,22 +452,22 @@ const Dashboard = () => {
             }
         });
 
-        filteredLogbooks.forEach(logbook => {
+        filteredLogb.forEach((logbook) => {
             const student = logbook.student?.user?.name || 'Mahasiswa';
             activities.push({
                 name: student,
-                status: logbook.status === 'approved' ? 'Disetujui' : 'Menunggu Validasi',
+                status: logbook.status === 'approved' ? 'Disetujui' : 'Menunggu',
                 type: 'Logbook',
                 date: logbook.created_at,
             });
         });
 
-        filteredReports.forEach(report => {
+        filteredReps.forEach((report) => {
             const group = report.kp_group;
-            const ketua = group?.members?.find(m => m.role === 'ketua');
-            const name = ketua?.student?.user?.name || 'Laporan';
+            const ketua = group?.members?.find((m) => m.role === 'ketua');
+            const name = ketua?.student?.user?.name || 'Laporan KP';
 
-            let status = 'Menunggu Validasi';
+            let status = 'Menunggu';
             if (report.status === 'approved') status = 'Disetujui';
             else if (report.status === 'rejected') status = 'Ditolak';
 
@@ -408,81 +484,259 @@ const Dashboard = () => {
         return (
             <div className="space-y-6">
                 <PageHeader title="Dashboard" description="Ringkasan sistem" icon={TrendingUp} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-28 rounded-2xl" />
+                    ))}
                 </div>
             </div>
         );
     }
 
-    const periodLabel = PERIOD_OPTIONS.find(p => p.value === period)?.label || '30 Hari';
+    const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label || '30 Hari';
 
     return (
         <div className="space-y-6">
+            {/* Header */}
             <PageHeader
-                title="Dashboard"
+                title="Dashboard Utama"
                 description={
-                    isAdmin ? 'Ringkasan sistem secara keseluruhan' :
-                        isKoordinator ? 'Ringkasan verifikasi dan plotting' :
-                            isDosen ? 'Ringkasan kelompok bimbingan Anda' :
-                                'Ringkasan kegiatan KP Anda'
+                    isAdmin
+                        ? 'Pengawasan operasional akademik, master data, dan akun pengguna.'
+                        : isKoordinator
+                        ? 'Monitoring verifikasi pendaftaran dan penugasan dosen pembimbing.'
+                        : isDosen
+                        ? 'Pantau progres bimbingan, logbook, dan laporan mahasiswa Anda.'
+                        : 'Pantau status pendaftaran, logbook harian, dan berkas kerja praktek Anda.'
                 }
                 icon={TrendingUp}
             />
 
-            {/* STATISTIK */}
+            {/* Mahasiswa Lifecycle Stepper Tracker */}
+            {isMahasiswa && (
+                <StepperTimeline steps={mahasiswaTimelineSteps} />
+            )}
+
+            {/* STATISTIK CARDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {stats.map((stat, index) => <Statistik key={index} {...stat} />)}
+                {stats.map((stat, index) => (
+                    <Statistik key={index} {...stat} />
+                ))}
             </div>
 
-            {/* GRAFIK + AKTIVITAS */}
+            {/* SECTION UTAMA BERDASARKAN PERAN */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* GRAFIK */}
-                {(isAdmin || isKoordinator || isDosen) && (
-                    <Card className="xl:col-span-2">
-                        <div className="px-5 sm:px-6 py-5 border-b border-gray-200 flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                                <h3 className="text-base font-semibold text-gray-900">Statistik Kelompok KP</h3>
-                                <p className="text-xs sm:text-sm text-gray-500">
-                                    Tren pendaftaran dan distribusi status kelompok dalam periode {periodLabel.toLowerCase()}.
-                                </p>
-                            </div>
-                            <Select
-                                options={PERIOD_OPTIONS}
-                                value={period}
-                                onChange={(e) => setPeriod(e.target.value)}
-                                className="w-40 shrink-0"
-                            />
-                        </div>
+                {/* MAHASISWA: DETAIL KELOMPOK & TEMPAT KP */}
+                {isMahasiswa && (
+                    <div className="xl:col-span-2 space-y-6">
+                        {!myGroup ? (
+                            <Card className="overflow-hidden bg-gradient-to-br from-emerald-900 to-slate-900 text-white border-0 shadow-lg p-6 sm:p-8">
+                                <div className="max-w-xl">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-semibold rounded-full ring-1 ring-emerald-400/30 mb-4">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        <span>Pendaftaran KP Dibuka</span>
+                                    </div>
+                                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                                        Mulai Perjalanan Kerja Praktek Anda
+                                    </h3>
+                                    <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                                        Anda belum terdaftar dalam kelompok kerja praktek manapun. Daftarkan kelompok bersama rekan Anda atau ajukan mandiri untuk memulai magang.
+                                    </p>
+                                    <div className="mt-6 flex flex-wrap gap-3">
+                                        <Link
+                                            to="/kp/kelompok"
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md"
+                                        >
+                                            <UserPlus className="w-4 h-4" />
+                                            <span>Daftar Kelompok KP Sekarang</span>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </Card>
+                        ) : (
+                            <Card className="p-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-3">
+                                    <div>
+                                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 block">
+                                            Informasi Kelompok KP
+                                        </span>
+                                        <h3 className="text-lg font-bold text-slate-800 mt-0.5">
+                                            {myGroup.kp_company?.name || 'Tempat KP Belum Ditentukan'}
+                                        </h3>
+                                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                            <Building2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                                            <span>{myGroup.kp_company?.address || 'Alamat perusahaan belum ada'}</span>
+                                        </p>
+                                    </div>
+                                    <div className="shrink-0">{getStatusBadge(myGroup.status)}</div>
+                                </div>
 
-                        <div className="p-4 sm:p-6">
-                            <div className="w-full overflow-hidden">
-                                <ResponsiveContainer width="100%" height={320}>
-                                    <LineChart data={trendData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} />
-                                        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                                        />
-                                        <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '12px' }} />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-5 border-b border-slate-100">
+                                    <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/60">
+                                        <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
+                                            Dosen Pembimbing
+                                        </span>
+                                        <p className="text-sm font-bold text-slate-800 mt-1">
+                                            {supervisorInfo?.name || 'Menunggu Penugasan Koordinator'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-0.5">
+                                            {supervisorInfo ? 'Dosen Pembimbing KP' : 'Plotting akan dilakukan segera'}
+                                        </p>
+                                    </div>
 
-                                        <Line type="monotone" dataKey="total" name="Total Pendaftaran" stroke="#10b981" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                        <Line type="monotone" dataKey="submitted" name="Menunggu" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                                        <Line type="monotone" dataKey="approved" name="Disetujui" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                                        <Line type="monotone" dataKey="rejected" name="Ditolak" stroke="#ef4444" strokeWidth={2} dot={false} />
-                                        <Line type="monotone" dataKey="ongoing" name="Berjalan" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                                        <Line type="monotone" dataKey="grading" name="Dinilai" stroke="#06b6d4" strokeWidth={2} dot={false} />
-                                        <Line type="monotone" dataKey="finished" name="Selesai" stroke="#6b7280" strokeWidth={2} dot={false} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </Card>
+                                    <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200/60">
+                                        <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">
+                                            Tema Kajian KP
+                                        </span>
+                                        <p className="text-sm font-bold text-slate-800 mt-1 truncate">
+                                            {myGroup.kp_theme?.title || 'Umum'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                                            {myGroup.kp_theme?.description || 'Tema penelitian magang'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Anggota Kelompok */}
+                                <div className="pt-4">
+                                    <span className="text-xs font-bold text-slate-700 block mb-2.5">
+                                        Anggota Kelompok ({myGroup.members?.length || 0} Mahasiswa)
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {myGroup.members?.map((m) => (
+                                            <div
+                                                key={m.id || m.student_id}
+                                                className="flex items-center justify-between p-2.5 bg-white border border-slate-200/70 rounded-xl"
+                                            >
+                                                <div className="min-w-0 pr-2">
+                                                    <p className="text-xs font-bold text-slate-800 truncate">
+                                                        {m.student?.name || 'Mahasiswa'}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 font-mono">
+                                                        {m.student?.nim || '-'}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                                        m.role === 'ketua'
+                                                            ? 'bg-amber-100 text-amber-800'
+                                                            : 'bg-slate-100 text-slate-600'
+                                                    }`}
+                                                >
+                                                    {m.role}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Quick Links */}
+                                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-2">
+                                    <Link
+                                        to="/kp/logbook"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                                    >
+                                        <BookOpen className="w-3.5 h-3.5" />
+                                        <span>Isi Logbook ({myLogbooks.length})</span>
+                                    </Link>
+                                    <Link
+                                        to="/kp/laporan"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                    >
+                                        <FileText className="w-3.5 h-3.5" />
+                                        <span>Laporan Akhir</span>
+                                    </Link>
+                                    <Link
+                                        to="/kp/nilai-saya"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                    >
+                                        <Award className="w-3.5 h-3.5" />
+                                        <span>Transkrip Nilai</span>
+                                    </Link>
+                                </div>
+                            </Card>
+                        )}
+                    </div>
                 )}
 
-                {/* AKTIVITAS TERBARU */}
-                <RecentActivity items={recentActivities} />
+                {/* DOSEN, KOORDINATOR & ADMIN: GRAFIK & WORKLOAD GAUGE */}
+                {(isAdmin || isKoordinator || isDosen) && (
+                    <div className="xl:col-span-2 space-y-6">
+                        {/* Workload Gauge for Dosen */}
+                        {isDosen && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <CapacityGauge
+                                    title="Kapasitas Bimbingan Kerja Praktek"
+                                    current={supervisedGroups.length}
+                                    max={10}
+                                    unit="Kelompok"
+                                    colorScheme="emerald"
+                                />
+                                <CapacityGauge
+                                    title="Kapasitas Bimbingan Tugas Akhir"
+                                    current={3}
+                                    max={8}
+                                    unit="Mahasiswa"
+                                    colorScheme="indigo"
+                                />
+                            </div>
+                        )}
+
+                        {/* Chart Card */}
+                        <Card className="overflow-hidden">
+                            <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                                <div className="min-w-0">
+                                    <h3 className="text-sm font-bold text-slate-800">Statistik Tren Pendaftaran KP</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Distribusi aktivitas pendaftaran kelompok dalam periode {periodLabel.toLowerCase()}.
+                                    </p>
+                                </div>
+                                <Select
+                                    options={PERIOD_OPTIONS}
+                                    value={period}
+                                    onChange={(e) => setPeriod(e.target.value)}
+                                    className="w-36 shrink-0"
+                                />
+                            </div>
+
+                            <div className="p-4 sm:p-6">
+                                <div className="w-full overflow-hidden">
+                                    <ResponsiveContainer width="100%" height={290}>
+                                        <LineChart data={trendData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
+                                            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    borderRadius: '12px',
+                                                    border: '1px solid #e2e8f0',
+                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                                                    fontSize: '12px',
+                                                }}
+                                            />
+                                            <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px' }} />
+
+                                            <Line
+                                                type="monotone"
+                                                dataKey="total"
+                                                name="Total Pengajuan"
+                                                stroke="#059669"
+                                                strokeWidth={2.5}
+                                                dot={{ r: 3, fill: '#059669' }}
+                                                activeDot={{ r: 5 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+                {/* AKTIVITAS TERBARU (KOLOM KANAN) */}
+                <div className="space-y-6">
+                    <RecentActivity items={recentActivities} />
+                </div>
             </div>
         </div>
     );

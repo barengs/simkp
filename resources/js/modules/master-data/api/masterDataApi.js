@@ -49,7 +49,10 @@ export const masterDataApi = createApi({
         'DocumentType',
         'Room',
     ],
-    keepUnusedDataFor: 600,
+    keepUnusedDataFor: 86400,
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
     endpoints: (builder) => ({
         // Study Program endpoints (program-studi -> study-program)
         getStudyPrograms: builder.query({
