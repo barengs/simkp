@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('student_id')->nullable()->constrained('student')->nullOnDelete();
             $table->string('file_url')->nullable();
             $table->timestamp('submitted_at')->nullable();
-            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected'])->default('draft');
+            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected', 'revision'])->default('draft');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

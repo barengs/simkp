@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('name');
             $table->date('start_date');
             $table->date('end_date');
+            $table->date('registration_start_date')->nullable();
+            $table->date('registration_end_date')->nullable();
+            $table->date('grading_start_date')->nullable();
+            $table->date('grading_end_date')->nullable();
             $table->integer('total_members')->nullable();
             $table->boolean('is_active')->default(false);
             $table->timestamps();

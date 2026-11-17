@@ -20,6 +20,10 @@ class AcademicPeriodSeeder extends Seeder
                 'name' => "Ganjil {$currentYear}/{$nextYear}",
                 'start_date' => Carbon::create($currentYear, 7, 1)->toDateString(),
                 'end_date' => Carbon::create($currentYear, 12, 31)->toDateString(),
+                'registration_start_date' => Carbon::create($currentYear, 7, 1)->toDateString(),
+                'registration_end_date' => Carbon::create($currentYear, 11, 30)->toDateString(),
+                'grading_start_date' => Carbon::create($currentYear, 12, 1)->toDateString(),
+                'grading_end_date' => Carbon::create($currentYear, 12, 25)->toDateString(),
                 'total_members' => 3,
                 'is_active' => true,
                 'created_at' => $now,
@@ -29,6 +33,10 @@ class AcademicPeriodSeeder extends Seeder
                 'name' => "Genap {$currentYear}/{$nextYear}",
                 'start_date' => Carbon::create($nextYear, 1, 1)->toDateString(),
                 'end_date' => Carbon::create($nextYear, 6, 30)->toDateString(),
+                'registration_start_date' => Carbon::create($nextYear, 1, 1)->toDateString(),
+                'registration_end_date' => Carbon::create($nextYear, 1, 31)->toDateString(),
+                'grading_start_date' => Carbon::create($nextYear, 6, 1)->toDateString(),
+                'grading_end_date' => Carbon::create($nextYear, 6, 25)->toDateString(),
                 'total_members' => 3,
                 'is_active' => false,
                 'created_at' => $now,
@@ -38,6 +46,10 @@ class AcademicPeriodSeeder extends Seeder
                 'name' => "Genap {$prevYear}/{$currentYear}",
                 'start_date' => Carbon::create($currentYear, 1, 1)->toDateString(),
                 'end_date' => Carbon::create($currentYear, 6, 30)->toDateString(),
+                'registration_start_date' => Carbon::create($currentYear, 1, 1)->toDateString(),
+                'registration_end_date' => Carbon::create($currentYear, 1, 31)->toDateString(),
+                'grading_start_date' => Carbon::create($currentYear, 6, 1)->toDateString(),
+                'grading_end_date' => Carbon::create($currentYear, 6, 25)->toDateString(),
                 'total_members' => 3,
                 'is_active' => false,
                 'created_at' => $now,
@@ -47,6 +59,10 @@ class AcademicPeriodSeeder extends Seeder
                 'name' => "Ganjil {$prevYear}/{$currentYear}",
                 'start_date' => Carbon::create($prevYear, 7, 1)->toDateString(),
                 'end_date' => Carbon::create($prevYear, 12, 31)->toDateString(),
+                'registration_start_date' => Carbon::create($prevYear, 7, 1)->toDateString(),
+                'registration_end_date' => Carbon::create($prevYear, 8, 31)->toDateString(),
+                'grading_start_date' => Carbon::create($prevYear, 12, 1)->toDateString(),
+                'grading_end_date' => Carbon::create($prevYear, 12, 25)->toDateString(),
                 'total_members' => 3,
                 'is_active' => false,
                 'created_at' => $now,
@@ -56,6 +72,10 @@ class AcademicPeriodSeeder extends Seeder
                 'name' => "Semester Pendek {$currentYear}",
                 'start_date' => Carbon::create($currentYear, 7, 1)->toDateString(),
                 'end_date' => Carbon::create($currentYear, 8, 31)->toDateString(),
+                'registration_start_date' => Carbon::create($currentYear, 7, 1)->toDateString(),
+                'registration_end_date' => Carbon::create($currentYear, 7, 15)->toDateString(),
+                'grading_start_date' => Carbon::create($currentYear, 8, 15)->toDateString(),
+                'grading_end_date' => Carbon::create($currentYear, 8, 30)->toDateString(),
                 'total_members' => 3,
                 'is_active' => false,
                 'created_at' => $now,
@@ -67,6 +87,6 @@ class AcademicPeriodSeeder extends Seeder
             AcademicPeriod::updateOrCreate(['name' => $period['name']], $period);
         }
 
-        $this->command->info("5 academic periods created successfully for year {$currentYear}!");
+        $this->command->info("5 academic periods created successfully with registration & grading schedules for year {$currentYear}!");
     }
 }

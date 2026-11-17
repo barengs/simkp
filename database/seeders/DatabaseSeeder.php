@@ -26,18 +26,12 @@ class DatabaseSeeder extends Seeder
         $this->call(KpThemeSeeder::class);
         $this->call(KpCompanySeeder::class);
 
-        // 6. Dosen & Mahasiswa (termasuk profil demo user dosen & mahasiswa)
+        // 6. Dosen & Mahasiswa (Master Data Pengguna)
         $this->call(LecturerSeeder::class);
         $this->call(StudentSeeder::class);
 
         // 7. Pengaturan Sistem
         $this->call(SettingSeeder::class);
         $this->call(ApplicationSettingSeeder::class);
-
-        // 8. Kelompok KP, Anggota, Dokumen & Logbook (tahun ini, bulan ini, waktu/jam sekarang)
-        $this->call(KpGroupSeeder::class);
-
-        // 9. Tugas Akhir (TA) & Bimbingan (tahun ini, bulan ini, waktu/jam sekarang)
-        $this->call(FinalProjectSeeder::class);
     }
 }

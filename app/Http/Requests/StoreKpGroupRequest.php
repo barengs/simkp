@@ -81,6 +81,18 @@ class StoreKpGroupRequest extends FormRequest
                 return;
             }
 
+            // Validasi jadwal pendaftaran periode akademik
+            if ($period->registration_start_date && $period->registration_end_date) {
+                if (!$period->isRegistrationOpen()) {
+                    $regStart = $period->registration_start_date->format('d/m/Y');
+                    $regEnd = $period->registration_end_date->format('d/m/Y');
+                    $validator->errors()->add(
+                        'academic_period_id',
+                        "Pendaftaran KP di luar jadwal resmi. Jadwal pendaftaran dibuka pada tanggal {$regStart} s/d {$regEnd}."
+                    );
+                }
+            }
+
             $start = \Carbon\Carbon::parse($startDate);
             $end = \Carbon\Carbon::parse($endDate);
             $periodStart = \Carbon\Carbon::parse($period->start_date);
