@@ -86,7 +86,7 @@ const Sidebar = ({ isOpen = true }) => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 py-5 space-y-1.5 overflow-y-auto custom-scroll px-0">
+      <nav className="flex-1 py-3 space-y-0.5 overflow-y-auto custom-scroll px-0">
         {visibleMenu.map((item) => {
           if (item.type === 'section') {
             const visibleChildren = item.children.filter(
@@ -95,10 +95,10 @@ const Sidebar = ({ isOpen = true }) => {
             if (visibleChildren.length === 0) return null;
 
             return (
-              <div key={item.label} className="space-y-1">
+              <div key={item.label} className="space-y-0.5">
                 {/* Section Header - tidak klikable */}
                 <div
-                  className={`px-6 py-2 text-xs font-bold uppercase tracking-wider text-emerald-300/80 ${!isOpen ? 'text-center' : ''
+                  className={`px-6 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-300/80 ${!isOpen ? 'text-center' : ''
                     }`}
                 >
                   {isOpen && item.label}
@@ -113,7 +113,7 @@ const Sidebar = ({ isOpen = true }) => {
                       key={child.path}
                       to={child.path}
                       title={isOpen ? child.label : undefined}
-                      className={`flex items-center gap-3 px-6 py-2.5 text-sm font-medium transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
+                      className={`flex items-center gap-3 px-6 py-1.5 text-sm font-medium transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
                         } ${childActive
                           ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-md'
                           : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'
@@ -135,11 +135,11 @@ const Sidebar = ({ isOpen = true }) => {
 
           if (hasChildren) {
             return (
-              <div key={item.label} className="space-y-1">
+              <div key={item.label} className="space-y-0.5">
                 <button
                   onClick={() => toggleSubmenu(item.label)}
                   title={isOpen ? item.label : undefined}
-                  className={`w-full flex items-center justify-between gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${isOpen ? '' : 'justify-center px-0'
+                  className={`w-full flex items-center justify-between gap-3 px-6 py-2 text-sm font-semibold transition-all rounded-none ${isOpen ? '' : 'justify-center px-0'
                     } ${active
                       ? 'bg-amber-400 text-amber-950 border-r-4 border-amber-600 shadow-md'
                       : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'
@@ -169,7 +169,7 @@ const Sidebar = ({ isOpen = true }) => {
                       : 'grid-rows-[0fr] opacity-0'
                     }`}
                 >
-                  <div className="overflow-hidden space-y-1">
+                  <div className="overflow-hidden space-y-0.5">
                     {item.children
                       .filter((child) => !child.permission || permissions.includes(child.permission))
                       .map((child) => {
@@ -179,7 +179,7 @@ const Sidebar = ({ isOpen = true }) => {
                           <Link
                             key={child.path}
                             to={child.path}
-                            className={`flex items-center gap-3 pl-16 pr-6 py-2.5 text-sm transition-all rounded-none ${childActive
+                            className={`flex items-center gap-3 pl-16 pr-6 py-1.5 text-sm transition-all rounded-none ${childActive
                                 ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-sm'
                                 : 'text-emerald-200/70 hover:text-white hover:bg-emerald-900/20'
                               }`}
@@ -200,7 +200,7 @@ const Sidebar = ({ isOpen = true }) => {
               key={item.path}
               to={item.path}
               title={isOpen ? item.label : undefined}
-              className={`flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
+              className={`flex items-center gap-3 px-6 py-2 text-sm font-semibold transition-all rounded-none ${!isOpen ? 'justify-center px-0' : ''
                 } ${active
                   ? 'bg-amber-300/20 text-amber-300 border-r-4 border-amber-300 shadow-md'
                   : 'text-emerald-100 hover:bg-emerald-900/60 hover:text-yellow-400'

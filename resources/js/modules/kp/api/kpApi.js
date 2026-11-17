@@ -276,11 +276,11 @@ export const kpApi = createApi({
         }),
         assignSupervisor: builder.mutation({
             query: (body) => ({ url: '/kp-plotting/assign', method: 'POST', body }),
-            invalidatesTags: ['Plotting', 'KpGroup'],
+            invalidatesTags: ['Plotting', 'KpGroup', 'Verifikasi'],
         }),
         removeSupervisor: builder.mutation({
             query: (kpGroupId) => ({ url: `/kp-plotting/groups/${kpGroupId}/remove`, method: 'DELETE' }),
-            invalidatesTags: ['Plotting', 'KpGroup'],
+            invalidatesTags: ['Plotting', 'KpGroup', 'Verifikasi'],
         }),
 
         // ── Upload Dokumen KP ──────────────────────────────────────────────────
@@ -300,11 +300,11 @@ export const kpApi = createApi({
         // ── Approval Dokumen ──────────────────────────────────────────────────
         approveKpDocument: builder.mutation({
             query: (id) => ({ url: `/kp-document/${id}/approve`, method: 'POST' }),
-            invalidatesTags: ['KpDocument', 'KpGroup'],
+            invalidatesTags: ['KpDocument', 'KpGroup', 'Verifikasi'],
         }),
         rejectKpDocument: builder.mutation({
             query: (id) => ({ url: `/kp-document/${id}/reject`, method: 'POST' }),
-            invalidatesTags: ['KpDocument', 'KpGroup'],
+            invalidatesTags: ['KpDocument', 'KpGroup', 'Verifikasi'],
         }),
         submitDocumentRevision: builder.mutation({
             query: ({ groupId, documentId, notes }) => ({
@@ -312,7 +312,7 @@ export const kpApi = createApi({
                 method: 'POST',
                 body: { notes, group_id: groupId },
             }),
-            invalidatesTags: ['KpDocument', 'KpGroup'],
+            invalidatesTags: ['KpDocument', 'KpGroup', 'Verifikasi'],
         }),
     }),
 });

@@ -56,7 +56,8 @@ class RegistrationVerificationResource extends JsonResource
                     'file_url' => $d->file_url,
                     'status' => $d->status,
                     'submitted_at' => $d->submitted_at,
-                    'remarks' => $d->remarks,
+                    'remarks' => $d->notes ?? $d->remarks,
+                    'notes' => $d->notes,
                     'document_type' => $d->documentType ? [
                         'id'   => $d->documentType->id,
                         'name' => $d->documentType->name,

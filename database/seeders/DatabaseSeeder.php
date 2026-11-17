@@ -8,33 +8,36 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create roles, permissions and demo users
+        // 1. Roles, permissions, dan demo users
         $this->call(RolePermissionSeeder::class);
         $this->call(RoleManagementSeeder::class);
 
-        // Seed institutions (Indonesian universities)
+        // 2. Institusi & Program Studi
         $this->call(InstitutionSeeder::class);
-
-        // Seed study programs (Indonesian program names)
         $this->call(StudyProgramSeeder::class);
 
-        // Seed academic periods (KP registration periods)
+        // 3. Periode Akademik (tahun ini & bulan ini aktif)
         $this->call(AcademicPeriodSeeder::class);
 
-        // Seed KP themes
-        $this->call(KpThemeSeeder::class);
+        // 4. Tipe Dokumen Persyaratan
+        $this->call(DocumentTypeSeeder::class);
 
-        // Seed KP partners (Mitra)
+        // 5. Tema & Mitra KP
+        $this->call(KpThemeSeeder::class);
         $this->call(KpCompanySeeder::class);
 
-        // Seed lecturers (Indonesian names)
+        // 6. Dosen & Mahasiswa (termasuk profil demo user dosen & mahasiswa)
         $this->call(LecturerSeeder::class);
-
-        // Seed students (Indonesian names)
         $this->call(StudentSeeder::class);
 
-        // Seed remaining master data
+        // 7. Pengaturan Sistem
         $this->call(SettingSeeder::class);
         $this->call(ApplicationSettingSeeder::class);
+
+        // 8. Kelompok KP, Anggota, Dokumen & Logbook (tahun ini, bulan ini, waktu/jam sekarang)
+        $this->call(KpGroupSeeder::class);
+
+        // 9. Tugas Akhir (TA) & Bimbingan (tahun ini, bulan ini, waktu/jam sekarang)
+        $this->call(FinalProjectSeeder::class);
     }
 }
