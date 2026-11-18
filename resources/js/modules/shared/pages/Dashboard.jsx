@@ -21,7 +21,6 @@ import Skeleton from '../../../components/ui/Skeleton';
 import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import Select from '../../../components/ui/Select';
-import StepperTimeline from '../../../components/ui/StepperTimeline';
 import CapacityGauge from '../../../components/ui/CapacityGauge';
 
 import {
@@ -235,6 +234,122 @@ const RecentActivity = ({ items }) => {
 };
 
 /* =========================================================
+ * TIMELINE VERTIKAL MAHASISWA (AKTIVITAS & TAHAPAN TERKINI)
+ * ========================================================= */
+
+const MahasiswaTimelineVertical = ({ steps = [] }) => {
+    return (
+        <Card className="overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 className="text-sm font-bold text-slate-800">Aktivitas Terkini</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Linimasa progres Kerja Praktek Anda</p>
+                </div>
+                <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                    Linimasa
+                </span>
+            </div>
+
+            <div className="p-5 sm:p-6">
+                <div className="relative pl-6 space-y-5 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                    {steps.map((step, idx) => {
+                        const isCompleted = step.status === 'completed';
+                        const isCurrent = step.status === 'current';
+                        const isWarning = step.status === 'warning';
+
+                        return (
+                            <div key={step.id || idx} className="relative group">
+                                {/* Connector Dot / Icon */}
+                                <div
+                                    className={`absolute -left-6 top-0.5 w-6 h-6 rounded-full flex items-center justify-center transition-all shadow-xs ${
+                                        isCompleted
+                                            ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                                            : isCurrent
+                                            ? 'bg-emerald-500 text-white ring-4 ring-emerald-200 animate-pulse'
+                                            : isWarning
+                                            ? 'bg-amber-500 text-white ring-4 ring-amber-100'
+                                            : 'bg-white text-slate-400 border border-slate-300'
+                                    }`}
+                                >
+                                    {isCompleted ? (
+                                        <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    ) : isCurrent ? (
+                                        <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    ) : isWarning ? (
+                                        <AlertCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    ) : (
+                                        <span className="text-[10px] font-bold text-slate-500">{idx + 1}</span>
+                                    )}
+                                </div>
+
+                                {/* Content Box */}
+                                <div
+                                    className={`p-3.5 rounded-xl border transition-all ${
+                                        isCurrent
+                                            ? 'bg-emerald-50/50 border-emerald-200/80 shadow-xs'
+                                            : isWarning
+                                            ? 'bg-amber-50/50 border-amber-200/80'
+                                            : isCompleted
+                                            ? 'bg-white border-slate-200/70 hover:border-slate-300'
+                                            : 'bg-slate-50/40 border-slate-100 opacity-75'
+                                    }`}
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <h4
+                                            className={`text-xs font-bold ${
+                                                isCurrent ? 'text-emerald-950' : 'text-slate-800'
+                                            }`}
+                                        >
+                                            {step.title}
+                                        </h4>
+                                        <span
+                                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 uppercase tracking-wide ${
+                                                isCompleted
+                                                    ? 'bg-emerald-100 text-emerald-800'
+                                                    : isCurrent
+                                                    ? 'bg-emerald-600 text-white'
+                                                    : isWarning
+                                                    ? 'bg-amber-100 text-amber-800'
+                                                    : 'bg-slate-100 text-slate-500'
+                                            }`}
+                                        >
+                                            {isCompleted ? 'Selesai' : isCurrent ? 'Berjalan' : isWarning ? 'Perhatian' : 'Menunggu'}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                                        {step.subtitle}
+                                    </p>
+
+                                    {step.date && (
+                                        <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            <span>{formatDateTime(step.date)}</span>
+                                        </p>
+                                    )}
+
+                                    {step.actionLink && (
+                                        <div className="mt-2.5 pt-2 border-t border-slate-200/60">
+                                            <Link
+                                                to={step.actionLink}
+                                                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+                                            >
+                                                <span>{step.actionText || 'Lanjutkan'}</span>
+                                                <ArrowRight className="w-3.5 h-3.5" />
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </Card>
+    );
+};
+
+/* =========================================================
  * DASHBOARD UTAMA
  * ========================================================= */
 
@@ -316,9 +431,10 @@ const Dashboard = () => {
         return [
             {
                 id: 'step-1',
-                title: '1. Pendaftaran',
-                subtitle: hasGroup ? (myGroup.kp_company?.name || 'Kelompok terdaftar') : 'Belum mendaftar',
+                title: '1. Pendaftaran Kelompok',
+                subtitle: hasGroup ? (myGroup.kp_company?.name || 'Kelompok terdaftar') : 'Belum mendaftar kelompok KP',
                 status: hasGroup ? 'completed' : 'current',
+                date: myGroup?.created_at || null,
                 actionLink: !hasGroup ? '/kp/kelompok' : null,
                 actionText: 'Daftar Sekarang',
             },
@@ -326,9 +442,9 @@ const Dashboard = () => {
                 id: 'step-2',
                 title: '2. Verifikasi Berkas',
                 subtitle: !hasGroup
-                    ? 'Menunggu pendaftaran'
+                    ? 'Menunggu pendaftaran kelompok'
                     : isApproved
-                    ? 'Berkas disetujui'
+                    ? 'Berkas disetujui Koordinator'
                     : isRevision
                     ? 'Perlu perbaikan berkas'
                     : isRejected
@@ -341,6 +457,7 @@ const Dashboard = () => {
                     : isSubmitted
                     ? 'current'
                     : 'pending',
+                date: (isApproved || isRejected || isRevision) ? myGroup?.updated_at : null,
                 actionLink: isRevision ? '/kp/kelompok' : null,
                 actionText: 'Lihat Catatan',
             },
@@ -350,33 +467,34 @@ const Dashboard = () => {
                 subtitle: hasSupervisor
                     ? supervisorInfo.name
                     : isApproved
-                    ? 'Menunggu penugasan'
-                    : 'Tahap berikutnya',
+                    ? 'Menunggu penugasan oleh Koordinator'
+                    : 'Tahap berikutnya setelah disetujui',
                 status: hasSupervisor
                     ? 'completed'
                     : isApproved
                     ? 'current'
                     : 'pending',
+                date: hasSupervisor ? myGroup?.updated_at : null,
             },
             {
                 id: 'step-4',
                 title: '4. Logbook & Magang',
                 subtitle: hasSupervisor
-                    ? `${myLogbooks.length} aktivitas dicatat`
+                    ? `${myLogbooks.length} logbook aktivitas dicatat`
                     : 'Belum dimulai',
                 status: hasSupervisor
-                    ? hasLogbooks
-                        ? 'current'
-                        : 'current'
+                    ? (myLogbooks.length > 0 ? 'completed' : 'current')
                     : 'pending',
+                date: myLogbooks[0]?.created_at || null,
                 actionLink: hasSupervisor ? '/kp/logbook' : null,
                 actionText: 'Buka Logbook',
             },
             {
                 id: 'step-5',
                 title: '5. Laporan & Nilai',
-                subtitle: hasReport ? 'Laporan diunggah' : 'Menunggu laporan akhir',
+                subtitle: hasReport ? 'Laporan akhir telah diunggah' : 'Menunggu pengumpulan laporan akhir',
                 status: hasReport ? 'completed' : 'pending',
+                date: myReports[0]?.created_at || null,
                 actionLink: hasSupervisor ? '/kp/laporan' : null,
                 actionText: 'Unggah Laporan',
             },
@@ -511,11 +629,6 @@ const Dashboard = () => {
                 }
                 icon={TrendingUp}
             />
-
-            {/* Mahasiswa Lifecycle Stepper Tracker */}
-            {isMahasiswa && (
-                <StepperTimeline steps={mahasiswaTimelineSteps} />
-            )}
 
             {/* STATISTIK CARDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -735,7 +848,11 @@ const Dashboard = () => {
 
                 {/* AKTIVITAS TERBARU (KOLOM KANAN) */}
                 <div className="space-y-6">
-                    <RecentActivity items={recentActivities} />
+                    {isMahasiswa ? (
+                        <MahasiswaTimelineVertical steps={mahasiswaTimelineSteps} />
+                    ) : (
+                        <RecentActivity items={recentActivities} />
+                    )}
                 </div>
             </div>
         </div>

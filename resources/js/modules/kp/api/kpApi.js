@@ -33,11 +33,11 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const kpApi = createApi({
     reducerPath: 'kpApi',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument', 'KpGrade', 'EvaluationCriteria', 'Plotting'],
-    keepUnusedDataFor: 86400,
-    refetchOnMountOrArgChange: false,
-    refetchOnFocus: false,
-    refetchOnReconnect: false,
+    tagTypes: ['KpGroup', 'KpCompany', 'Logbook', 'Verifikasi', 'DocumentType', 'KpDocument', 'KpGrade', 'EvaluationCriteria', 'Plotting', 'Report'],
+    keepUnusedDataFor: 60,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
     endpoints: (builder) => ({
 
         // ── Kelompok KP ────────────────────────────────────────────────────────
@@ -167,21 +167,23 @@ export const kpApi = createApi({
 
                 return { url: `/report/${id}`, method: 'PUT', body };
             },
-            invalidatesTags: ['Report'],
+            invalidatesTags: ['Report', 'KpGrade', 'KpGroup', 'Plotting'],
         }),
         deleteReport: builder.mutation({
             query: (id) => ({ url: `/report/${id}`, method: 'DELETE' }),
-            invalidatesTags: ['Report'],
+            invalidatesTags: ['Report', 'KpGrade', 'KpGroup', 'Plotting'],
         }),
 
         // ── Kp Grade ─────────────────────────────────────────────────────────────
         getKpGrade: builder.query({
             query: (groupId) => groupId ? `/kp-grade?group_id=${groupId}` : '/kp-grade',
             providesTags: ['KpGrade'],
+            refetchOnMountOrArgChange: true,
+            keepUnusedDataFor: 0,
         }),
         createKpGrade: builder.mutation({
             query: (body) => ({ url: '/kp-grade', method: 'POST', body }),
-            invalidatesTags: ['KpGrade'],
+            invalidatesTags: ['KpGrade', 'KpGroup', 'Plotting'],
         }),
         updateKpGrade: builder.mutation({
             query: (arg) => {
@@ -193,19 +195,23 @@ export const kpApi = createApi({
                 }
                 return { url: `/kp-grade/${id}`, method: 'PUT', body };
             },
-            invalidatesTags: ['KpGrade'],
+            invalidatesTags: ['KpGrade', 'KpGroup', 'Plotting'],
         }),
         deleteKpGrade: builder.mutation({
             query: (id) => ({ url: `/kp-grade/${id}`, method: 'DELETE' }),
-            invalidatesTags: ['KpGrade'],
+            invalidatesTags: ['KpGrade', 'KpGroup', 'Plotting'],
         }),
         createGroupGrade: builder.mutation({
             query: (body) => ({ url: '/kp-grade/group', method: 'POST', body }),
-            invalidatesTags: ['KpGrade', 'KpGroup'],
+            invalidatesTags: ['KpGrade', 'KpGroup', 'Plotting'],
         }),
         getSupervisedGroups: builder.query({
             query: () => '/kp-grade/supervised-groups',
             providesTags: ['KpGrade'],
+            refetchOnMountOrArgChange: true,
+            refetchOnFocus: true,
+            refetchOnReconnect: true,
+            keepUnusedDataFor: 0,
         }),
 
         // ── Evaluation Criteria ──────────────────────────────────────────────────

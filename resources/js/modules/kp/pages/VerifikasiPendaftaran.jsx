@@ -748,6 +748,7 @@ const PlottingModal = ({ isOpen, onClose, onConfirm, submitting, data, lecturers
             onClose={handleClose}
             title="Plotting Dosen Pembimbing"
             size="md"
+            overflowVisible={true}
         >
             <div className="space-y-4">
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-800 flex items-start gap-2">

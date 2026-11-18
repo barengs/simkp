@@ -69,6 +69,17 @@ class KpGroupResource extends JsonResource
                     'created_at'      => $d->created_at,
                 ])
             ),
+            // Laporan akhir yang diunggah
+            'reports' => $this->whenLoaded('reports', fn () =>
+                $this->reports->map(fn ($r) => [
+                    'id'          => $r->id,
+                    'title'       => $r->title,
+                    'file_url'    => $r->file_url,
+                    'status'      => $r->status,
+                    'description' => $r->description,
+                    'created_at'  => $r->created_at,
+                ])
+            ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

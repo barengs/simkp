@@ -89,15 +89,21 @@ class RolePermissionSeeder extends Seeder
         // Admin → semua permission
         $roleAdmin->syncPermissions(Permission::all());
 
-        // Koordinator → verifikasi & plotting KP/TA, monitoring, repository
+        // Koordinator → verifikasi & plotting KP/TA, monitoring, penilaian, repository
         $roleKoordinator->syncPermissions([
             'kp.verifikasi-pendaftaran',
             'kp.daftar-kelompok',
             'kp.plotting-dosen',
+            'kp.validasi-logbook',
+            'kp.validasi-laporan',
+            'kp.nilai',
             'ta.verifikasi-judul',
             'ta.plotting-dosen',
+            'ta.nilai',
             'repository.publish',
             'repository.view',
+            'kp.detail-kelompok',
+        ]);
             'kp.detail-kelompok',
         ]);
 

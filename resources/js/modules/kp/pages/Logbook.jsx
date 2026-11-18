@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
     useGetLogbookQuery,
     useCreateLogbookMutation,
@@ -19,7 +18,7 @@ import Textarea from '../../../components/ui/Textarea';
 import Statistik from '../../../components/ui/Statistik';
 import DataTableWrapper from '../../../components/ui/DataTableWrapper';
 import {
-    FileText, Search, Plus, Upload, Trash2, Pencil, CalendarDays, Clock, CheckCircle2, UserRound, ClipboardList, Eye,
+    FileText, Search, Plus, Upload, Trash2, Pencil, CalendarDays, Clock, CheckCircle2, UserRound, ClipboardList,
 } from 'lucide-react';
 
 
@@ -50,7 +49,6 @@ const isImageFile = (url) => {
 };
 
 const Logbook = () => {
-    const navigate = useNavigate();
     const authUser = useSelector(s => s.auth.user);
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -212,16 +210,15 @@ const Logbook = () => {
             center: true,
             cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
-                    {row.status === 'pending' && authUser?.student?.id === row.student_id && (
+                    {row.status === 'pending' && authUser?.student?.id === row.student_id ? (
                         <>
-                            <Button size="sm" variant="secondary" icon={Pencil} onClick={() => handleEdit(row)} />
-                            <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleDelete(row.id)} />
+                            <Button size="sm" variant="secondary" icon={Pencil} onClick={() => handleEdit(row)} title="Edit" />
+                            <Button size="sm" variant="danger" icon={Trash2} onClick={() => handleDelete(row.id)} title="Hapus" />
                         </>
+                    ) : (
+                        <span className="text-xs text-gray-400">-</span>
                     )}
-                    {/* Detail button */}
-                    <Button size="sm" variant="secondary" icon={Eye} onClick={() => navigate(`/kp/daftar-kelompok/${row.kp_group_id}`)} />
                 </div>
-
             ),
         },
     ];

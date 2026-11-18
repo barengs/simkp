@@ -279,6 +279,7 @@ const PlottingDosenTA = () => {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 title="Tetapkan Dosen Pembimbing"
+                overflowVisible={true}
             >
                 {selected && (
                     <div className="space-y-4">

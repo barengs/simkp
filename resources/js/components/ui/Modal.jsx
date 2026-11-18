@@ -1,7 +1,16 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, size = 'md', footer }) => {
+const Modal = ({
+    isOpen,
+    onClose,
+    title,
+    children,
+    size = 'md',
+    footer,
+    overflowVisible = false,
+    className = '',
+}) => {
     if (!isOpen) return null;
 
     const sizes = {
@@ -23,7 +32,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', footer }) => {
                 />
 
                 {/* Panel */}
-                <div className={`relative w-full ${sizes[size]} bg-white rounded-xl shadow-xl transform transition-all`}>
+                <div className={`relative w-full ${sizes[size]} bg-white rounded-xl shadow-xl transform transition-all ${overflowVisible ? 'overflow-visible' : ''}`}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -36,7 +45,9 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', footer }) => {
                     </div>
 
                     {/* Body */}
-                    <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
+                    <div className={`px-6 py-4 ${overflowVisible ? 'overflow-visible' : 'max-h-[70vh] overflow-y-auto'} ${className}`}>
+                        {children}
+                    </div>
 
                     {/* Footer */}
                     {footer && (

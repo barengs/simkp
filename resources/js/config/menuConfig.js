@@ -41,7 +41,7 @@ export const menuConfig = [
         children: [
             { label: 'Verifikasi Pendaftaran', path: '/kp/verifikasi', permission: 'kp.verifikasi-pendaftaran', icon: CheckCircle },
             { label: 'Pendaftaran Kelompok', path: '/kp/kelompok', permission: 'kp.pendaftaran-kelompok', icon: UserPlus },
-            { label: 'Daftar Kelompok', path: '/kp/daftar-kelompok', permission: 'kp.plotting-dosen', icon: UsersRound },
+            { label: 'Daftar Kelompok', path: '/kp/daftar-kelompok', permission: 'kp.daftar-kelompok', icon: UsersRound },
             { label: 'Logbook', path: '/kp/logbook', permission: 'kp.logbook', icon: BookOpen },
             { label: 'Validasi Logbook', path: '/kp/logbook/validasi', permission: 'kp.validasi-logbook', icon: ClipboardList },
             { label: 'Laporan KP', path: '/kp/laporan', permission: 'kp.laporan', icon: FileText },

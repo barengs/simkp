@@ -67,7 +67,14 @@ class KpGradeController extends Controller
 
         return response()->json(
             KpGradeResource::collection(
-                \App\Models\KpGrade::with(['evaluationCriteria', 'kpGroupMember.kpGroup'])
+                \App\Models\KpGrade::with([
+                    'evaluationCriteria',
+                    'kpGroupMember.kpGroup.kpCompany',
+                    'kpGroupMember.kpGroup.academicPeriod',
+                    'kpGroupMember.kpGroup.kpTheme',
+                    'kpGroupMember.supervisor.user',
+                    'kpGroupMember.kpGroup.members.student.user',
+                ])
                     ->whereIn('kp_group_member_id', $memberIds)
                     ->get()
             )
@@ -130,7 +137,12 @@ class KpGradeController extends Controller
             ->where('supervisor_lecturer_id', $lecturerId)
             ->exists();
 
-        if (!$isSupervisor && !$user->can('master-data.manage') && !$user->can('kp.nilai')) {
+        $canGrade = $isSupervisor
+            || $user->hasAnyRole(['admin', 'koordinator'])
+            || $user->can('master-data.manage')
+            || $user->can('kp.nilai');
+
+        if (!$canGrade) {
             abort(403, 'Anda tidak diizinkan menilai kelompok ini.');
         }
 
@@ -146,19 +158,20 @@ class KpGradeController extends Controller
     {
         $user = request()->user();
 
-        if (!$user->hasRole('dosen') && !$user->can('kp.nilai')) {
+        if (!$user->hasAnyRole(['admin', 'koordinator', 'dosen']) && !$user->can('kp.nilai')) {
             abort(403, 'Anda tidak diizinkan mengakses data ini.');
         }
 
-        $isAdmin = $user->can('kp.nilai');
+        $canViewAll = $user->hasAnyRole(['admin', 'koordinator']) || $user->can('master-data.manage');
         $lecturerId = optional($user->lecturer)->id;
 
         $query = \App\Models\KpGroup::whereHas('reports', function ($q) {
             $q->where('status', 'approved');
         })
-        ->with(['members.student.user', 'reports', 'kpCompany', 'academicPeriod']);
+        ->with(['members.student.user', 'members.supervisor.user', 'reports', 'kpCompany', 'academicPeriod']);
 
-        if (!$isAdmin) {
+        // Jika dosen murni (bukan admin dan bukan koordinator), tampilkan kelompok yang dibimbingnya
+        if (!$canViewAll && $user->hasRole('dosen')) {
             if (!$lecturerId) {
                 return response()->json([]);
             }
@@ -168,7 +181,7 @@ class KpGradeController extends Controller
             });
         }
 
-        $groups = $query->get();
+        $groups = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json(KpGroupResource::collection($groups));
     }

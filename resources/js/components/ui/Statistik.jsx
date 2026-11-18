@@ -7,10 +7,13 @@ const Statistik = ({
     iconClassName = 'text-emerald-600',
     borderClassName = 'bg-emerald-500',
     description,
+    className = '',
+    onClick,
 }) => {
     return (
         <div
-            className="
+            onClick={onClick}
+            className={`
                 relative
                 flex
                 items-center
@@ -19,13 +22,15 @@ const Statistik = ({
                 px-5
                 py-4
                 bg-white
-                rounded-lg
-                shadow-sm
+                rounded-md
+                border border-gray-100
+                shadow-2xs
                 overflow-hidden
                 transition-all
                 duration-200
-                hover:shadow-md
-            "
+                ${onClick ? 'cursor-pointer hover:shadow-md' : 'hover:shadow-sm'}
+                ${className}
+            `}
         >
             {/* Border kiri */}
             <div
@@ -48,8 +53,8 @@ const Statistik = ({
                     shrink-0
                     w-11
                     h-11
-                    rounded-lg
-                    bg-gray-50
+                    rounded-md
+                    ${!iconClassName?.includes('bg-') ? 'bg-gray-50' : ''}
                     ${iconClassName}
                 `}
             >
@@ -62,7 +67,7 @@ const Statistik = ({
             </div>
 
             {/* Content */}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-500 truncate">
                     {title}
                 </p>
@@ -72,7 +77,7 @@ const Statistik = ({
                 </p>
 
                 {description && (
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1.5 text-xs text-gray-400 truncate">
                         {description}
                     </p>
                 )}

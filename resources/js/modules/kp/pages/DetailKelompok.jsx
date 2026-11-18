@@ -6,6 +6,7 @@ import {
     useGetKpGroupByIdQuery,
     useGetLogbookQuery,
     useUpdateLogbookMutation,
+    useGetReportQuery,
 } from '../api/kpApi';
 
 import {
@@ -44,6 +45,8 @@ import {
     Eye,
     Check,
     Image,
+    Award,
+    Download,
 } from 'lucide-react';
 
 
@@ -461,6 +464,186 @@ const ActionModal = ({
 
 };
 
+/* =========================================================
+   LOGBOOK DETAIL MODAL
+========================================================= */
+
+const LogbookDetailModal = ({
+    isOpen,
+    onClose,
+    logbook,
+    onApprove,
+}) => {
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+
+    if (!logbook) return null;
+
+    const isPending =
+        logbook.status === 'pending' ||
+        logbook.status === 'submitted';
+
+    const openImage = (src, alt) => {
+        if (src) {
+            setSelectedImage({ src, alt });
+            setShowImageModal(true);
+        }
+    };
+
+    return (
+        <>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title="Detail Aktivitas Logbook"
+                size="lg"
+            >
+                <div className="space-y-5">
+                    {/* Header Card: Student & Meta */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-md bg-gray-50 border border-gray-200">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-600 shrink-0 font-bold">
+                                <UserRound className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">
+                                    {logbook.student?.user?.name || logbook.student?.name || 'Mahasiswa'}
+                                </p>
+                                <p className="text-xs text-gray-500 font-mono">
+                                    NIM: {logbook.student?.nim || '-'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                            {getStatusBadge(logbook.status)}
+                        </div>
+                    </div>
+
+                    {/* Metadata Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3 rounded-md border border-gray-100 bg-white">
+                            <span className="text-gray-400 block uppercase text-[10px] font-bold tracking-wider mb-1">
+                                Tanggal Aktivitas
+                            </span>
+                            <div className="flex items-center gap-1.5 font-medium text-gray-800">
+                                <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
+                                <span>{formatDate(logbook.date || logbook.activity_date)}</span>
+                            </div>
+                            {(logbook.time_start || logbook.time_end) && (
+                                <p className="text-gray-500 mt-1 flex items-center gap-1">
+                                    <Clock className="w-3 h-3 text-gray-400" />
+                                    <span>{logbook.time_start || ''} - {logbook.time_end || ''}</span>
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="p-3 rounded-md border border-gray-100 bg-white">
+                            <span className="text-gray-400 block uppercase text-[10px] font-bold tracking-wider mb-1">
+                                Mitra / Perusahaan
+                            </span>
+                            <div className="flex items-center gap-1.5 font-medium text-gray-800">
+                                <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                                <span>{logbook.kp_company?.name || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Activity Description */}
+                    <div>
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-2">
+                            Deskripsi Aktivitas
+                        </span>
+                        <div className="p-4 rounded-md border border-gray-200 bg-white text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                            {logbook.activity || '-'}
+                        </div>
+                    </div>
+
+                    {/* Supervisor Notes if any */}
+                    {logbook.notes && (
+                        <div className="p-3.5 rounded-md border border-amber-200 bg-amber-50/70 text-xs text-amber-900">
+                            <span className="font-bold block mb-1">Catatan Pembimbing:</span>
+                            <p className="whitespace-pre-line leading-relaxed">{logbook.notes}</p>
+                        </div>
+                    )}
+
+                    {/* Attachments / Photos */}
+                    {(logbook.attachment || logbook.evidence_photo) && (
+                        <div className="space-y-2">
+                            <span className="text-xs font-bold text-gray-700 uppercase tracking-wide block">
+                                Bukti & Lampiran
+                            </span>
+                            <div className="flex flex-wrap gap-3">
+                                {logbook.evidence_photo && (
+                                    <div
+                                        onClick={() => openImage(logbook.evidence_photo, 'Foto Bukti Aktivitas')}
+                                        className="group relative cursor-pointer overflow-hidden rounded-md border border-gray-200 bg-gray-50 p-2 hover:border-emerald-300 transition"
+                                    >
+                                        <img
+                                            src={logbook.evidence_photo}
+                                            alt="Foto Bukti"
+                                            className="h-24 w-32 rounded-md object-cover group-hover:opacity-90 transition"
+                                        />
+                                        <div className="mt-1 flex items-center justify-center gap-1 text-[11px] font-medium text-gray-600">
+                                            <Image className="w-3 h-3 text-emerald-600" />
+                                            <span>Lihat Foto</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {logbook.attachment && (
+                                    <a
+                                        href={logbook.attachment}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-3 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs font-medium text-blue-700 transition self-start"
+                                    >
+                                        <FileText className="w-4 h-4 text-blue-600" />
+                                        <span>Unduh / Buka Dokumen Lampiran</span>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Footer */}
+                    <div className="flex justify-end items-center gap-2 pt-4 border-t border-gray-200">
+                        <Button
+                            variant="secondary"
+                            onClick={onClose}
+                        >
+                            Tutup
+                        </Button>
+
+                        {isPending && onApprove && (
+                            <Button
+                                variant="primary"
+                                icon={Check}
+                                onClick={() => {
+                                    onClose();
+                                    onApprove(logbook);
+                                }}
+                            >
+                                Setujui Logbook
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Evidence Image Viewer */}
+            {showImageModal && (
+                <ModalImage
+                    isOpen={showImageModal}
+                    onClose={() => setShowImageModal(false)}
+                    imageSrc={selectedImage?.src}
+                    imageAlt={selectedImage?.alt}
+                />
+            )}
+        </>
+    );
+};
+
 
 /* =========================================================
    TIMELINE ITEM
@@ -838,7 +1021,7 @@ const DetailKelompok = () => {
     const auth = useSelector(state => state.auth);
     const user = auth?.user;
     const userPermissions = auth?.permissions || [];
-    const hasDetailPermission = userPermissions.includes('kp.detail-kelompok');
+    const hasDetailPermission = userPermissions.includes('kp.daftar-kelompok') || userPermissions.includes('kp.detail-kelompok');
 
     const [
         activeTab,
@@ -884,6 +1067,16 @@ const DetailKelompok = () => {
         isLoading: isLoadingLogbook,
         refetch: refetchLogbook,
     } = useGetLogbookQuery(id);
+
+    /* =====================================================
+       REPORTS
+    ===================================================== */
+
+    const {
+        data: reportsRaw,
+        isLoading: isLoadingReports,
+        refetch: refetchReports,
+    } = useGetReportQuery(id);
 
 
     /* =====================================================
@@ -957,6 +1150,12 @@ const DetailKelompok = () => {
 
     }, [logbooksRaw]);
 
+
+    const reports = useMemo(() => {
+        if (Array.isArray(reportsRaw)) return reportsRaw;
+        if (Array.isArray(reportsRaw?.data)) return reportsRaw.data;
+        return [];
+    }, [reportsRaw]);
 
     const members =
         data?.members || [];
@@ -2313,17 +2512,89 @@ const DetailKelompok = () => {
                             ================================================= */}
 
                             {activeTab === 'laporan' && (
+                                <div className="space-y-4">
+                                    {isLoadingReports ? (
+                                        <Skeleton className="h-40" />
+                                    ) : reports.length === 0 ? (
+                                        <EmptyContent
+                                            icon={ClipboardList}
+                                            title="Laporan belum diunggah"
+                                            description="Mahasiswa kelompok ini belum mengunggah naskah Laporan Akhir KP."
+                                        />
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {reports.map((report) => (
+                                                <div
+                                                    key={report.id}
+                                                    className="border border-gray-200 rounded-md p-5 bg-white shadow-sm space-y-4 hover:border-gray-300 transition-colors"
+                                                >
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-gray-100">
+                                                        <div>
+                                                            <h4 className="text-base font-semibold text-gray-900">
+                                                                {report.title || 'Laporan Akhir KP'}
+                                                            </h4>
+                                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                                Diunggah oleh <span className="font-medium text-gray-700">{report.student?.user?.name || '-'}</span> ({report.student?.nim || '-'})
+                                                            </p>
+                                                        </div>
+                                                        <div className="shrink-0">
+                                                            {report.status === 'approved' && (
+                                                                <Badge status="green">Disetujui</Badge>
+                                                            )}
+                                                            {report.status === 'pending' && (
+                                                                <Badge status="yellow">Menunggu Validasi</Badge>
+                                                            )}
+                                                            {report.status === 'rejected' && (
+                                                                <Badge status="red">Perlu Revisi</Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
 
-                                <EmptyContent
-                                    icon={ClipboardList}
-                                    title="Laporan belum tersedia"
-                                    description="
-                                        Fitur pengelolaan dan pemeriksaan
-                                        laporan kelompok akan tersedia
-                                        pada tahap berikutnya.
-                                    "
-                                />
+                                                    {report.description && (
+                                                        <div className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Keterangan Mahasiswa</p>
+                                                            <p className="whitespace-pre-line text-xs">{report.description}</p>
+                                                        </div>
+                                                    )}
 
+                                                    {report.rejection_note && (
+                                                        <div className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg p-3">
+                                                            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Catatan Revisi</p>
+                                                            <p className="whitespace-pre-line text-xs">{report.rejection_note}</p>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                                                        {report.file_url ? (
+                                                            <a
+                                                                href={report.file_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200"
+                                                            >
+                                                                <Download className="w-4 h-4" />
+                                                                Unduh File Naskah
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400">File tidak tersedia</span>
+                                                        )}
+
+                                                        {report.status === 'approved' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="primary"
+                                                                icon={Award}
+                                                                onClick={() => navigate('/kp/nilai')}
+                                                            >
+                                                                Input / Kelola Nilai KP
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                         </div>

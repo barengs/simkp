@@ -161,7 +161,7 @@ const AssignModal = ({ isOpen, onClose, onConfirm, groups, lecturers, submitting
     const group = groups.find(g => g.id === Number(selectedGroup));
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Plotting Dosen Pembimbing" size="md">
+        <Modal isOpen={isOpen} onClose={handleClose} title="Plotting Dosen Pembimbing" size="md" overflowVisible={true}>
             <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex gap-2">
                     <UserPlus className="w-4 h-4 mt-0.5 shrink-0 text-blue-600" />

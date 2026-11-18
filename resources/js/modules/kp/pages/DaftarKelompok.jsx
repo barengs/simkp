@@ -533,7 +533,7 @@ const DaftarKelompok = () => {
     const { user, roles, permissions } = useSelector(s => s.auth);
     const isDosen = !!user?.lecturer_id;
     const canViewAll = permissions?.some(p =>
-        p === 'kp.plotting-dosen' || p === 'master-data.manage' || p === 'kp.verifikasi-pendaftaran'
+        p === 'kp.daftar-kelompok' || p === 'kp.plotting-dosen' || p === 'master-data.manage' || p === 'kp.verifikasi-pendaftaran'
     ) || false;
 
     // Title and description based on role
